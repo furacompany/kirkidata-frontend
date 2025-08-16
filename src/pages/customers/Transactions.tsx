@@ -111,9 +111,7 @@ const Transactions: React.FC = () => {
     return { total, successful, pending, failed, totalAmount }
   }
 
-  const getTransactionReference = (transaction: any) => {
-    return transaction.reference || transaction.wiaxyRef || 'N/A'
-  }
+
 
   const stats = getTransactionStats()
 

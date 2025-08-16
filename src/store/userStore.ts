@@ -12,7 +12,7 @@ interface UserStore extends UserState {
   fetchWalletBalance: () => Promise<void>
 }
 
-export const useUserStore = create<UserStore>((set, get) => ({
+export const useUserStore = create<UserStore>((set) => ({
   walletBalance: 5000,
   transactions: [],
   isLoading: false,

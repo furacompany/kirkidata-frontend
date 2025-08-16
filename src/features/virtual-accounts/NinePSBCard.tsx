@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
-import { Copy, Building, CheckCircle, AlertCircle, Loader2, CreditCard } from "lucide-react";
+import { Copy, CheckCircle, AlertCircle, Loader2, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import toast from "react-hot-toast";
 import {
-  getAvailableBanks,
   getUserVirtualAccounts,
   createVirtualAccount,
-  type BankId,
   type VirtualAccount,
 } from "./api";
 
