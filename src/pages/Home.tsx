@@ -12,7 +12,7 @@ const features = [
   {
     icon: <Smartphone className="w-8 h-8 text-primary" />,
     title: 'Instant Airtime',
-    desc: 'Buy airtime for all networks instantly with zero delays. MTN, Airtel, Glo, 9mobile supported.'
+    desc: 'Buy airtime for all networks instantly with zero delays MTN, Airtel, Glo, 9mobile supported.'
   },
   {
     icon: <Wifi className="w-8 h-8 text-accent" />,
