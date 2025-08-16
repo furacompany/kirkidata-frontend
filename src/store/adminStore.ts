@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { apiService } from '../services/api'
+import { getVirtualAccountTransactions } from '../features/virtual-accounts/api'
 import toast from 'react-hot-toast'
 import { AdminStats, User, Transaction, WalletLog } from '../types'
 
@@ -448,11 +449,12 @@ export const useAdminStore = create<AdminAuthStore>((set, _get) => ({
 
   fetchTransactions: async () => {
     try {
-      // const response = await apiService.getAllTransactions()
-      // if (response.success && response.data) {
-      //   set({ transactions: response.data })
-      // }
-      console.log('fetchTransactions: Method not yet implemented in apiService')
+      const response = await getVirtualAccountTransactions(1, 50)
+      if (response.success && response.data) {
+        set({ transactions: response.data.transactions })
+      } else {
+        throw new Error(response.message || 'Failed to fetch transactions')
+      }
     } catch (error: any) {
       console.error('Failed to fetch transactions:', error)
       toast.error('Failed to fetch transactions')

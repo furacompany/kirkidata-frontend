@@ -33,6 +33,7 @@ const AdminHome: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'successful':
+      case 'completed':
         return 'text-success bg-success/10 border-success/20'
       case 'pending':
         return 'text-yellow bg-yellow/10 border-yellow/20'
@@ -50,15 +51,14 @@ const AdminHome: React.FC = () => {
       case 'data':
         return <Wifi className="w-4 h-4 text-blue-600" />
       case 'wallet_funding':
+      case 'funding':
         return <CreditCard className="w-4 h-4 text-purple-600" />
+      case 'wallet_withdrawal':
+      case 'withdrawal':
+        return <ArrowUpRight className="w-4 h-4 text-red-600" />
       default:
         return <Activity className="w-4 h-4 text-gray-600" />
     }
-  }
-
-  const formatAmount = (amount?: number) => {
-    if (amount === undefined || amount === null) return '₦0';
-    return `₦${amount.toLocaleString()}`;
   }
 
   const formatDate = (dateString: string) => {
@@ -68,6 +68,15 @@ const AdminHome: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  const formatAmount = (amount: number) => {
+    return `₦${amount.toLocaleString()}`
+  }
+
+  const getTransactionAmount = (transaction: any) => {
+    const isCredit = transaction.type === 'wallet_funding' || transaction.type === 'funding'
+    return `${isCredit ? '+' : '-'}${formatAmount(transaction.amount)}`
   }
 
   const getPercentageChange = (current: number, previous: number) => {
@@ -390,7 +399,7 @@ const AdminHome: React.FC = () => {
             <div className="space-y-4">
               {recentTransactions.length > 0 ? (
                 recentTransactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div key={transaction._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-white rounded-lg shadow-sm">
                         {getTransactionIcon(transaction.type)}
@@ -404,7 +413,7 @@ const AdminHome: React.FC = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-gray-900">{formatAmount(transaction.amount)}</div>
+                      <div className="font-bold text-gray-900">{getTransactionAmount(transaction)}</div>
                       <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(transaction.status)}`}>
                         {transaction.status}
                       </span>

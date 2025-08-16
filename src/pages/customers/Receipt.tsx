@@ -18,7 +18,7 @@ const Receipt: React.FC = () => {
   const { user } = useAuthStore()
   const [copied, setCopied] = useState(false)
 
-  const transaction = transactions.find(t => t.id === id)
+  const transaction = transactions.find(t => t._id === id)
 
   useEffect(() => {
     if (!transaction) {
@@ -46,6 +46,7 @@ const Receipt: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'successful':
+      case 'completed':
         return <CheckCircle className="w-5 h-5 text-success" />
       case 'pending':
         return <Clock className="w-5 h-5 text-yellow" />
@@ -63,6 +64,10 @@ const Receipt: React.FC = () => {
       case 'data':
         return <Wifi className="w-5 h-5" />
       case 'wallet_funding':
+      case 'funding':
+        return <CreditCard className="w-5 h-5" />
+      case 'wallet_withdrawal':
+      case 'withdrawal':
         return <CreditCard className="w-5 h-5" />
       default:
         return <CreditCard className="w-5 h-5" />
@@ -88,7 +93,8 @@ const Receipt: React.FC = () => {
         Kirkidata Recharge Platform
 Transaction Receipt
 
-Transaction ID: ${transaction.id}
+Transaction ID: ${transaction._id}
+Reference: ${transaction.reference || 'N/A'}
 Date: ${formatDate(transaction.createdAt)}
 Type: ${transaction.type}
 Amount: ${formatAmount(transaction.amount)}
@@ -96,6 +102,8 @@ Status: ${transaction.status}
 Description: ${transaction.description}
 ${transaction.network ? `Network: ${transaction.network}` : ''}
 ${transaction.phoneNumber ? `Phone: ${transaction.phoneNumber}` : ''}
+${transaction.metadata?.bankName ? `Bank: ${transaction.metadata.bankName}` : ''}
+${transaction.metadata?.accountNumber ? `Account: ${transaction.metadata.accountNumber}` : ''}
 
         Thank you for using Kirkidata!
     `.trim()
@@ -170,7 +178,10 @@ ${transaction.phoneNumber ? `Phone: ${transaction.phoneNumber}` : ''}
               
               <div className="text-center">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Transaction Receipt</h2>
-                <p className="text-sm text-gray-600 break-all">Transaction ID: {transaction.id}</p>
+                <p className="text-sm text-gray-600 break-all">Transaction ID: {transaction._id}</p>
+                {transaction.reference && (
+                  <p className="text-sm text-gray-600 break-all">Reference: {transaction.reference}</p>
+                )}
               </div>
             </CardHeader>
             
@@ -179,7 +190,7 @@ ${transaction.phoneNumber ? `Phone: ${transaction.phoneNumber}` : ''}
               <div className="space-y-6">
                 {/* Status Banner */}
                 <div className={`p-4 rounded-lg border-2 ${
-                  transaction.status === 'successful' 
+                  transaction.status === 'successful' || transaction.status === 'completed'
                     ? 'bg-success/10 border-success/20' 
                     : transaction.status === 'pending'
                     ? 'bg-yellow/10 border-yellow/20'
@@ -239,6 +250,20 @@ ${transaction.phoneNumber ? `Phone: ${transaction.phoneNumber}` : ''}
                       <div>
                         <label className="text-sm font-medium text-gray-600">Phone Number</label>
                         <div className="font-medium mt-1">{transaction.phoneNumber}</div>
+                      </div>
+                    )}
+
+                    {transaction.metadata?.bankName && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Bank</label>
+                        <div className="font-medium mt-1">{transaction.metadata.bankName}</div>
+                      </div>
+                    )}
+
+                    {transaction.metadata?.accountNumber && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Account Number</label>
+                        <div className="font-medium mt-1">{transaction.metadata.accountNumber}</div>
                       </div>
                     )}
                   </div>

@@ -1,56 +1,18 @@
 import { create } from 'zustand'
-import { UserState, Transaction } from '../types'
+import { toast } from 'react-hot-toast'
 import { apiService } from '../services/api'
-import toast from 'react-hot-toast'
+import { getVirtualAccountTransactions } from '../features/virtual-accounts/api'
+import { UserState, Transaction } from '../types'
 
 interface UserStore extends UserState {
   updateWalletBalance: (amount: number) => void
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => void
+  addTransaction: (transactionData: Partial<Transaction>) => void
   fetchTransactions: () => Promise<void>
   syncWalletBalance: (balance: number) => void
   fetchWalletBalance: () => Promise<void>
 }
 
-// Mock transactions for simulation
-const mockTransactions: Transaction[] = [
-  {
-    id: '1',
-    userId: '1',
-    type: 'airtime',
-    amount: 1000,
-    status: 'successful',
-    description: 'Airtime purchase for MTN',
-    phoneNumber: '+2348012345678',
-    network: 'MTN',
-    createdAt: '2024-01-15T10:30:00Z',
-    updatedAt: '2024-01-15T10:30:00Z',
-  },
-  {
-    id: '2',
-    userId: '1',
-    type: 'data',
-    amount: 2500,
-    status: 'successful',
-    description: 'Data purchase for Airtel',
-    phoneNumber: '+2348012345678',
-    network: 'Airtel',
-    dataPlan: '5GB - 30 Days',
-    createdAt: '2024-01-14T15:20:00Z',
-    updatedAt: '2024-01-14T15:20:00Z',
-  },
-  {
-    id: '3',
-    userId: '1',
-    type: 'wallet_funding',
-    amount: 10000,
-    status: 'successful',
-    description: 'Wallet funding via bank transfer',
-    createdAt: '2024-01-13T09:15:00Z',
-    updatedAt: '2024-01-13T09:15:00Z',
-  },
-]
-
-export const useUserStore = create<UserStore>((set) => ({
+export const useUserStore = create<UserStore>((set, get) => ({
   walletBalance: 5000,
   transactions: [],
   isLoading: false,
@@ -64,10 +26,17 @@ export const useUserStore = create<UserStore>((set) => ({
   addTransaction: (transactionData) => {
     const newTransaction: Transaction = {
       ...transactionData,
-      id: Date.now().toString(),
+      _id: Date.now().toString(),
+      userId: '', // Will be set by the API
+      type: 'wallet_funding',
+      amount: 0,
+      currency: 'NGN',
+      status: 'pending',
+      reference: '',
+      description: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }
+    } as Transaction
     
     set(state => ({
       transactions: [newTransaction, ...state.transactions],
@@ -77,13 +46,21 @@ export const useUserStore = create<UserStore>((set) => ({
   fetchTransactions: async () => {
     set({ isLoading: true })
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    set({
-      transactions: mockTransactions,
-      isLoading: false,
-    })
+    try {
+      const response = await getVirtualAccountTransactions(1, 50)
+      if (response.success && response.data) {
+        set({
+          transactions: response.data.transactions,
+          isLoading: false,
+        })
+      } else {
+        throw new Error(response.message || 'Failed to fetch transactions')
+      }
+    } catch (error) {
+      console.error('Error fetching transactions:', error)
+      set({ isLoading: false })
+      // Don't show error toast for transactions as it might be expected for new users
+    }
   },
 
   syncWalletBalance: (balance: number) => {

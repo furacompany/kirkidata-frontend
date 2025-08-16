@@ -15,19 +15,53 @@ export interface User {
 }
 
 export interface Transaction {
-  id?: string
+  _id: string
   userId: string
-  type: 'airtime' | 'data' | 'wallet_funding' | 'wallet_withdrawal'
+  virtualAccountId?: {
+    _id: string
+    accountNumber: string
+    bankName: string
+  }
+  type: 'airtime' | 'data' | 'wallet_funding' | 'wallet_withdrawal' | 'funding' | 'withdrawal'
   amount: number
-  status: 'pending' | 'successful' | 'failed'
+  currency: string
+  status: 'pending' | 'successful' | 'failed' | 'completed'
+  reference: string
+  wiaxyRef?: string
+  merchantReference?: string
   description: string
   phoneNumber?: string
   network?: string
   dataPlan?: string
-  reference?: string
   createdAt: string
   updatedAt: string
+  metadata?: {
+    payerAccountNumber?: string
+    bankName?: string
+    accountNumber?: string
+    accountName?: string
+  }
+  // Legacy fields for backward compatibility
+  id?: string
   userName?: string
+}
+
+// New interface for virtual account transactions response
+export interface VirtualAccountTransactionsResponse {
+  success: boolean
+  message: string
+  data: {
+    transactions: Transaction[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      totalPages: number
+      hasNext: boolean
+      hasPrev: boolean
+    }
+  }
+  timestamp?: string
 }
 
 export interface AirtimePlan {

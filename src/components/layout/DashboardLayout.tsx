@@ -8,6 +8,7 @@ import {
   Wifi, 
   History, 
   User, 
+  Shield,
   LogOut,
   Menu,
   X,
@@ -33,6 +34,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Buy Data', href: '/buy-data', icon: Wifi },
     { name: 'Fund Wallet', href: '/fund-wallet', icon: CreditCard },
     { name: 'Transaction History', href: '/transactions', icon: History },
+    { name: 'KYC Verification', href: '/kyc', icon: Shield },
     { name: 'Profile', href: '/profile', icon: User },
   ]
 

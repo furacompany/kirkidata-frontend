@@ -2,8 +2,7 @@ import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Wallet, Activity, Smartphone, Wifi, CreditCard, 
-  Eye, EyeOff, Plus, History,
-  CheckCircle, Copy, Building
+  Eye, EyeOff, Plus, History, RefreshCw, ArrowUpRight
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -11,13 +10,18 @@ import { useUserStore } from '../../store/userStore'
 import { useAuthStore } from '../../store/authStore'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
+
 import PinSetupModal from '../../components/ui/PinSetupModal'
+import VirtualAccountsCard from '../../features/virtual-accounts/VirtualAccountsCard'
+import VirtualAccountViewer from '../../features/virtual-accounts/VirtualAccountViewer'
+import NinePSBCard from '../../features/virtual-accounts/NinePSBCard'
 
 const DashboardHome: React.FC = () => {
   const { walletBalance, transactions, fetchTransactions, fetchWalletBalance } = useUserStore()
   const { user } = useAuthStore()
   const [showBalance, setShowBalance] = React.useState(true)
   const [showPinModal, setShowPinModal] = React.useState(false)
+  const [refreshingBalance, setRefreshingBalance] = React.useState(false)
 
   useEffect(() => {
     fetchTransactions()
@@ -40,6 +44,7 @@ const DashboardHome: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'successful':
+      case 'completed':
         return 'text-success bg-success/10 border-success/20'
       case 'pending':
         return 'text-yellow bg-yellow/10 border-yellow/20'
@@ -57,7 +62,11 @@ const DashboardHome: React.FC = () => {
       case 'data':
         return <Wifi className="w-4 h-4 text-blue-600" />
       case 'wallet_funding':
+      case 'funding':
         return <CreditCard className="w-4 h-4 text-purple-600" />
+      case 'wallet_withdrawal':
+      case 'withdrawal':
+        return <ArrowUpRight className="w-4 h-4 text-red-600" />
       default:
         return <Activity className="w-4 h-4 text-gray-600" />
     }
@@ -74,13 +83,25 @@ const DashboardHome: React.FC = () => {
     return `₦${amount.toLocaleString()}`
   }
 
-  const copyToClipboard = async (text: string) => {
+  const handleRefreshBalance = async () => {
+    setRefreshingBalance(true)
     try {
-      await navigator.clipboard.writeText(text)
-      toast.success('Copied to clipboard!')
-    } catch (err) {
-      toast.error('Failed to copy to clipboard')
+      await fetchWalletBalance()
+      toast.success('Balance refreshed successfully!')
+    } catch (error) {
+      toast.error('Failed to refresh balance')
+    } finally {
+      setRefreshingBalance(false)
     }
+  }
+
+  const getTransactionAmount = (transaction: any) => {
+    const isCredit = transaction.type === 'wallet_funding' || transaction.type === 'funding'
+    return `${isCredit ? '+' : '-'}${formatAmount(transaction.amount)}`
+  }
+
+  const getTransactionReference = (transaction: any) => {
+    return transaction.reference || transaction.wiaxyRef || 'N/A'
   }
 
   // const successfulTransactions = transactions.filter(t => t.status === 'successful') // Not currently used
@@ -130,9 +151,19 @@ const DashboardHome: React.FC = () => {
                                                                                {/* Wallet Balance */}
              <Card className="bg-primary text-white border-0 shadow-lg -mt-6 sm:mt-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                <CardTitle className="text-sm font-medium text-white/90">
-                  Wallet Balance
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-sm font-medium text-white/90">
+                    Wallet Balance
+                  </CardTitle>
+                  <button
+                    onClick={handleRefreshBalance}
+                    disabled={refreshingBalance}
+                    className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-50"
+                    title="Refresh wallet balance"
+                  >
+                    <RefreshCw className={`h-4 w-4 text-white/70 ${refreshingBalance ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
                 <Wallet className="h-5 w-5 text-white/70" />
               </CardHeader>
               <CardContent className="pt-0">
@@ -154,56 +185,10 @@ const DashboardHome: React.FC = () => {
             </Card>
 
                    {/* Virtual Account Details */}
-           <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
-             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-               <CardTitle className="text-sm font-medium text-gray-700">Virtual Account</CardTitle>
-               <div className="p-2 bg-blue-50 rounded-lg">
-                 <Building className="h-4 w-4 text-blue-600" />
-               </div>
-             </CardHeader>
-                         <CardContent className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm text-gray-500">Account Number</span>
-                  <span className="text-xs sm:text-sm text-gray-500">Account Name</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm sm:text-base font-bold text-gray-900">1234567890</div>
-                    <button
-                      onClick={() => copyToClipboard('1234567890')}
-                      className="p-1 hover:bg-gray-100 rounded transition-colors"
-                    >
-                      <Copy className="h-3 w-3 text-gray-500" />
-                    </button>
-                  </div>
-                  <div className="text-sm sm:text-base font-medium text-gray-900">
-                    {user?.name?.split(' ')[0]} Kirkidata
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm text-gray-500">Bank Name</span>
-                  <div className="text-sm sm:text-base font-medium text-gray-900">Palmpay</div>
-                </div>
-              </CardContent>
-           </Card>
+           <VirtualAccountsCard />
 
-                   {/* Last Recharge */}
-           <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
-             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-               <CardTitle className="text-sm font-medium text-gray-700">Last Recharge</CardTitle>
-               <div className="p-2 bg-green-50 rounded-lg">
-                 <CheckCircle className="h-4 w-4 text-green-600" />
-               </div>
-             </CardHeader>
-             <CardContent className="pt-0">
-               <div className="text-2xl font-bold text-gray-900">
-                 {recentTransactions.length > 0 ? formatAmount(recentTransactions[0]?.amount || 0) : '₦0'}
-               </div>
-               <p className="text-xs text-gray-500 mt-1">
-                 {recentTransactions.length > 0 ? formatDate(recentTransactions[0]?.createdAt) : 'No transactions yet'}
-               </p>
-             </CardContent>
-           </Card>
+                                       {/* 9PSB Virtual Account Details */}
+            <NinePSBCard />
         </motion.div>
 
       {/* Main Content Grid */}
@@ -276,6 +261,16 @@ const DashboardHome: React.FC = () => {
         </Card>
       </motion.div>
 
+      {/* Virtual Account Viewer Utility */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.25 }}
+        className="lg:col-span-2"
+      >
+        <VirtualAccountViewer />
+      </motion.div>
+
       {/* Transaction History */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -303,7 +298,7 @@ const DashboardHome: React.FC = () => {
             <div className="space-y-4">
               {recentTransactions.length > 0 ? (
                 recentTransactions.map((transaction) => (
-                  <div key={transaction.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors gap-3">
+                  <div key={transaction._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors gap-3">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
                         {getTransactionIcon(transaction.type)}
@@ -322,9 +317,9 @@ const DashboardHome: React.FC = () => {
                     </div>
                     <div className="text-right sm:ml-2">
                       <p className="text-sm font-bold text-gray-900">
-                        {transaction.type === 'wallet_funding' ? '+' : '-'}{formatAmount(transaction.amount)}
+                        {getTransactionAmount(transaction)}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">{transaction.reference}</p>
+                      <p className="text-xs text-gray-500 truncate">{getTransactionReference(transaction)}</p>
                     </div>
                   </div>
                 ))

@@ -59,13 +59,14 @@ const Transactions: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'successful':
+      case 'completed':
         return 'text-success bg-success/10 border-success/20'
       case 'pending':
         return 'text-yellow bg-yellow/10 border-yellow/20'
       case 'failed':
         return 'text-danger bg-danger/10 border-danger/20'
       default:
-        return 'text-gray-500 bg-gray-100 border-gray-200'
+        return 'text-gray-500 bg-gray-200 border-gray/200'
     }
   }
 
@@ -76,7 +77,11 @@ const Transactions: React.FC = () => {
       case 'data':
         return <Wifi className="w-4 h-4" />
       case 'wallet_funding':
+      case 'funding':
         return <CreditCard className="w-4 h-4" />
+      case 'wallet_withdrawal':
+      case 'withdrawal':
+        return <TrendingUp className="w-4 h-4" />
       default:
         return <TrendingUp className="w-4 h-4" />
     }
@@ -98,12 +103,16 @@ const Transactions: React.FC = () => {
 
   const getTransactionStats = () => {
     const total = transactions.length
-    const successful = transactions.filter(t => t.status === 'successful').length
+    const successful = transactions.filter(t => t.status === 'successful' || t.status === 'completed').length
     const pending = transactions.filter(t => t.status === 'pending').length
     const failed = transactions.filter(t => t.status === 'failed').length
     const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0)
 
     return { total, successful, pending, failed, totalAmount }
+  }
+
+  const getTransactionReference = (transaction: any) => {
+    return transaction.reference || transaction.wiaxyRef || 'N/A'
   }
 
   const stats = getTransactionStats()
@@ -333,7 +342,7 @@ const Transactions: React.FC = () => {
               <div className="space-y-4">
                 {filteredTransactions.map((transaction) => (
                   <motion.div
-                    key={transaction.id}
+                    key={transaction._id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors gap-3"
@@ -355,10 +364,10 @@ const Transactions: React.FC = () => {
                     <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
                       <div className="text-right">
                         <div className="font-bold text-sm sm:text-base">
-                          {transaction.type === 'wallet_funding' ? '+' : '-'}{formatAmount(transaction.amount)}
+                          {transaction.type === 'wallet_funding' || transaction.type === 'funding' ? '+' : '-'}{formatAmount(transaction.amount)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {transaction.type === 'wallet_funding' ? 'Credit' : 'Debit'}
+                          {transaction.type === 'wallet_funding' || transaction.type === 'funding' ? 'Credit' : 'Debit'}
                         </div>
                       </div>
                       
@@ -367,7 +376,7 @@ const Transactions: React.FC = () => {
                           {transaction.status}
                         </span>
                         
-                        <Link to={`/receipt/${transaction.id}`}>
+                        <Link to={`/receipt/${transaction._id}`}>
                           <Button variant="ghost" size="sm" className="p-1 sm:p-2">
                             <Eye className="w-4 h-4" />
                           </Button>

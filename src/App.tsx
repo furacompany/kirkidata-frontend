@@ -22,6 +22,7 @@ import BuyData from './pages/customers/BuyData'
 import FundWallet from './pages/customers/FundWallet'
 import Transactions from './pages/customers/Transactions'
 import Profile from './pages/customers/Profile'
+import KYC from './pages/customers/KYC'
 import Receipt from './pages/customers/Receipt'
 
 // Admin Pages
@@ -166,6 +167,16 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <DashboardLayout>
                   <Profile />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kyc"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <KYC />
                 </DashboardLayout>
               </ProtectedRoute>
             }
