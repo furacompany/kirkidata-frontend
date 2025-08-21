@@ -92,7 +92,7 @@ export default function VirtualAccountsCard() {
 
   if (loading) {
     return (
-      <Card className="border-0 shadow-md">
+      <Card className="border-0 shadow-md h-full">
         <CardContent className="flex items-center justify-center py-6">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
           <span className="ml-2 text-sm text-gray-600">Loading...</span>
@@ -102,7 +102,7 @@ export default function VirtualAccountsCard() {
   }
 
   return (
-    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
+    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow h-full">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-3">
         <CardTitle className="text-sm font-medium text-gray-700">Virtual Account</CardTitle>
         

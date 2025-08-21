@@ -13,7 +13,6 @@ import toast from 'react-hot-toast'
 
 import PinSetupModal from '../../components/ui/PinSetupModal'
 import VirtualAccountsCard from '../../features/virtual-accounts/VirtualAccountsCard'
-import VirtualAccountViewer from '../../features/virtual-accounts/VirtualAccountViewer'
 import NinePSBCard from '../../features/virtual-accounts/NinePSBCard'
 
 const DashboardHome: React.FC = () => {
@@ -22,6 +21,7 @@ const DashboardHome: React.FC = () => {
   const [showBalance, setShowBalance] = React.useState(true)
   const [showPinModal, setShowPinModal] = React.useState(false)
   const [refreshingBalance, setRefreshingBalance] = React.useState(false)
+  const [activeVirtualAccount, setActiveVirtualAccount] = React.useState<'9PSB' | 'PALMPAY'>('9PSB')
 
   useEffect(() => {
     fetchTransactions()
@@ -141,135 +141,190 @@ const DashboardHome: React.FC = () => {
          </Link>
        </motion.div>
 
-                                                       {/* Stats Cards */}
-         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.5, delay: 0.1 }}
-           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 -mt-4 sm:mt-0"
-         >
-                                                                               {/* Wallet Balance */}
-             <Card className="bg-primary text-white border-0 shadow-lg -mt-6 sm:mt-0">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-sm font-medium text-white/90">
-                    Wallet Balance
-                  </CardTitle>
-                  <button
-                    onClick={handleRefreshBalance}
-                    disabled={refreshingBalance}
-                    className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-50"
-                    title="Refresh wallet balance"
-                  >
-                    <RefreshCw className={`h-4 w-4 text-white/70 ${refreshingBalance ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
-                <Wallet className="h-5 w-5 text-white/70" />
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">
-                    {showBalance ? formatAmount(walletBalance) : '₦••••••'}
-                  </div>
-                  <button
-                    onClick={() => setShowBalance(!showBalance)}
-                    className="p-1 hover:bg-white/10 rounded transition-colors"
-                  >
-                    {showBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <p className="text-xs text-white/80 mt-1">
-                  Available for transactions
-                </p>
-              </CardContent>
-            </Card>
+                                                                                                               {/* Stats Cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 -mt-4 sm:mt-0"
+          >
+                                                                                {/* Wallet Balance */}
+              <Card className="bg-primary text-white border-0 shadow-lg -mt-6 sm:mt-0 h-full">
+                               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-6 sm:pt-6">
+                 <div className="flex items-center gap-2">
+                   <CardTitle className="text-sm font-medium text-white/90">
+                     Wallet Balance
+                   </CardTitle>
+                   <button
+                     onClick={handleRefreshBalance}
+                     disabled={refreshingBalance}
+                     className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-50"
+                     title="Refresh wallet balance"
+                   >
+                     <RefreshCw className={`h-4 w-4 text-white/70 ${refreshingBalance ? 'animate-spin' : ''}`} />
+                   </button>
+                 </div>
+                 <Wallet className="h-5 w-5 text-white/70" />
+               </CardHeader>
+                               <CardContent className="pt-2 sm:pt-0">
+                 <div className="flex items-center justify-between">
+                   <div className="text-2xl font-bold">
+                     {showBalance ? formatAmount(walletBalance) : '₦••••••'}
+                   </div>
+                   <button
+                     onClick={() => setShowBalance(!showBalance)}
+                     className="p-1 hover:bg-white/10 rounded transition-colors"
+                   >
+                     {showBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                   </button>
+                 </div>
+                 <p className="text-xs text-white/80 mt-1">
+                   Available for transactions
+                 </p>
+                             </CardContent>
+             </Card>
 
-                   {/* Virtual Account Details */}
-           <VirtualAccountsCard />
+                          {/* 9PSB Virtual Account Card */}
+                          <div className="hidden sm:block h-full">
+                            <NinePSBCard />
+                          </div>
 
-                                       {/* 9PSB Virtual Account Details */}
-            <NinePSBCard />
+                          {/* PalmPay Virtual Account Card */}
+                          <div className="hidden sm:block h-full">
+                            <VirtualAccountsCard />
+                          </div>
         </motion.div>
 
-      {/* Main Content Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8"
-      >
-        {/* Buy Airtime Section */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold text-gray-900">Buy Airtime</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Quick airtime purchase for all networks
-                </CardDescription>
-              </div>
-              <div className="p-3 bg-green-50 rounded-lg">
-                <Smartphone className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              {['MTN', 'Airtel', 'Glo', '9mobile'].map((network) => (
-                <div key={network} className="p-3 border border-gray-200 rounded-lg text-center hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
-                  <div className="text-sm font-medium text-gray-900">{network}</div>
-                </div>
-              ))}
-            </div>
+                          {/* Mobile Layout - Separate from desktop grid */}
+          <div className="sm:hidden">
+                                           {/* Mobile Virtual Account Toggle Buttons - Close to wallet balance */}
+             <div className="flex gap-1 -mt-8">
+             <button
+               onClick={() => setActiveVirtualAccount('9PSB')}
+               className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                 activeVirtualAccount === '9PSB'
+                   ? 'bg-primary text-white shadow-md'
+                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+               }`}
+             >
+               9PSB Account
+             </button>
+             <button
+               onClick={() => setActiveVirtualAccount('PALMPAY')}
+               className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                 activeVirtualAccount === 'PALMPAY'
+                   ? 'bg-primary text-white shadow-md'
+                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+               }`}
+             >
+               Palmpay Account
+             </button>
+           </div>
+
+           {/* Mobile Virtual Account Cards - Close to buttons */}
+           <div className="mt-2">
+            {activeVirtualAccount === '9PSB' ? (
+              <NinePSBCard />
+            ) : (
+              <VirtualAccountsCard />
+            )}
+          </div>
+        </div>
+
+             {/* Main Content Grid - Web View Only */}
+       <motion.div
+         initial={{ opacity: 0, y: 20 }}
+         animate={{ opacity: 1, y: 0 }}
+         transition={{ duration: 0.5, delay: 0.2 }}
+         className="hidden sm:grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8"
+       >
+         {/* Buy Airtime Section */}
+         <Card className="border-0 shadow-lg">
+           <CardHeader className="pb-4">
+             <div className="flex items-center justify-between">
+               <div>
+                 <CardTitle className="text-lg font-bold text-gray-900">Buy Airtime</CardTitle>
+                 <CardDescription className="text-gray-600">
+                   Quick airtime purchase for all networks
+                 </CardDescription>
+               </div>
+               <div className="p-3 bg-green-50 rounded-lg">
+                 <Smartphone className="w-6 h-6 text-green-600" />
+               </div>
+             </div>
+           </CardHeader>
+           <CardContent className="space-y-4">
+             <div className="grid grid-cols-2 gap-3">
+               {['MTN', 'Airtel', 'Glo', '9mobile'].map((network) => (
+                 <div key={network} className="p-3 border border-gray-200 rounded-lg text-center hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
+                   <div className="text-sm font-medium text-gray-900">{network}</div>
+                 </div>
+               ))}
+             </div>
+             <Link to="/buy-airtime" className="block">
+               <Button className="w-full bg-success hover:bg-success/90 text-white">
+                 Buy Airtime
+               </Button>
+             </Link>
+           </CardContent>
+         </Card>
+
+         {/* Buy Data Section */}
+         <Card className="border-0 shadow-lg">
+           <CardHeader className="pb-4">
+             <div className="flex items-center justify-between">
+               <div>
+                 <CardTitle className="text-lg font-bold text-gray-900">Buy Data</CardTitle>
+                 <CardDescription className="text-gray-600">
+                   Affordable data plans for all networks
+                 </CardDescription>
+               </div>
+               <div className="p-3 bg-blue-50 rounded-lg">
+                 <Wifi className="w-6 h-6 text-blue-600" />
+               </div>
+             </div>
+           </CardHeader>
+           <CardContent className="space-y-4">
+             <div className="space-y-2">
+               {['1GB - ₦500', '2GB - ₦1,000', '5GB - ₦2,500', '10GB - ₦5,000'].map((plan) => (
+                 <div key={plan} className="flex justify-between items-center p-2 border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
+                   <span className="text-sm font-medium text-gray-900">{plan}</span>
+                 </div>
+               ))}
+             </div>
+             <Link to="/buy-data" className="block">
+               <Button className="w-full bg-primary hover:bg-primary/90 text-white">
+                 Buy Data
+               </Button>
+             </Link>
+           </CardContent>
+         </Card>
+       </motion.div>
+
+               {/* Mobile Buy Buttons - Mobile View Only */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="sm:hidden"
+        >
+          <div className="grid grid-cols-2 gap-3">
             <Link to="/buy-airtime" className="block">
-              <Button className="w-full bg-success hover:bg-success/90 text-white">
-                Buy Airtime
+              <Button className="w-full bg-success hover:bg-success/90 text-white py-4 text-lg font-semibold">
+                <Smartphone className="w-5 h-5 mr-3" />
+                Airtime
               </Button>
             </Link>
-          </CardContent>
-        </Card>
-
-        {/* Buy Data Section */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold text-gray-900">Buy Data</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Affordable data plans for all networks
-                </CardDescription>
-              </div>
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <Wifi className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              {['1GB - ₦500', '2GB - ₦1,000', '5GB - ₦2,500', '10GB - ₦5,000'].map((plan) => (
-                <div key={plan} className="flex justify-between items-center p-2 border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
-                  <span className="text-sm font-medium text-gray-900">{plan}</span>
-                </div>
-              ))}
-            </div>
             <Link to="/buy-data" className="block">
-              <Button className="w-full bg-primary hover:bg-primary/90 text-white">
+              <Button className="w-full bg-primary hover:bg-primary/90 text-white py-4 text-lg font-semibold">
+                <Wifi className="w-5 h-5 mr-3" />
                 Buy Data
               </Button>
             </Link>
-          </CardContent>
-        </Card>
-      </motion.div>
+          </div>
+        </motion.div>
 
-      {/* Virtual Account Viewer Utility */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.25 }}
-        className="lg:col-span-2"
-      >
-        <VirtualAccountViewer />
-      </motion.div>
+
 
       {/* Transaction History */}
       <motion.div
