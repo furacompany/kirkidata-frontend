@@ -1,4 +1,11 @@
 import { clearAdminAuth } from '../utils/auth'
+import { 
+  OtoBillNetworksResponse, 
+  OtoBillDataPlansResponse, 
+  OtoBillPricingSummaryResponse,
+  OtoBillDataPlansPricingResponse,
+  OtoBillPricingUpdateResponse
+} from '../types'
 
 const API_BASE_URL = 'https://api.kirkidata.ng/api/v1'
 
@@ -650,6 +657,8 @@ export interface AdminSessionResponse {
   }
   timestamp?: string
 }
+
+
 
 class ApiService {
   private baseUrl: string
@@ -1615,6 +1624,151 @@ class ApiService {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  // OtoBill Networks and Data Plans API Methods
+  async getOtoBillNetworks(): Promise<OtoBillNetworksResponse> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<OtoBillNetworksResponse>('/otobill/networks', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getOtoBillDataPlansByNetwork(
+    networkName: string, 
+    planType: string, 
+    page: number = 1, 
+    limit: number = 20
+  ): Promise<OtoBillDataPlansResponse> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const queryParams = new URLSearchParams({
+        planType,
+        page: page.toString(),
+        limit: limit.toString()
+      })
+      
+      const response = await this.request<OtoBillDataPlansResponse>(`/otobill/data-plans/network/${networkName}?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  // OtoBill Pricing Management API Methods
+  async getOtoBillPricingSummary(): Promise<OtoBillPricingSummaryResponse> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<OtoBillPricingSummaryResponse>('/otobill/pricing/summary', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getOtoBillDataPlansPricing(
+    networkName: string,
+    planType: string,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<OtoBillDataPlansPricingResponse> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const queryParams = new URLSearchParams({
+        networkName,
+        planType,
+        page: page.toString(),
+        limit: limit.toString()
+      })
+      
+      const response = await this.request<OtoBillDataPlansPricingResponse>(`/otobill/data-plans/pricing?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async updateOtoBillDataPlanPricing(
+    planId: string,
+    adminPrice: number
+  ): Promise<OtoBillPricingUpdateResponse> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<OtoBillPricingUpdateResponse>(`/otobill/data-plans/${planId}/pricing`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ adminPrice }),
       })
       return response
     } catch (error: any) {

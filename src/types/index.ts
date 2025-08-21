@@ -177,4 +177,112 @@ export interface AdminState {
   walletLogs: WalletLog[]
   stats: AdminStats
   isLoading: boolean
+}
+
+export interface OtoBillNetwork {
+  id: string
+  name: string
+  status: string
+  isActive: boolean
+}
+
+export interface OtoBillDataPlan {
+  planId: string
+  id: string
+  name: string
+  networkName: string
+  planType: string
+  validityDays: number
+  originalPrice: number
+  price: number
+  formattedPrice: string
+  profit: number
+  formattedProfit: string
+}
+
+export interface OtoBillDataPlansResponse {
+  success: boolean
+  message: string
+  data: {
+    plans: OtoBillDataPlan[]
+    total: number
+    page: number
+    pages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+}
+
+export interface OtoBillNetworksResponse {
+  success: boolean
+  message: string
+  data: OtoBillNetwork[]
+}
+
+export interface OtoBillPricingSummary {
+  networks: {
+    total: number
+    active: number
+  }
+  dataPlans: {
+    total: number
+    active: number
+    visible: number
+  }
+  airtimePricing: {
+    total: number
+    active: number
+  }
+}
+
+export interface OtoBillPricingSummaryResponse {
+  success: boolean
+  message: string
+  data: OtoBillPricingSummary
+}
+
+export interface OtoBillDataPlanWithPricing {
+  planId: string
+  name: string
+  networkName: string
+  planType: string
+  validityDays: number
+  originalPrice: number
+  adminPrice: number
+  profit: number
+  isActive: boolean
+  lastSynced: string
+}
+
+export interface OtoBillDataPlansPricingResponse {
+  success: boolean
+  message: string
+  data: {
+    plans: OtoBillDataPlanWithPricing[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      totalPages: number
+      hasNext: boolean
+      hasPrev: boolean
+    }
+  }
+}
+
+export interface OtoBillPricingUpdateRequest {
+  adminPrice: number
+}
+
+export interface OtoBillPricingUpdateResponse {
+  success: boolean
+  message: string
+  data: {
+    planId: string
+    name: string
+    networkName: string
+    originalPrice: number
+    adminPrice: number
+    profit: number
+  }
 } 

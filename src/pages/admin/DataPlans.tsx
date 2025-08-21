@@ -1,758 +1,211 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  Wifi, Edit, Save, X, ChevronDown, Search, Banknote,
-  Clock, Download, Settings, Plus
+  Wifi, Edit, Save, X, ChevronDown, Search,
+  Clock, Download, Settings, Grid, List, RefreshCw,
+  DollarSign, Activity
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import toast from 'react-hot-toast'
+import { apiService } from '../../services/api'
+import { 
+  OtoBillNetwork, 
+  OtoBillDataPlan, 
+  OtoBillDataPlanWithPricing,
+  OtoBillPricingSummary
+} from '../../types'
 
-interface Network {
-  id: string
-  name: string
-  logo: string
-  color: string
-}
-
-interface DataType {
-  id: string
-  name: string
-  network: string
-}
-
-interface DataPlan {
-  id: string
-  name: string
-  size: string
-  duration: string
-  price: number
-  network: string
-  type: string
-  description: string
-  validity: string
-}
-
-const networks: Network[] = [
-  { id: 'mtn', name: 'MTN', logo: '🟡', color: 'bg-yellow-500' },
-  { id: 'airtel', name: 'Airtel', logo: '🔴', color: 'bg-red-500' },
-  { id: 'glo', name: 'Glo', logo: '🟢', color: 'bg-green-500' },
-  { id: '9mobile', name: '9mobile', logo: '🟢', color: 'bg-green-600' },
-]
-
-const dataTypes: DataType[] = [
-  // MTN types
-  { id: 'mtn_sme', name: 'SME', network: 'MTN' },
-  { id: 'mtn_corporate', name: 'Corporate', network: 'MTN' },
-  { id: 'mtn_gifting', name: 'Gifting', network: 'MTN' },
-  // Airtel types
-  { id: 'airtel_gifting', name: 'Gifting', network: 'Airtel' },
-  // Glo types
-  { id: 'glo_corporate', name: 'Corporate', network: 'Glo' },
-  // 9mobile types
-  { id: '9mobile_sme', name: 'SME', network: '9mobile' },
-]
-
-const initialDataPlans: DataPlan[] = [
-  // MTN SME Plans
-  {
-    id: 'mtn_sme_500mb',
-    name: '500MB SME',
-    size: '500MB',
-    duration: '7 Days',
-    price: 500,
-    network: 'MTN',
-    type: 'SME',
-    description: '500MB SME for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_sme_1gb',
-    name: '1GB SME',
-    size: '1GB',
-    duration: '30 Days',
-    price: 700,
-    network: 'MTN',
-    type: 'SME',
-    description: '1GB SME for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_sme_2gb',
-    name: '2GB SME',
-    size: '2GB',
-    duration: '30 Days',
-    price: 1300,
-    network: 'MTN',
-    type: 'SME',
-    description: '2GB SME for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_sme_3gb',
-    name: '3GB SME',
-    size: '3GB',
-    duration: '30 Days',
-    price: 1900,
-    network: 'MTN',
-    type: 'SME',
-    description: '3GB SME for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_sme_5gb',
-    name: '5GB SME',
-    size: '5GB',
-    duration: '30 Days',
-    price: 2500,
-    network: 'MTN',
-    type: 'SME',
-    description: '5GB SME for 30 days',
-    validity: '30 days'
-  },
-
-  // MTN Gifting Plans
-  {
-    id: 'mtn_gifting_75mb',
-    name: '75MB Gifting',
-    size: '75MB',
-    duration: '1 Days',
-    price: 90,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '75MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_gifting_110mb',
-    name: '110MB Gifting',
-    size: '110MB',
-    duration: '1 Days',
-    price: 120,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '110MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_gifting_1gb',
-    name: '1GB Gifting',
-    size: '1GB',
-    duration: '1 Days',
-    price: 500,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1GB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_gifting_2gb',
-    name: '2GB Gifting',
-    size: '2GB',
-    duration: '2 Days',
-    price: 760,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '2GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'mtn_gifting_2_5gb',
-    name: '2.5GB Gifting',
-    size: '2.5GB',
-    duration: '2 Days',
-    price: 900,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '2.5GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'mtn_gifting_3_2gb',
-    name: '3.2GB Gifting',
-    size: '3.2GB',
-    duration: '2 Days',
-    price: 1000,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '3.2GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'mtn_gifting_6gb',
-    name: '6GB Gifting',
-    size: '6GB',
-    duration: '7 Days',
-    price: 2460,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '6GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_gifting_11gb',
-    name: '11GB Gifting',
-    size: '11GB',
-    duration: '7 Days',
-    price: 3500,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '11GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_gifting_16_5gb',
-    name: '16.5GB Gifting',
-    size: '16.5GB',
-    duration: '30 Days',
-    price: 6500,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '16.5GB Gifting for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_gifting_1_5gb_2days',
-    name: '1.5GB Gifting',
-    size: '1.5GB',
-    duration: '2 Days',
-    price: 650,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1.5GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'mtn_gifting_1_5gb_7days',
-    name: '1.5GB Gifting',
-    size: '1.5GB',
-    duration: '7 Days',
-    price: 990,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1.5GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_gifting_1_2gb',
-    name: '1.2GB Gifting',
-    size: '1.2GB',
-    duration: '7 Days',
-    price: 800,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1.2GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_gifting_230mb',
-    name: '230MB Gifting',
-    size: '230MB',
-    duration: '1 Days',
-    price: 220,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '230MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_gifting_750mb',
-    name: '750MB Gifting',
-    size: '750MB',
-    duration: '3 Days',
-    price: 455,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '750MB Gifting for 3 days',
-    validity: '3 days'
-  },
-  {
-    id: 'mtn_gifting_36gb',
-    name: '36GB Gifting',
-    size: '36GB',
-    duration: '30 Days',
-    price: 11000,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '36GB Gifting for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_gifting_1_12gb_calls',
-    name: '1.12GB (Plus 35Mins Call) Gifting',
-    size: '1.12GB + 35Mins',
-    duration: '30 Days',
-    price: 1500,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1.12GB plus 35 minutes call for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_gifting_5gb_calls',
-    name: '5GB (Plus 35Mins Call) Gifting',
-    size: '5GB + 35Mins',
-    duration: '30 Days',
-    price: 3000,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '5GB plus 35 minutes call for 30 days',
-    validity: '30 days'
-  },
-
-  // MTN Corporate Plans
-  {
-    id: 'mtn_corporate_20mb_facebook',
-    name: '20MB (Facebook) Corporate',
-    size: '20MB',
-    duration: '1 Days',
-    price: 35,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '20MB Facebook Corporate for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_corporate_20mb_whatsapp',
-    name: '20MB (Whatsapp) Corporate',
-    size: '20MB',
-    duration: '1 Days',
-    price: 35,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '20MB WhatsApp Corporate for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_corporate_40mb_whatsapp',
-    name: '40MB (Whatsapp) Corporate',
-    size: '40MB',
-    duration: '1 Days',
-    price: 60,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '40MB WhatsApp Corporate for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_corporate_110mb_whatsapp',
-    name: '110MB (Whatsapp) Corporate',
-    size: '110MB',
-    duration: '7 Days',
-    price: 170,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '110MB WhatsApp Corporate for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_corporate_230mb_coupon',
-    name: '230MB (Coupon) Corporate',
-    size: '230MB',
-    duration: '1 Days',
-    price: 210,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '230MB Coupon Corporate for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_corporate_500mb_coupon',
-    name: '500MB (Coupon) Corporate',
-    size: '500MB',
-    duration: '7 Days',
-    price: 510,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '500MB Coupon Corporate for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_corporate_750mb_coupon',
-    name: '750MB (Coupon) Corporate',
-    size: '750MB',
-    duration: '3 Days',
-    price: 450,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '750MB Coupon Corporate for 3 days',
-    validity: '3 days'
-  },
-  {
-    id: 'mtn_corporate_1_2gb_social',
-    name: '1.2GB (Social Only) Corporate',
-    size: '1.2GB',
-    duration: '7 Days',
-    price: 460,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '1.2GB Social Only Corporate for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_corporate_1_5gb_coupon',
-    name: '1.5GB (Coupon) Corporate',
-    size: '1.5GB',
-    duration: '7 Days',
-    price: 990,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '1.5GB Coupon Corporate for 7 days',
-    validity: '7 days'
-  },
-
-  // Airtel Gifting Plans
-  {
-    id: 'airtel_gifting_warning',
-    name: 'Do Not Buy If You Are Owing Airtel Gifting',
-    size: '0MB',
-    duration: '1 Days',
-    price: 0,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: 'Warning: Do not buy if you owe Airtel',
-    validity: '1 days'
-  },
-  {
-    id: 'airtel_gifting_150mb',
-    name: '150MB Gifting',
-    size: '150MB',
-    duration: '1 Days',
-    price: 70,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '150MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'airtel_gifting_300mb',
-    name: '300MB Gifting',
-    size: '300MB',
-    duration: '2 Days',
-    price: 130,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '300MB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'airtel_gifting_600mb',
-    name: '600MB Gifting',
-    size: '600MB',
-    duration: '1 Days',
-    price: 230,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '600MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'airtel_gifting_2gb',
-    name: '2GB Gifting',
-    size: '2GB',
-    duration: '2 Days',
-    price: 600,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '2GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'airtel_gifting_7gb',
-    name: '7GB Gifting',
-    size: '7GB',
-    duration: '7 Days',
-    price: 2200,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '7GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'airtel_gifting_10gb',
-    name: '10GB Gifting',
-    size: '10GB',
-    duration: '30 Days',
-    price: 3300,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '10GB Gifting for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'airtel_gifting_1gb_social',
-    name: '1GB (Social Only) Gifting',
-    size: '1GB',
-    duration: '3 Days',
-    price: 370,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '1GB Social Only Gifting for 3 days',
-    validity: '3 days'
-  },
-  {
-    id: 'airtel_gifting_13gb',
-    name: '13GB Gifting',
-    size: '13GB',
-    duration: '30 Days',
-    price: 5200,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '13GB Gifting for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'airtel_gifting_4gb',
-    name: '4GB Gifting',
-    size: '4GB',
-    duration: '2 Days',
-    price: 800,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '4GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'airtel_gifting_3_5gb_bonus',
-    name: '3.5GB (+3.5GB Bonus) Gifting',
-    size: '3.5GB + 3.5GB',
-    duration: '7 Days',
-    price: 1500,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '3.5GB plus 3.5GB bonus for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'airtel_gifting_1_5gb',
-    name: '1.5GB Gifting',
-    size: '1.5GB',
-    duration: '1 Days',
-    price: 455,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '1.5GB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'airtel_gifting_1gb',
-    name: '1GB Gifting',
-    size: '1GB',
-    duration: '1 Days',
-    price: 380,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '1GB Gifting for 1 day',
-    validity: '1 days'
-  },
-
-  // Glo Corporate Plans
-  {
-    id: 'glo_corporate_200mb',
-    name: '200MB Corporate',
-    size: '200MB',
-    duration: '30 Days',
-    price: 95,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '200MB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_500mb',
-    name: '500MB Corporate',
-    size: '500MB',
-    duration: '30 Days',
-    price: 230,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '500MB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_1gb',
-    name: '1GB Corporate',
-    size: '1GB',
-    duration: '30 Days',
-    price: 450,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '1GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_2gb',
-    name: '2GB Corporate',
-    size: '2GB',
-    duration: '30 Days',
-    price: 900,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '2GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_3gb',
-    name: '3GB Corporate',
-    size: '3GB',
-    duration: '30 Days',
-    price: 1350,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '3GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_5gb',
-    name: '5GB Corporate',
-    size: '5GB',
-    duration: '30 Days',
-    price: 2250,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '5GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_10gb',
-    name: '10GB Corporate',
-    size: '10GB',
-    duration: '30 Days',
-    price: 4500,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '10GB Corporate for 30 days',
-    validity: '30 days'
-  },
-
-  // 9mobile SME Plans
-  {
-    id: '9mobile_sme_200mb',
-    name: '200MB Corporate',
-    size: '200MB',
-    duration: '30 Days',
-    price: 95,
-    network: '9mobile',
-    type: 'SME',
-    description: '200MB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_500mb',
-    name: '500MB Corporate',
-    size: '500MB',
-    duration: '30 Days',
-    price: 230,
-    network: '9mobile',
-    type: 'SME',
-    description: '500MB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_1gb',
-    name: '1GB Corporate',
-    size: '1GB',
-    duration: '30 Days',
-    price: 450,
-    network: '9mobile',
-    type: 'SME',
-    description: '1GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_2gb',
-    name: '2GB Corporate',
-    size: '2GB',
-    duration: '30 Days',
-    price: 900,
-    network: '9mobile',
-    type: 'SME',
-    description: '2GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_3gb',
-    name: '3GB Corporate',
-    size: '3GB',
-    duration: '30 Days',
-    price: 1350,
-    network: '9mobile',
-    type: 'SME',
-    description: '3GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_5gb',
-    name: '5GB Corporate',
-    size: '5GB',
-    duration: '30 Days',
-    price: 2250,
-    network: '9mobile',
-    type: 'SME',
-    description: '5GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_10gb',
-    name: '10GB Corporate',
-    size: '10GB',
-    duration: '30 Days',
-    price: 4500,
-    network: '9mobile',
-    type: 'SME',
-    description: '10GB Corporate for 30 days',
-    validity: '30 days'
-  },
-]
+type ViewMode = 'card' | 'table'
 
 const DataPlans: React.FC = () => {
-  const [dataPlans, setDataPlans] = useState<DataPlan[]>(initialDataPlans)
-  const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null)
-  const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
+  // State for networks and data plans
+  const [networks, setNetworks] = useState<OtoBillNetwork[]>([])
+  const [dataPlans, setDataPlans] = useState<OtoBillDataPlan[]>([])
+  const [dataPlansWithPricing, setDataPlansWithPricing] = useState<OtoBillDataPlanWithPricing[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingNetworks, setIsLoadingNetworks] = useState(false)
+  const [isLoadingPricing, setIsLoadingPricing] = useState(false)
+  
+  // Pricing summary state
+  const [pricingSummary, setPricingSummary] = useState<OtoBillPricingSummary | null>(null)
+  
+  // Filter states
+  const [selectedNetwork, setSelectedNetwork] = useState<OtoBillNetwork | null>(null)
+  const [selectedPlanType, setSelectedPlanType] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
+  
+  // UI states
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false)
-  const [showDataTypeDropdown, setShowDataTypeDropdown] = useState(false)
+  const [showPlanTypeDropdown, setShowPlanTypeDropdown] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [editingPlan, setEditingPlan] = useState<string | null>(null)
   const [editPrice, setEditPrice] = useState<number>(0)
-  const [isLoading, setIsLoading] = useState(false)
+  const [editingPricingPlan, setEditingPricingPlan] = useState<string | null>(null)
+  const [editAdminPrice, setEditAdminPrice] = useState<number>(0)
   
-  // Add New Plan Modal States
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [newPlan, setNewPlan] = useState({
-    network: '',
-    type: '',
-    name: '',
-    size: '',
-    duration: '',
-    price: 0,
-    description: '',
-    validity: ''
-  })
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalPlans, setTotalPlans] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrev, setHasPrev] = useState(false)
 
-  const availableDataTypes = selectedNetwork 
-    ? dataTypes.filter(type => type.network === selectedNetwork.name)
-    : []
+  // Available plan types for MTN (based on your API examples)
+  const availablePlanTypes = ['Corporate', 'SME', 'Gifting']
 
-  const filteredPlans = dataPlans.filter(plan => {
-    const matchesNetwork = !selectedNetwork || plan.network === selectedNetwork.name
-    const matchesType = !selectedDataType || plan.type === selectedDataType.name
-    const matchesSearch = !searchTerm || 
-      plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plan.size.toLowerCase().includes(searchTerm.toLowerCase())
+  // Fetch networks on component mount
+  useEffect(() => {
+    fetchNetworks()
+    fetchPricingSummary()
+  }, [])
+
+  // Fetch all data plans when networks are loaded and no filters are selected
+  useEffect(() => {
+    if (networks.length > 0 && !selectedNetwork && !selectedPlanType) {
+      fetchAllDataPlans()
+    }
+  }, [networks, selectedNetwork, selectedPlanType])
+
+  // Fetch data plans when filters change
+  useEffect(() => {
+    if (selectedNetwork && selectedPlanType) {
+      // Fetch specific network and plan type with pricing
+      fetchDataPlansWithPricing()
+    } else if (!selectedNetwork && !selectedPlanType) {
+      // Fetch all data plans when no filters are selected
+      fetchAllDataPlans()
+    }
+  }, [selectedNetwork, selectedPlanType, currentPage])
+
+  const fetchNetworks = async () => {
+    setIsLoadingNetworks(true)
+    try {
+      const response = await apiService.getOtoBillNetworks()
+      if (response.success) {
+        setNetworks(response.data)
+      } else {
+        toast.error(response.message || 'Failed to fetch networks')
+      }
+    } catch (error: any) {
+      console.error('Error fetching networks:', error)
+      toast.error(error.message || 'Failed to fetch networks')
+    } finally {
+      setIsLoadingNetworks(false)
+    }
+  }
+
+  const fetchPricingSummary = async () => {
+    try {
+      const response = await apiService.getOtoBillPricingSummary()
+      if (response.success) {
+        setPricingSummary(response.data)
+      } else {
+        console.warn('Failed to fetch pricing summary:', response.message)
+      }
+    } catch (error: any) {
+      console.warn('Error fetching pricing summary:', error)
+      // Don't show error toast for pricing summary as it's not critical
+    }
+  }
+
+  const fetchAllDataPlans = async () => {
+    setIsLoading(true)
+    try {
+      const allPlans: OtoBillDataPlan[] = []
+      let totalPlansCount = 0
+
+      // Fetch data plans for each network and plan type combination
+      for (const network of networks) {
+        for (const planType of availablePlanTypes) {
+          try {
+            const response = await apiService.getOtoBillDataPlansByNetwork(
+              network.name,
+              planType,
+              1,
+              100 // Get more plans per request to reduce API calls
+            )
+            
+            if (response.success && response.data.plans.length > 0) {
+              allPlans.push(...response.data.plans)
+              totalPlansCount += response.data.total
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch ${planType} plans for ${network.name}:`, error)
+            // Continue with other combinations even if one fails
+          }
+        }
+      }
+
+      // Sort plans by network, then by plan type, then by price
+      const sortedPlans = allPlans.sort((a, b) => {
+        // First sort by network
+        if (a.networkName !== b.networkName) {
+          return a.networkName.localeCompare(b.networkName)
+        }
+        // Then by plan type
+        if (a.planType !== b.planType) {
+          return a.planType.localeCompare(b.planType)
+        }
+        // Then by price (ascending)
+        return a.price - b.price
+      })
+
+      setDataPlans(sortedPlans)
+      setTotalPlans(totalPlansCount)
+      setTotalPages(1) // Since we're fetching all at once
+      setHasNext(false)
+      setHasPrev(false)
+    } catch (error: any) {
+      console.error('Error fetching all data plans:', error)
+      toast.error('Failed to fetch all data plans')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchDataPlansWithPricing = async () => {
+    if (!selectedNetwork || !selectedPlanType) return
     
-    return matchesNetwork && matchesType && matchesSearch
-  })
+    setIsLoadingPricing(true)
+    try {
+      const response = await apiService.getOtoBillDataPlansPricing(
+        selectedNetwork.name,
+        selectedPlanType,
+        currentPage,
+        20
+      )
+      
+      if (response.success) {
+        setDataPlansWithPricing(response.data.plans)
+        setTotalPages(response.data.pagination.totalPages)
+        setTotalPlans(response.data.pagination.total)
+        setHasNext(response.data.pagination.hasNext)
+        setHasPrev(response.data.pagination.hasPrev)
+      } else {
+        toast.error(response.message || 'Failed to fetch data plans with pricing')
+      }
+    } catch (error: any) {
+      console.error('Error fetching data plans with pricing:', error)
+      toast.error(error.message || 'Failed to fetch data plans with pricing')
+    } finally {
+      setIsLoadingPricing(false)
+    }
+  }
 
-  const handleNetworkSelect = (network: Network) => {
+  const handleNetworkSelect = (network: OtoBillNetwork) => {
     setSelectedNetwork(network)
-    setSelectedDataType(null)
+    setSelectedPlanType('')
+    setDataPlans([])
+    setCurrentPage(1)
     setShowNetworkDropdown(false)
   }
 
-  const handleDataTypeSelect = (dataType: DataType) => {
-    setSelectedDataType(dataType)
-    setShowDataTypeDropdown(false)
+  const handlePlanTypeSelect = (planType: string) => {
+    setSelectedPlanType(planType)
+    setCurrentPage(1)
+    setShowPlanTypeDropdown(false)
   }
 
   const handleEditStart = (planId: string, currentPrice: number) => {
@@ -773,7 +226,7 @@ const DataPlans: React.FC = () => {
 
     setIsLoading(true)
     try {
-      // Simulate API call
+      // TODO: Implement API call to update price
       await new Promise(resolve => setTimeout(resolve, 1000))
       
       setDataPlans(prev => prev.map(plan => 
@@ -790,92 +243,151 @@ const DataPlans: React.FC = () => {
     }
   }
 
-  const formatAmount = (amount: number) => {
-    return `₦${amount.toLocaleString()}`
+  const handlePricingEditStart = (planId: string, currentAdminPrice: number) => {
+    setEditingPricingPlan(planId)
+    setEditAdminPrice(currentAdminPrice)
+  }
+
+  const handlePricingEditCancel = () => {
+    setEditingPricingPlan(null)
+    setEditAdminPrice(0)
+  }
+
+  const handlePricingEditSave = async (planId: string) => {
+    if (editAdminPrice <= 0) {
+      toast.error('Admin price must be greater than 0')
+      return
+    }
+
+    setIsLoadingPricing(true)
+    try {
+      const response = await apiService.updateOtoBillDataPlanPricing(planId, editAdminPrice)
+      
+      if (response.success) {
+        // Update the local state with the new pricing data
+        setDataPlansWithPricing(prev => prev.map(plan => 
+          plan.planId === planId ? {
+            ...plan,
+            adminPrice: response.data.adminPrice,
+            profit: response.data.profit
+          } : plan
+        ))
+        
+        setEditingPricingPlan(null)
+        setEditAdminPrice(0)
+        toast.success('Data plan pricing updated successfully!')
+        
+        // Refresh pricing summary to get updated counts
+        fetchPricingSummary()
+      } else {
+        toast.error(response.message || 'Failed to update pricing')
+      }
+    } catch (error: any) {
+      console.error('Error updating pricing:', error)
+      toast.error(error.message || 'Failed to update pricing. Please try again.')
+    } finally {
+      setIsLoadingPricing(false)
+    }
+  }
+
+  const getProfitColor = (profit: number) => {
+    if (profit > 0) return 'text-green-600'
+    if (profit < 0) return 'text-red-600'
+    return 'text-gray-600'
+  }
+
+  const getProfitIcon = (profit: number) => {
+    if (profit > 0) return '↗️'
+    if (profit < 0) return '↘️'
+    return '→'
   }
 
   const clearFilters = () => {
     setSelectedNetwork(null)
-    setSelectedDataType(null)
+    setSelectedPlanType('')
     setSearchTerm('')
+    setDataPlans([])
+    setCurrentPage(1)
+    // Fetch all data plans when filters are cleared
+    fetchAllDataPlans()
   }
 
-  // Add New Plan Handlers
-  const handleAddPlanClick = () => {
-    setNewPlan({
-      network: '',
-      type: '',
-      name: '',
-      size: '',
-      duration: '',
-      price: 0,
-      description: '',
-      validity: ''
-    })
-    setShowAddModal(true)
-  }
+  const filteredPlans = dataPlans.filter(plan => {
+    if (!searchTerm) return true
+    return plan.name.toLowerCase().includes(searchTerm.toLowerCase())
+  })
 
-  const handleAddPlanCancel = () => {
-    setShowAddModal(false)
-    setNewPlan({
-      network: '',
-      type: '',
-      name: '',
-      size: '',
-      duration: '',
-      price: 0,
-      description: '',
-      validity: ''
-    })
-  }
+  const filteredPlansWithPricing = dataPlansWithPricing.filter(plan => {
+    if (!searchTerm) return true
+    return plan.name.toLowerCase().includes(searchTerm.toLowerCase())
+  })
 
-  const handleAddPlanSave = async () => {
-    // Validation
-    if (!newPlan.network || !newPlan.type || !newPlan.name || !newPlan.size || 
-        !newPlan.duration || newPlan.price <= 0 || !newPlan.description || !newPlan.validity) {
-      toast.error('Please fill in all fields')
-      return
+  // Use appropriate data source based on context
+  const getDisplayPlans = () => {
+    if (selectedNetwork && selectedPlanType) {
+      return filteredPlansWithPricing
     }
+    return filteredPlans
+  }
 
-    setIsLoading(true)
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const plan: DataPlan = {
-        id: `new_plan_${Date.now()}`,
-        network: newPlan.network,
-        type: newPlan.type,
-        name: newPlan.name,
-        size: newPlan.size,
-        duration: newPlan.duration,
-        price: newPlan.price,
-        description: newPlan.description,
-        validity: newPlan.validity
-      }
-      
-      setDataPlans(prev => [...prev, plan])
-      setShowAddModal(false)
-      setNewPlan({
-        network: '',
-        type: '',
-        name: '',
-        size: '',
-        duration: '',
-        price: 0,
-        description: '',
-        validity: ''
-      })
-      toast.success('New data plan added successfully!')
-    } catch (error) {
-      toast.error('Failed to add data plan. Please try again.')
-    } finally {
-      setIsLoading(false)
+  // Helper function to get plan ID
+  const getPlanId = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
+    return plan.planId
+  }
+
+  // Helper function to get plan price
+  const getPlanPrice = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
+    if ('adminPrice' in plan) {
+      return plan.adminPrice
+    }
+    return plan.price
+  }
+
+  // Helper function to get formatted price
+  const getFormattedPrice = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
+    if ('formattedPrice' in plan) {
+      return plan.formattedPrice
+    }
+    return `₦${getPlanPrice(plan).toLocaleString()}`
+  }
+
+  // Helper function to get profit
+  const getPlanProfit = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
+    if ('profit' in plan) {
+      return plan.profit
+    }
+    return 0
+  }
+
+  // Helper function to get formatted profit
+  const getFormattedProfit = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
+    if ('formattedProfit' in plan) {
+      return plan.formattedProfit
+    }
+    const profit = getPlanProfit(plan)
+    return profit > 0 ? `+₦${profit.toLocaleString()}` : `₦${profit.toLocaleString()}`
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const refreshData = () => {
+    if (selectedNetwork && selectedPlanType) {
+      fetchDataPlansWithPricing()
+    } else if (!selectedNetwork && !selectedPlanType) {
+      fetchAllDataPlans()
     }
   }
 
-  const getAvailableTypesForNetwork = (networkName: string) => {
-    return dataTypes.filter(type => type.network === networkName)
+  const getNetworkLogo = (networkName: string) => {
+    const logos: { [key: string]: string } = {
+      'MTN': '🟡',
+      'AIRTEL': '🔴',
+      'GLO': '🟢',
+      '9MOBILE': '🟢'
+    }
+    return logos[networkName] || '📱'
   }
 
   return (
@@ -888,17 +400,75 @@ const DataPlans: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-base text-gray-500">
-            Total Plans: <span className="font-semibold text-gray-900">{filteredPlans.length}</span>
+            Total Plans: <span className="font-semibold text-gray-900">{totalPlans}</span>
           </div>
           <Button
-            onClick={handleAddPlanClick}
-            className="bg-primary hover:bg-primary/90 text-white"
+            onClick={refreshData}
+            disabled={isLoading}
+            variant="outline"
+            className="flex items-center gap-2"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Plan
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
         </div>
       </div>
+
+      {/* Pricing Summary */}
+      {pricingSummary && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Activity className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Networks</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {pricingSummary.networks.active}/{pricingSummary.networks.total}
+                  </p>
+                  <p className="text-xs text-gray-500">Active/Total</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Wifi className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Data Plans</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {pricingSummary.dataPlans.visible}/{pricingSummary.dataPlans.total}
+                  </p>
+                  <p className="text-xs text-gray-500">Visible/Total</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <DollarSign className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Airtime Pricing</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {pricingSummary.airtimePricing.active}/{pricingSummary.airtimePricing.total}
+                  </p>
+                  <p className="text-xs text-gray-500">Active/Total</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <Card>
@@ -908,7 +478,7 @@ const DataPlans: React.FC = () => {
             Filters & Search
           </CardTitle>
           <CardDescription>
-            Filter data plans by network, type, or search by name
+            Filter data plans by network and plan type
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -933,11 +503,11 @@ const DataPlans: React.FC = () => {
                 <div className="flex items-center gap-2">
                   {selectedNetwork ? (
                     <>
-                      <span className="text-lg">{selectedNetwork.logo}</span>
+                      <span className="text-lg">{getNetworkLogo(selectedNetwork.name)}</span>
                       <span className="font-medium">{selectedNetwork.name}</span>
                     </>
                   ) : (
-                    <span className="text-gray-500">All Networks</span>
+                    <span className="text-gray-500">Select Network</span>
                   )}
                 </div>
                 <ChevronDown className={`w-4 h-4 transition-transform ${showNetworkDropdown ? 'rotate-180' : ''}`} />
@@ -947,73 +517,64 @@ const DataPlans: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
+                  className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                 >
-                  <button
-                    onClick={() => {
-                      setSelectedNetwork(null)
-                      setSelectedDataType(null)
-                      setShowNetworkDropdown(false)
-                    }}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-100"
-                  >
-                    <span className="font-medium text-gray-600">All Networks</span>
-                  </button>
-                  {networks.map((network) => (
-                    <button
-                      key={network.id}
-                      onClick={() => handleNetworkSelect(network)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
-                    >
-                      <span className="text-lg">{network.logo}</span>
-                      <span className="font-medium">{network.name}</span>
-                    </button>
-                  ))}
+                  {isLoadingNetworks ? (
+                    <div className="p-3 text-center text-gray-500">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent mx-auto mb-2"></div>
+                      Loading networks...
+                    </div>
+                  ) : (
+                    <>
+                      {networks.map((network) => (
+                        <button
+                          key={network.id}
+                          onClick={() => handleNetworkSelect(network)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="text-lg">{getNetworkLogo(network.name)}</span>
+                          <span className="font-medium">{network.name}</span>
+                          <span className={`ml-auto w-2 h-2 rounded-full ${network.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                        </button>
+                      ))}
+                    </>
+                  )}
                 </motion.div>
               )}
             </div>
 
-            {/* Data Type Filter */}
+            {/* Plan Type Filter */}
             <div className="relative">
               <button
-                onClick={() => setShowDataTypeDropdown(!showDataTypeDropdown)}
+                onClick={() => setShowPlanTypeDropdown(!showPlanTypeDropdown)}
                 className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors"
                 disabled={!selectedNetwork}
               >
                 <div className="flex items-center gap-2">
-                  {selectedDataType ? (
-                    <span className="font-medium">{selectedDataType.name}</span>
+                  {selectedPlanType ? (
+                    <span className="font-medium">{selectedPlanType}</span>
                   ) : (
                     <span className="text-gray-500">
-                      {selectedNetwork ? 'All Types' : 'Select Network First'}
+                      {selectedNetwork ? 'Select Plan Type' : 'Select Network First'}
                     </span>
                   )}
                 </div>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showDataTypeDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 transition-transform ${showPlanTypeDropdown ? 'rotate-180' : ''}`} />
               </button>
               
-              {showDataTypeDropdown && selectedNetwork && (
+              {showPlanTypeDropdown && selectedNetwork && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
                 >
-                  <button
-                    onClick={() => {
-                      setSelectedDataType(null)
-                      setShowDataTypeDropdown(false)
-                    }}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-100"
-                  >
-                    <span className="font-medium text-gray-600">All Types</span>
-                  </button>
-                  {availableDataTypes.map((dataType) => (
+                  {availablePlanTypes.map((planType) => (
                     <button
-                      key={dataType.id}
-                      onClick={() => handleDataTypeSelect(dataType)}
+                      key={planType}
+                      onClick={() => handlePlanTypeSelect(planType)}
                       className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
                     >
-                      <span className="font-medium">{dataType.name}</span>
+                      <span className="font-medium">{planType}</span>
                     </button>
                   ))}
                 </motion.div>
@@ -1032,309 +593,622 @@ const DataPlans: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Data Plans List */}
-      <div className="grid grid-cols-1 gap-6">
-        {networks.map((network) => {
-          const networkPlans = filteredPlans.filter(plan => plan.network === network.name)
+      {/* View Mode Toggle */}
+      {(selectedNetwork && selectedPlanType) || (!selectedNetwork && !selectedPlanType && dataPlans.length > 0) ? (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">View Mode:</span>
+            <div className="flex border border-gray-300 rounded-lg">
+              <button
+                onClick={() => setViewMode('card')}
+                className={`px-3 py-2 text-sm font-medium transition-colors ${
+                  viewMode === 'card' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Grid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-3 py-2 text-sm font-medium transition-colors ${
+                  viewMode === 'table' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
           
-          if (networkPlans.length === 0 && (selectedNetwork || searchTerm)) return null
+          {/* Pagination Info */}
+          <div className="text-sm text-gray-500">
+            {selectedNetwork && selectedPlanType ? (
+              `Page ${currentPage} of ${totalPages} • ${totalPlans} total plans`
+            ) : (
+              `${totalPlans} total plans across all networks`
+            )}
+          </div>
+        </div>
+      ) : null}
 
-          return (
-            <motion.div
-              key={network.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
-                    <span className="text-2xl">{network.logo}</span>
-                    <span>{network.name} Data Plans</span>
-                    <span className="text-base font-normal text-gray-500">
-                      ({networkPlans.length} plans)
-                    </span>
-                  </CardTitle>
-                  <CardDescription>
-                    Manage {network.name} data plan pricing and availability
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {networkPlans.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      No plans found for the selected filters
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {/* Group by data type */}
-                      {dataTypes
-                        .filter(type => type.network === network.name)
-                        .map((dataType) => {
-                          const typePlans = networkPlans.filter(plan => plan.type === dataType.name)
+      {/* Data Plans Display */}
+      {selectedNetwork && selectedPlanType ? (
+        <div className="space-y-6">
+          {/* Network Header */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <span className="text-2xl">{getNetworkLogo(selectedNetwork.name)}</span>
+                <span>{selectedNetwork.name} {selectedPlanType} Data Plans</span>
+                <span className="text-base font-normal text-gray-500">
+                  ({totalPlans} plans)
+                </span>
+              </CardTitle>
+              <CardDescription>
+                Manage {selectedNetwork.name} {selectedPlanType} data plan pricing and availability
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          {/* Loading State */}
+          {isLoadingPricing && (
+            <Card>
+              <CardContent className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading data plans with pricing...</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Data Plans Content */}
+          {!isLoadingPricing && (
+            <>
+              {/* Card View */}
+              {viewMode === 'card' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {dataPlansWithPricing.map((plan) => (
+                    <motion.div
+                      key={plan.planId}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors bg-white"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 text-base">
+                            {plan.name}
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            {plan.planType} • {plan.validityDays} days
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-gray-500 mt-2">
+                            <span className="flex items-center gap-1">
+                              <Download className="w-3 h-3" />
+                              {plan.name.includes('GB') ? plan.name.split(' ')[0] : plan.name.split(' ')[0]}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {plan.validityDays} days
+                            </span>
+                          </div>
                           
-                          if (typePlans.length === 0) return null
+                          {/* Pricing Information */}
+                          <div className="mt-3 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Original Price:</span>
+                              <span className="font-medium text-gray-900">₦{plan.originalPrice.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Admin Price:</span>
+                              <span className="font-medium text-primary">₦{plan.adminPrice.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Profit:</span>
+                              <span className={`font-medium ${getProfitColor(plan.profit)}`}>
+                                {getProfitIcon(plan.profit)} ₦{plan.profit.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 ml-3">
+                          {editingPricingPlan === plan.planId ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                value={editAdminPrice}
+                                onChange={(e) => setEditAdminPrice(Number(e.target.value))}
+                                className="w-20 h-8 text-base"
+                                min="1"
+                                placeholder="Price"
+                              />
+                              <button
+                                onClick={() => handlePricingEditSave(plan.planId)}
+                                disabled={isLoadingPricing}
+                                className="p-1 text-green-600 hover:text-green-700 transition-colors"
+                              >
+                                <Save className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={handlePricingEditCancel}
+                                disabled={isLoadingPricing}
+                                className="p-1 text-gray-500 hover:text-gray-600 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handlePricingEditStart(plan.planId, plan.adminPrice)}
+                              className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
+                              title="Edit Admin Price"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Status Indicator */}
+                      <div className="mt-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${plan.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                          <span className="text-xs text-gray-500">
+                            {plan.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Last synced: {new Date(plan.lastSynced).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
 
-                          return (
-                            <div key={dataType.id} className="space-y-2">
-                              <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-                                <Wifi className="w-4 h-4 text-primary" />
-                                <span className="font-semibold text-gray-700">{dataType.name} Plans</span>
-                                <span className="text-sm text-gray-500">({typePlans.length})</span>
-                              </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {typePlans.map((plan) => (
-                                  <div
-                                    key={plan.id}
-                                    className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+              {/* Table View */}
+              {viewMode === 'table' && (
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Plan Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Type
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Validity
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Original Price
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Admin Price
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Profit
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Status
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {dataPlansWithPricing.map((plan) => (
+                            <tr key={plan.planId} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">{plan.name}</div>
+                                <div className="text-sm text-gray-500">ID: {plan.planId}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                  {plan.planType}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {plan.validityDays} days
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ₦{plan.originalPrice.toLocaleString()}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {editingPricingPlan === plan.planId ? (
+                                  <Input
+                                    type="number"
+                                    value={editAdminPrice}
+                                    onChange={(e) => setEditAdminPrice(Number(e.target.value))}
+                                    className="w-24 h-8 text-sm"
+                                    min="1"
+                                    placeholder="Price"
+                                  />
+                                ) : (
+                                  <div className="text-sm font-medium text-primary">
+                                    ₦{plan.adminPrice.toLocaleString()}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                <span className={`font-medium ${getProfitColor(plan.profit)}`}>
+                                  {getProfitIcon(plan.profit)} ₦{plan.profit.toLocaleString()}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                  <span className={`w-2 h-2 rounded-full ${plan.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                  <span className="text-sm text-gray-900">
+                                    {plan.isActive ? 'Active' : 'Inactive'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                {editingPricingPlan === plan.planId ? (
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handlePricingEditSave(plan.planId)}
+                                      disabled={isLoadingPricing}
+                                      className="text-green-600 hover:text-green-700"
+                                    >
+                                      <Save className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={handlePricingEditCancel}
+                                      disabled={isLoadingPricing}
+                                      className="text-gray-500 hover:text-gray-600"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => handlePricingEditStart(plan.planId, plan.adminPrice)}
+                                    className="text-blue-600 hover:text-blue-700"
+                                    title="Edit Admin Price"
                                   >
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1">
-                                                                              <div className="font-medium text-gray-900 text-base">
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-700">
+                        Showing page {currentPage} of {totalPages}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={!hasPrev || isLoading}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={!hasNext || isLoading}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+        </div>
+      ) : (
+        /* Comprehensive Overview - All Networks and Plan Types */
+        <div className="space-y-6">
+          {/* Overview Header */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Wifi className="w-6 h-6" />
+                <span>All Networks Data Plans Overview</span>
+                <span className="text-base font-normal text-gray-500">
+                  ({totalPlans} total plans)
+                </span>
+              </CardTitle>
+              <CardDescription>
+                Comprehensive view of all data plans across all networks and plan types
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          {/* Loading State */}
+          {isLoading && (
+            <Card>
+              <CardContent className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading all data plans...</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* All Data Plans Content */}
+          {!isLoading && getDisplayPlans().length > 0 && (
+            <>
+              {/* Card View */}
+              {viewMode === 'card' && (
+                <div className="space-y-8">
+                  {/* Group by Network */}
+                  {Array.from(new Set(getDisplayPlans().map(plan => plan.networkName))).map((networkName) => (
+                    <div key={networkName} className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{getNetworkLogo(networkName)}</span>
+                        <h3 className="text-xl font-semibold text-gray-900">{networkName}</h3>
+                      </div>
+                      
+                      {/* Group by Plan Type within Network */}
+                      {Array.from(new Set(getDisplayPlans().filter(plan => plan.networkName === networkName).map(plan => plan.planType))).map((planType) => {
+                        const networkTypePlans = getDisplayPlans().filter(plan => 
+                          plan.networkName === networkName && plan.planType === planType
+                        )
+                        
+                        return (
+                          <div key={`${networkName}-${planType}`} className="ml-6 space-y-3">
+                            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                              <Wifi className="w-4 h-4 text-primary" />
+                              <span className="font-semibold text-gray-700">{planType} Plans</span>
+                              <span className="text-sm text-gray-500">({networkTypePlans.length})</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {networkTypePlans.map((plan) => (
+                                <motion.div
+                                  key={getPlanId(plan)}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors bg-white"
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="font-medium text-gray-900 text-base">
                                         {plan.name}
                                       </div>
                                       <div className="text-sm text-gray-600 mt-1">
-                                        {plan.description}
+                                        {plan.planType} • {plan.validityDays} days
                                       </div>
                                       <div className="flex items-center gap-3 text-sm text-gray-500 mt-2">
-                                          <span className="flex items-center gap-1">
-                                            <Download className="w-3 h-3" />
-                                            {plan.size}
-                                          </span>
-                                          <span className="flex items-center gap-1">
-                                            <Clock className="w-3 h-3" />
-                                            {plan.validity}
-                                          </span>
-                                        </div>
+                                        <span className="flex items-center gap-1">
+                                          <Download className="w-3 h-3" />
+                                          {plan.name.includes('GB') ? plan.name.split(' ')[0] : plan.name.split(' ')[0]}
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                          <Clock className="w-3 h-3" />
+                                          {plan.validityDays} days
+                                        </span>
                                       </div>
-                                      <div className="flex items-center gap-2 ml-3">
-                                        {editingPlan === plan.id ? (
-                                          <div className="flex items-center gap-2">
-                                            <Input
-                                              type="number"
-                                              value={editPrice}
-                                              onChange={(e) => setEditPrice(Number(e.target.value))}
-                                                                                              className="w-20 h-8 text-base"
-                                              min="1"
-                                            />
-                                            <button
-                                              onClick={() => handleEditSave(plan.id)}
-                                              disabled={isLoading}
-                                              className="p-1 text-green-600 hover:text-green-700 transition-colors"
-                                            >
-                                              <Save className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                              onClick={handleEditCancel}
-                                              disabled={isLoading}
-                                              className="p-1 text-gray-500 hover:text-gray-600 transition-colors"
-                                            >
-                                              <X className="w-4 h-4" />
-                                            </button>
+                                      
+                                      {/* Pricing Information - Show if available */}
+                                      {'adminPrice' in plan && (
+                                        <div className="mt-3 space-y-2">
+                                          <div className="flex items-center justify-between text-sm">
+                                            <span className="text-gray-600">Original Price:</span>
+                                            <span className="font-medium text-gray-900">₦{plan.originalPrice.toLocaleString()}</span>
                                           </div>
-                                        ) : (
-                                          <div className="flex items-center gap-2">
-                                            <div className="text-right">
-                                                                                      <div className="font-bold text-primary text-base">
-                                          {formatAmount(plan.price)}
+                                          <div className="flex items-center justify-between text-sm">
+                                            <span className="text-gray-600">Admin Price:</span>
+                                            <span className="font-medium text-primary">₦{plan.adminPrice.toLocaleString()}</span>
+                                          </div>
+                                          <div className="flex items-center justify-between text-sm">
+                                            <span className="text-gray-600">Profit:</span>
+                                            <span className={`font-medium ${getProfitColor(plan.profit)}`}>
+                                              {getProfitIcon(plan.profit)} ₦{plan.profit.toLocaleString()}
+                                            </span>
+                                          </div>
                                         </div>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2 ml-3">
+                                      {editingPlan === getPlanId(plan) ? (
+                                        <div className="flex items-center gap-2">
+                                          <Input
+                                            type="number"
+                                            value={editPrice}
+                                            onChange={(e) => setEditPrice(Number(e.target.value))}
+                                            className="w-20 h-8 text-base"
+                                            min="1"
+                                          />
+                                          <button
+                                            onClick={() => handleEditSave(getPlanId(plan))}
+                                            disabled={isLoading}
+                                            className="p-1 text-green-600 hover:text-green-700 transition-colors"
+                                          >
+                                            <Save className="w-4 h-4" />
+                                          </button>
+                                          <button
+                                            onClick={handleEditCancel}
+                                            disabled={isLoading}
+                                            className="p-1 text-gray-500 hover:text-gray-600 transition-colors"
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-2">
+                                          <div className="text-right">
+                                            <div className="font-bold text-primary text-base">
+                                              {getFormattedPrice(plan)}
                                             </div>
-                                            <button
-                                              onClick={() => handleEditStart(plan.id, plan.price)}
-                                              className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
-                                            >
-                                              <Edit className="w-4 h-4" />
-                                            </button>
+                                            {'profit' in plan && getPlanProfit(plan) > 0 && (
+                                              <div className="text-xs text-green-600">
+                                                +{getFormattedProfit(plan)}
+                                              </div>
+                                            )}
                                           </div>
-                                        )}
-                                      </div>
+                                          <button
+                                            onClick={() => handleEditStart(getPlanId(plan), 'price' in plan ? plan.price : plan.adminPrice)}
+                                            className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
+                                          >
+                                            <Edit className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
-                                ))}
-                              </div>
+                                </motion.div>
+                              ))}
                             </div>
-                          )
-                        })}
+                          </div>
+                        )
+                      })}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          )
-        })}
-      </div>
+                  ))}
+                </div>
+              )}
 
-      {filteredPlans.length === 0 && (selectedNetwork || selectedDataType || searchTerm) && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Wifi className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Plans Found</h3>
-            <p className="text-gray-500 mb-4">
-              No data plans match your current filters. Try adjusting your search criteria.
-            </p>
-            <Button onClick={clearFilters}>Clear All Filters</Button>
-          </CardContent>
-        </Card>
+              {/* Table View */}
+              {viewMode === 'table' && (
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Network
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Plan Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Type
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Validity
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Price
+                            </th>
+                            {getDisplayPlans().some(plan => 'adminPrice' in plan) && (
+                              <>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Admin Price
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Profit
+                                </th>
+                              </>
+                            )}
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {getDisplayPlans().map((plan) => (
+                            <tr key={getPlanId(plan)} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">{getNetworkLogo(plan.networkName)}</span>
+                                  <span className="text-sm font-medium text-gray-900">{plan.networkName}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">{plan.name}</div>
+                                <div className="text-sm text-gray-500">ID: {getPlanId(plan)}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                  {plan.planType}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {plan.validityDays} days
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {getFormattedPrice(plan)}
+                              </td>
+                              {getDisplayPlans().some(p => 'adminPrice' in p) && (
+                                <>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {'adminPrice' in plan ? `₦${plan.adminPrice.toLocaleString()}` : '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    {'profit' in plan ? (
+                                      <span className={`font-medium ${getProfitColor(plan.profit)}`}>
+                                        {getProfitIcon(plan.profit)} ₦{plan.profit.toLocaleString()}
+                                      </span>
+                                    ) : '-'}
+                                  </td>
+                                </>
+                              )}
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button
+                                  onClick={() => handleEditStart(getPlanId(plan), 'price' in plan ? plan.price : plan.adminPrice)}
+                                  className="text-blue-600 hover:text-blue-700"
+                                  title="Edit Price"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+
+          {/* No Data State */}
+          {!isLoading && getDisplayPlans().length === 0 && (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Wifi className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Plans Available</h3>
+                <p className="text-gray-500 mb-4">
+                  No data plans are currently available. Please check your API connection or try refreshing.
+                </p>
+                <Button onClick={refreshData}>Refresh Data</Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
-      {/* Add New Plan Modal */}
-      {showAddModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={handleAddPlanCancel}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Add New Data Plan</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleAddPlanCancel}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             {/* Network Selection */}
-               <div className="space-y-2">
-                 <label className="text-base font-medium text-gray-700">Network *</label>
-                <select
-                  value={newPlan.network}
-                  onChange={(e) => setNewPlan(prev => ({ ...prev, network: e.target.value, type: '' }))}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="">Select Network</option>
-                  {networks.map(network => (
-                    <option key={network.id} value={network.name}>{network.name}</option>
-                  ))}
-                </select>
-              </div>
-
-                             {/* Data Type Selection */}
-               <div className="space-y-2">
-                 <label className="text-base font-medium text-gray-700">Data Type *</label>
-                <select
-                  value={newPlan.type}
-                  onChange={(e) => setNewPlan(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  disabled={!newPlan.network}
-                >
-                  <option value="">Select Type</option>
-                  {newPlan.network && getAvailableTypesForNetwork(newPlan.network).map(type => (
-                    <option key={type.id} value={type.name}>{type.name}</option>
-                  ))}
-                </select>
-              </div>
-
-                             {/* Plan Name */}
-               <div className="space-y-2">
-                 <label className="text-base font-medium text-gray-700">Plan Name *</label>
-                <Input
-                  type="text"
-                  placeholder="e.g., 1GB SME"
-                  value={newPlan.name}
-                  onChange={(e) => setNewPlan(prev => ({ ...prev, name: e.target.value }))}
-                />
-              </div>
-
-                             {/* Data Size */}
-               <div className="space-y-2">
-                 <label className="text-base font-medium text-gray-700">Data Size *</label>
-                <Input
-                  type="text"
-                  placeholder="e.g., 1GB, 500MB"
-                  value={newPlan.size}
-                  onChange={(e) => setNewPlan(prev => ({ ...prev, size: e.target.value }))}
-                />
-              </div>
-
-                             {/* Duration */}
-               <div className="space-y-2">
-                 <label className="text-base font-medium text-gray-700">Duration *</label>
-                <Input
-                  type="text"
-                  placeholder="e.g., 30 Days, 7 Days"
-                  value={newPlan.duration}
-                  onChange={(e) => setNewPlan(prev => ({ ...prev, duration: e.target.value }))}
-                />
-              </div>
-
-                             {/* Price */}
-               <div className="space-y-2">
-                 <label className="text-base font-medium text-gray-700">Price (₦) *</label>
-                <Input
-                  type="number"
-                  placeholder="Enter price in Naira"
-                  value={newPlan.price}
-                  onChange={(e) => setNewPlan(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
-                  icon={<Banknote className="w-4 h-4" />}
-                />
-              </div>
-
-                             {/* Validity */}
-               <div className="space-y-2">
-                 <label className="text-base font-medium text-gray-700">Validity *</label>
-                <Input
-                  type="text"
-                  placeholder="e.g., 30 days, 7 days"
-                  value={newPlan.validity}
-                  onChange={(e) => setNewPlan(prev => ({ ...prev, validity: e.target.value }))}
-                />
-              </div>
-
-                             {/* Description - Full Width */}
-               <div className="md:col-span-2 space-y-2">
-                 <label className="text-base font-medium text-gray-700">Description *</label>
-                <Input
-                  type="text"
-                  placeholder="e.g., 1GB for 30 days"
-                  value={newPlan.description}
-                  onChange={(e) => setNewPlan(prev => ({ ...prev, description: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
-              <Button
-                variant="outline"
-                onClick={handleAddPlanCancel}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddPlanSave}
-                disabled={isLoading}
-                className="bg-primary hover:bg-primary/90 text-white"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Add Plan
-                  </>
-                )}
-              </Button>
-            </div>
-          </motion.div>
-        </motion.div>
+      {/* No Results State */}
+      {selectedNetwork && selectedPlanType && !isLoading && filteredPlans.length === 0 && searchTerm && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Plans Found</h3>
+            <p className="text-gray-500 mb-4">
+              No data plans match your search term "{searchTerm}". Try adjusting your search criteria.
+            </p>
+            <Button onClick={() => setSearchTerm('')}>Clear Search</Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   )
 }
 
-export default DataPlans 
+export default DataPlans
