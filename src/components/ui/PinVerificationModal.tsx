@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, Shield, Eye, EyeOff, X, AlertCircle } from 'lucide-react'
+import { Lock, Shield, Eye, EyeOff, X } from 'lucide-react'
 import { Button } from './Button'
 import { Input } from './Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './Card'
@@ -37,7 +37,6 @@ const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
 }) => {
   const [showPin, setShowPin] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
-  const [attempts, setAttempts] = React.useState(0)
   const { user } = useAuthStore()
 
   const {
@@ -51,39 +50,26 @@ const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
   })
 
   const onSubmit = async (data: PinVerificationFormData) => {
-    if (!user || !user.transferPin) {
-      toast.error('PIN not found. Please set up your PIN first.')
+    if (!user) {
+      toast.error('User not found. Please log in again.')
       return
     }
 
     setIsLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API delay
-      
-      if (data.pin === user.transferPin) {
+      // Check if user has a PIN set locally (from registration)
+      if (user.transferPin && data.pin === user.transferPin) {
         toast.success('PIN verified successfully!')
         reset()
-        setAttempts(0)
         onSuccess()
       } else {
-        const newAttempts = attempts + 1
-        setAttempts(newAttempts)
-        
-        if (newAttempts >= 3) {
-          toast.error('Too many failed attempts. Please reset your PIN.')
-          setError('pin', { 
-            type: 'manual', 
-            message: 'Too many failed attempts. Please reset your PIN.' 
-          })
-        } else {
-          setError('pin', { 
-            type: 'manual', 
-            message: `Incorrect PIN. ${3 - newAttempts} attempts remaining.` 
-          })
-          toast.error(`Incorrect PIN. ${3 - newAttempts} attempts remaining.`)
-        }
+        toast.error('Incorrect PIN. Please try again.')
+        setError('pin', { 
+          type: 'manual', 
+          message: 'Incorrect PIN. Please try again.' 
+        })
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.error('Verification failed. Please try again.')
     } finally {
       setIsLoading(false)
@@ -92,7 +78,6 @@ const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
 
   const handleClose = () => {
     reset()
-    setAttempts(0)
     onClose()
   }
 
@@ -137,40 +122,24 @@ const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
               </CardDescription>
             </CardHeader>
             
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                {attempts >= 3 && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="flex items-start space-x-3">
-                      <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="text-sm font-semibold text-red-700 mb-1">Account Temporarily Locked</h4>
-                        <p className="text-xs text-red-600">
-                          You've exceeded the maximum number of PIN attempts. Please reset your PIN to continue.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div>
+                         <CardContent>
+               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                 <div>
                   <div className="relative">
-                    <Input
-                      label="Transfer PIN"
-                      type={showPin ? 'text' : 'password'}
-                      placeholder="Enter your 4-digit PIN"
-                      error={errors.pin?.message}
-                      {...register('pin')}
-                      icon={<Lock className="h-4 w-4" />}
-                      maxLength={4}
-                      disabled={attempts >= 3}
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 transition-colors"
-                      onClick={() => setShowPin(!showPin)}
-                      disabled={attempts >= 3}
-                    >
+                                         <Input
+                       label="Transfer PIN"
+                       type={showPin ? 'text' : 'password'}
+                       placeholder="Enter your 4-digit PIN"
+                       error={errors.pin?.message}
+                       {...register('pin')}
+                       icon={<Lock className="h-4 w-4" />}
+                       maxLength={4}
+                     />
+                                         <button
+                       type="button"
+                       className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 transition-colors"
+                       onClick={() => setShowPin(!showPin)}
+                     >
                       {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -186,12 +155,12 @@ const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
                   >
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-primary hover:bg-primary/90 text-white transition-all duration-200 shadow-md"
-                    loading={isLoading}
-                    disabled={isLoading || attempts >= 3}
-                  >
+                                     <Button
+                     type="submit"
+                     className="flex-1 bg-primary hover:bg-primary/90 text-white transition-all duration-200 shadow-md"
+                     loading={isLoading}
+                     disabled={isLoading}
+                   >
                     <Shield className="w-4 h-4 mr-2" />
                     Verify PIN
                   </Button>

@@ -1,3 +1,5 @@
+import { clearAdminAuth } from '../utils/auth'
+
 const API_BASE_URL = 'https://api.kirkidata.ng/api/v1'
 
 export interface RegisterRequest {
@@ -331,6 +333,86 @@ export interface DeleteUserResponse {
   timestamp?: string
 }
 
+// Data Purchase Interfaces
+export interface Network {
+  id: string
+  name: string
+  status: string
+  isActive: boolean
+  airtimeMarkup: number
+}
+
+export interface NetworksResponse {
+  success: boolean
+  message: string
+  data?: Network[]
+  timestamp?: string
+}
+
+export interface DataPlanCategoriesResponse {
+  success: boolean
+  message: string
+  data?: string[]
+  timestamp?: string
+}
+
+export interface DataPlan {
+  planId: string
+  name: string
+  networkName: string
+  planType: string
+  validityDays: number
+  price: number
+  formattedPrice: string
+  description: string
+}
+
+export interface DataPlansFilters {
+  networkName: string
+  planType: string
+  sortBy: string
+  sortOrder: string
+}
+
+export interface DataPlansResponse {
+  success: boolean
+  message: string
+  data?: {
+    plans: DataPlan[]
+    total: number
+    page: number
+    pages: number
+    hasNext: boolean
+    hasPrev: boolean
+    filters: DataPlansFilters
+  }
+  timestamp?: string
+}
+
+// Data Purchase Request/Response Interfaces
+export interface DataPurchaseRequest {
+  planId: string
+  phoneNumber: string
+}
+
+export interface DataPurchaseResponse {
+  success: boolean
+  message: string
+  data?: {
+    transactionId: string
+    reference: string
+    amount: number
+    profit: number
+    status: string
+    description: string
+    networkName: string
+    phoneNumber: string
+    planId: string
+    planName: string
+    otobillRef: string
+  }
+  timestamp?: string
+}
 
 
 export interface WalletBalanceResponse {
@@ -630,7 +712,12 @@ class ApiService {
             
             return retryData
           }
-        } catch (refreshError) {
+        } catch (refreshError: any) {
+          // If refresh also fails with 401, clear the tokens
+          if (refreshError.message?.includes('401') || refreshError.message?.includes('Unauthorized')) {
+            console.warn('Token refresh failed with 401, clearing tokens')
+            clearAdminAuth()
+          }
           // If refresh fails, throw the original error
         }
         
@@ -1264,6 +1351,119 @@ class ApiService {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('404')) {
         throw new Error('404: User not found')
+      }
+      throw error
+    }
+  }
+
+  // Data Purchase Methods
+  async getNetworks(): Promise<NetworksResponse> {
+    const accessToken = localStorage.getItem('accessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<NetworksResponse>('/purchases/networks', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getDataPlanCategories(networkName: string): Promise<DataPlanCategoriesResponse> {
+    const accessToken = localStorage.getItem('accessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<DataPlanCategoriesResponse>(`/purchases/data-plans/network/${networkName}/categories`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getDataPlans(
+    networkName: string, 
+    page: number = 1, 
+    sortBy: string = 'price', 
+    sortOrder: string = 'asc'
+  ): Promise<DataPlansResponse> {
+    const accessToken = localStorage.getItem('accessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        sortBy,
+        sortOrder
+      })
+      
+      const response = await this.request<DataPlansResponse>(`/purchases/data-plans/network/${networkName}?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  // Purchase Data
+  async purchaseData(purchaseData: DataPurchaseRequest): Promise<DataPurchaseResponse> {
+    const accessToken = localStorage.getItem('accessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<DataPurchaseResponse>('/purchases/data', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(purchaseData),
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      } else if (error.message?.includes('400')) {
+        throw new Error('Invalid purchase data. Please check your phone number and plan selection.')
+      } else if (error.message?.includes('402')) {
+        throw new Error('Insufficient wallet balance. Please fund your wallet.')
+      } else if (error.message?.includes('409')) {
+        throw new Error('Purchase failed. Please try again.')
       }
       throw error
     }

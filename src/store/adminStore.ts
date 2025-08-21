@@ -3,6 +3,7 @@ import { apiService } from '../services/api'
 import { getVirtualAccountTransactions } from '../features/virtual-accounts/api'
 import toast from 'react-hot-toast'
 import { AdminStats, User, Transaction, WalletLog } from '../types'
+import { clearAdminAuth } from '../utils/auth'
 
 interface Admin {
   id: string
@@ -292,9 +293,7 @@ export const useAdminStore = create<AdminAuthStore>((set, _get) => ({
       // Even if API call fails, we still want to clear local state
     } finally {
       // Clear admin tokens from localStorage
-      localStorage.removeItem('adminAccessToken')
-      localStorage.removeItem('adminRefreshToken')
-      localStorage.removeItem('adminData')
+      clearAdminAuth()
       
       set({
         admin: null,
@@ -409,15 +408,22 @@ export const useAdminStore = create<AdminAuthStore>((set, _get) => ({
         localStorage.setItem('adminData', JSON.stringify(admin))
         return true
       }
-    } catch (error) {
-      // Even if API call fails, if we have tokens, consider admin authenticated
-      // This prevents auto-logout on network issues
-      return true
+    } catch (error: any) {
+      // If we get a 401 error, clear the invalid tokens
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        console.warn('Admin tokens are invalid, clearing them')
+        clearAdminAuth()
+        set({ isAuthenticated: false, admin: null })
+        return false
+      }
+      
+      // For other errors (network issues), keep the tokens but don't set as authenticated
+      console.warn('Admin auth check failed:', error.message)
+      return false
     }
 
-    // If we have tokens, consider admin authenticated regardless of API response
-    set({ isAuthenticated: true })
-    return true
+    // If we have tokens but no API response, don't assume authenticated
+    return false
   },
 
   // Data fetching methods - TODO: Implement these methods in apiService

@@ -33,6 +33,11 @@ export interface Transaction {
   phoneNumber?: string
   network?: string
   dataPlan?: string
+  transactionId?: string
+  otobillRef?: string
+  profit?: number
+  planId?: string
+  planName?: string
   createdAt: string
   updatedAt: string
   metadata?: {

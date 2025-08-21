@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/authStore'
 import { useAdminStore } from './store/adminStore'
+import './utils/devTools' // Import for debugging utilities
 
 // Landing Page
 import Home from './pages/Home'

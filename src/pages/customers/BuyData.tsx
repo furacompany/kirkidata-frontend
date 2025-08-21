@@ -1,760 +1,216 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Wifi, CreditCard, Wallet, CheckCircle, ChevronDown, Phone, 
-  Shield, Clock, Download
+  Shield, Loader2
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useUserStore } from '../../store/userStore'
 import { useAuthStore } from '../../store/authStore'
+import { apiService, DataPlan } from '../../services/api'
 import toast from 'react-hot-toast'
 import PinVerificationModal from '../../components/ui/PinVerificationModal'
 import PinResetModal from '../../components/ui/PinResetModal'
 
-interface Network {
+interface NetworkOption {
   id: string
   name: string
   logo: string
   color: string
+  isActive: boolean
 }
 
-interface DataPlan {
-  id: string
-  name: string
-  size: string
-  duration: string
-  price: number
-  network: string
-  type: string
-  description: string
-  validity: string
+const getNetworkLogo = (networkName: string): string => {
+  switch (networkName.toUpperCase()) {
+    case 'MTN':
+      return '🟡'
+    case 'AIRTEL':
+      return '🔴'
+    case 'GLO':
+      return '🟢'
+    case '9MOBILE':
+      return '🟢'
+    default:
+      return '📱'
+  }
 }
 
-interface DataType {
-  id: string
-  name: string
-  network: string
+const getNetworkColor = (networkName: string): string => {
+  switch (networkName.toUpperCase()) {
+    case 'MTN':
+      return 'bg-yellow-500'
+    case 'AIRTEL':
+      return 'bg-red-500'
+    case 'GLO':
+      return 'bg-green-500'
+    case '9MOBILE':
+      return 'bg-green-600'
+    default:
+      return 'bg-gray-500'
+  }
 }
-
-const networks: Network[] = [
-  { id: 'mtn', name: 'MTN', logo: '🟡', color: 'bg-yellow-500' },
-  { id: 'airtel', name: 'Airtel', logo: '🔴', color: 'bg-red-500' },
-  { id: 'glo', name: 'Glo', logo: '🟢', color: 'bg-green-500' },
-  { id: '9mobile', name: '9mobile', logo: '🟢', color: 'bg-green-600' },
-]
-
-const dataTypes: DataType[] = [
-  // MTN types
-  { id: 'mtn_sme', name: 'SME', network: 'MTN' },
-  { id: 'mtn_corporate', name: 'Corporate', network: 'MTN' },
-  { id: 'mtn_gifting', name: 'Gifting', network: 'MTN' },
-  // Airtel types
-  { id: 'airtel_gifting', name: 'Gifting', network: 'Airtel' },
-  // Glo types
-  { id: 'glo_corporate', name: 'Corporate', network: 'Glo' },
-  // 9mobile types
-  { id: '9mobile_sme', name: 'SME', network: '9mobile' },
-]
-
-const dataPlans: DataPlan[] = [
-  // MTN SME Plans
-  {
-    id: 'mtn_sme_500mb',
-    name: '500MB SME',
-    size: '500MB',
-    duration: '7 Days',
-    price: 500,
-    network: 'MTN',
-    type: 'SME',
-    description: '500MB SME for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_sme_1gb',
-    name: '1GB SME',
-    size: '1GB',
-    duration: '30 Days',
-    price: 700,
-    network: 'MTN',
-    type: 'SME',
-    description: '1GB SME for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_sme_2gb',
-    name: '2GB SME',
-    size: '2GB',
-    duration: '30 Days',
-    price: 1300,
-    network: 'MTN',
-    type: 'SME',
-    description: '2GB SME for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_sme_3gb',
-    name: '3GB SME',
-    size: '3GB',
-    duration: '30 Days',
-    price: 1900,
-    network: 'MTN',
-    type: 'SME',
-    description: '3GB SME for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_sme_5gb',
-    name: '5GB SME',
-    size: '5GB',
-    duration: '30 Days',
-    price: 2500,
-    network: 'MTN',
-    type: 'SME',
-    description: '5GB SME for 30 days',
-    validity: '30 days'
-  },
-
-  // MTN Gifting Plans
-  {
-    id: 'mtn_gifting_75mb',
-    name: '75MB Gifting',
-    size: '75MB',
-    duration: '1 Days',
-    price: 90,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '75MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_gifting_110mb',
-    name: '110MB Gifting',
-    size: '110MB',
-    duration: '1 Days',
-    price: 120,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '110MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_gifting_1gb',
-    name: '1GB Gifting',
-    size: '1GB',
-    duration: '1 Days',
-    price: 500,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1GB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_gifting_2gb',
-    name: '2GB Gifting',
-    size: '2GB',
-    duration: '2 Days',
-    price: 760,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '2GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'mtn_gifting_2_5gb',
-    name: '2.5GB Gifting',
-    size: '2.5GB',
-    duration: '2 Days',
-    price: 900,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '2.5GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'mtn_gifting_3_2gb',
-    name: '3.2GB Gifting',
-    size: '3.2GB',
-    duration: '2 Days',
-    price: 1000,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '3.2GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'mtn_gifting_6gb',
-    name: '6GB Gifting',
-    size: '6GB',
-    duration: '7 Days',
-    price: 2460,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '6GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_gifting_11gb',
-    name: '11GB Gifting',
-    size: '11GB',
-    duration: '7 Days',
-    price: 3500,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '11GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_gifting_16_5gb',
-    name: '16.5GB Gifting',
-    size: '16.5GB',
-    duration: '30 Days',
-    price: 6500,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '16.5GB Gifting for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_gifting_1_5gb_2days',
-    name: '1.5GB Gifting',
-    size: '1.5GB',
-    duration: '2 Days',
-    price: 650,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1.5GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'mtn_gifting_1_5gb_7days',
-    name: '1.5GB Gifting',
-    size: '1.5GB',
-    duration: '7 Days',
-    price: 990,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1.5GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_gifting_1_2gb',
-    name: '1.2GB Gifting',
-    size: '1.2GB',
-    duration: '7 Days',
-    price: 800,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1.2GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_gifting_230mb',
-    name: '230MB Gifting',
-    size: '230MB',
-    duration: '1 Days',
-    price: 220,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '230MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_gifting_750mb',
-    name: '750MB Gifting',
-    size: '750MB',
-    duration: '3 Days',
-    price: 455,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '750MB Gifting for 3 days',
-    validity: '3 days'
-  },
-  {
-    id: 'mtn_gifting_36gb',
-    name: '36GB Gifting',
-    size: '36GB',
-    duration: '30 Days',
-    price: 11000,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '36GB Gifting for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_gifting_1_12gb_calls',
-    name: '1.12GB (Plus 35Mins Call) Gifting',
-    size: '1.12GB + 35Mins',
-    duration: '30 Days',
-    price: 1500,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '1.12GB plus 35 minutes call for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'mtn_gifting_5gb_calls',
-    name: '5GB (Plus 35Mins Call) Gifting',
-    size: '5GB + 35Mins',
-    duration: '30 Days',
-    price: 3000,
-    network: 'MTN',
-    type: 'Gifting',
-    description: '5GB plus 35 minutes call for 30 days',
-    validity: '30 days'
-  },
-
-  // MTN Corporate Plans
-  {
-    id: 'mtn_corporate_20mb_facebook',
-    name: '20MB (Facebook) Corporate',
-    size: '20MB',
-    duration: '1 Days',
-    price: 35,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '20MB Facebook Corporate for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_corporate_20mb_whatsapp',
-    name: '20MB (Whatsapp) Corporate',
-    size: '20MB',
-    duration: '1 Days',
-    price: 35,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '20MB WhatsApp Corporate for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_corporate_40mb_whatsapp',
-    name: '40MB (Whatsapp) Corporate',
-    size: '40MB',
-    duration: '1 Days',
-    price: 60,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '40MB WhatsApp Corporate for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_corporate_110mb_whatsapp',
-    name: '110MB (Whatsapp) Corporate',
-    size: '110MB',
-    duration: '7 Days',
-    price: 170,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '110MB WhatsApp Corporate for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_corporate_230mb_coupon',
-    name: '230MB (Coupon) Corporate',
-    size: '230MB',
-    duration: '1 Days',
-    price: 210,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '230MB Coupon Corporate for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'mtn_corporate_500mb_coupon',
-    name: '500MB (Coupon) Corporate',
-    size: '500MB',
-    duration: '7 Days',
-    price: 510,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '500MB Coupon Corporate for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_corporate_750mb_coupon',
-    name: '750MB (Coupon) Corporate',
-    size: '750MB',
-    duration: '3 Days',
-    price: 450,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '750MB Coupon Corporate for 3 days',
-    validity: '3 days'
-  },
-  {
-    id: 'mtn_corporate_1_2gb_social',
-    name: '1.2GB (Social Only) Corporate',
-    size: '1.2GB',
-    duration: '7 Days',
-    price: 460,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '1.2GB Social Only Corporate for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'mtn_corporate_1_5gb_coupon',
-    name: '1.5GB (Coupon) Corporate',
-    size: '1.5GB',
-    duration: '7 Days',
-    price: 990,
-    network: 'MTN',
-    type: 'Corporate',
-    description: '1.5GB Coupon Corporate for 7 days',
-    validity: '7 days'
-  },
-
-  // Airtel Gifting Plans
-  {
-    id: 'airtel_gifting_warning',
-    name: 'Do Not Buy If You Are Owing Airtel Gifting',
-    size: '0MB',
-    duration: '1 Days',
-    price: 0,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: 'Warning: Do not buy if you owe Airtel',
-    validity: '1 days'
-  },
-  {
-    id: 'airtel_gifting_150mb',
-    name: '150MB Gifting',
-    size: '150MB',
-    duration: '1 Days',
-    price: 70,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '150MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'airtel_gifting_300mb',
-    name: '300MB Gifting',
-    size: '300MB',
-    duration: '2 Days',
-    price: 130,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '300MB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'airtel_gifting_600mb',
-    name: '600MB Gifting',
-    size: '600MB',
-    duration: '1 Days',
-    price: 230,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '600MB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'airtel_gifting_2gb',
-    name: '2GB Gifting',
-    size: '2GB',
-    duration: '2 Days',
-    price: 600,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '2GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'airtel_gifting_7gb',
-    name: '7GB Gifting',
-    size: '7GB',
-    duration: '7 Days',
-    price: 2200,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '7GB Gifting for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'airtel_gifting_10gb',
-    name: '10GB Gifting',
-    size: '10GB',
-    duration: '30 Days',
-    price: 3300,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '10GB Gifting for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'airtel_gifting_1gb_social',
-    name: '1GB (Social Only) Gifting',
-    size: '1GB',
-    duration: '3 Days',
-    price: 370,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '1GB Social Only Gifting for 3 days',
-    validity: '3 days'
-  },
-  {
-    id: 'airtel_gifting_13gb',
-    name: '13GB Gifting',
-    size: '13GB',
-    duration: '30 Days',
-    price: 5200,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '13GB Gifting for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'airtel_gifting_4gb',
-    name: '4GB Gifting',
-    size: '4GB',
-    duration: '2 Days',
-    price: 800,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '4GB Gifting for 2 days',
-    validity: '2 days'
-  },
-  {
-    id: 'airtel_gifting_3_5gb_bonus',
-    name: '3.5GB (+3.5GB Bonus) Gifting',
-    size: '3.5GB + 3.5GB',
-    duration: '7 Days',
-    price: 1500,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '3.5GB plus 3.5GB bonus for 7 days',
-    validity: '7 days'
-  },
-  {
-    id: 'airtel_gifting_1_5gb',
-    name: '1.5GB Gifting',
-    size: '1.5GB',
-    duration: '1 Days',
-    price: 455,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '1.5GB Gifting for 1 day',
-    validity: '1 days'
-  },
-  {
-    id: 'airtel_gifting_1gb',
-    name: '1GB Gifting',
-    size: '1GB',
-    duration: '1 Days',
-    price: 380,
-    network: 'Airtel',
-    type: 'Gifting',
-    description: '1GB Gifting for 1 day',
-    validity: '1 days'
-  },
-
-  // Glo Corporate Plans
-  {
-    id: 'glo_corporate_200mb',
-    name: '200MB Corporate',
-    size: '200MB',
-    duration: '30 Days',
-    price: 95,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '200MB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_500mb',
-    name: '500MB Corporate',
-    size: '500MB',
-    duration: '30 Days',
-    price: 230,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '500MB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_1gb',
-    name: '1GB Corporate',
-    size: '1GB',
-    duration: '30 Days',
-    price: 450,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '1GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_2gb',
-    name: '2GB Corporate',
-    size: '2GB',
-    duration: '30 Days',
-    price: 900,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '2GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_3gb',
-    name: '3GB Corporate',
-    size: '3GB',
-    duration: '30 Days',
-    price: 1350,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '3GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_5gb',
-    name: '5GB Corporate',
-    size: '5GB',
-    duration: '30 Days',
-    price: 2250,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '5GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: 'glo_corporate_10gb',
-    name: '10GB Corporate',
-    size: '10GB',
-    duration: '30 Days',
-    price: 4500,
-    network: 'Glo',
-    type: 'Corporate',
-    description: '10GB Corporate for 30 days',
-    validity: '30 days'
-  },
-
-  // 9mobile SME Plans (same as Glo Corporate per user's instruction)
-  {
-    id: '9mobile_sme_200mb',
-    name: '200MB Corporate',
-    size: '200MB',
-    duration: '30 Days',
-    price: 95,
-    network: '9mobile',
-    type: 'SME',
-    description: '200MB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_500mb',
-    name: '500MB Corporate',
-    size: '500MB',
-    duration: '30 Days',
-    price: 230,
-    network: '9mobile',
-    type: 'SME',
-    description: '500MB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_1gb',
-    name: '1GB Corporate',
-    size: '1GB',
-    duration: '30 Days',
-    price: 450,
-    network: '9mobile',
-    type: 'SME',
-    description: '1GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_2gb',
-    name: '2GB Corporate',
-    size: '2GB',
-    duration: '30 Days',
-    price: 900,
-    network: '9mobile',
-    type: 'SME',
-    description: '2GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_3gb',
-    name: '3GB Corporate',
-    size: '3GB',
-    duration: '30 Days',
-    price: 1350,
-    network: '9mobile',
-    type: 'SME',
-    description: '3GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_5gb',
-    name: '5GB Corporate',
-    size: '5GB',
-    duration: '30 Days',
-    price: 2250,
-    network: '9mobile',
-    type: 'SME',
-    description: '5GB Corporate for 30 days',
-    validity: '30 days'
-  },
-  {
-    id: '9mobile_sme_10gb',
-    name: '10GB Corporate',
-    size: '10GB',
-    duration: '30 Days',
-    price: 4500,
-    network: '9mobile',
-    type: 'SME',
-    description: '10GB Corporate for 30 days',
-    validity: '30 days'
-  },
-]
 
 const BuyData: React.FC = () => {
   const { walletBalance, updateWalletBalance, addTransaction } = useUserStore()
   const { user } = useAuthStore()
   
-  const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null)
-  const [selectedDataType, setSelectedDataType] = useState<DataType | null>(null)
+  // State for API data
+  const [networks, setNetworks] = useState<NetworkOption[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [dataPlans, setDataPlans] = useState<DataPlan[]>([])
+  
+  // State for selections
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkOption | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null)
   const [phoneNumber, setPhoneNumber] = useState<string>('')
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'card'>('wallet')
+  
+  // State for UI
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingNetworks, setIsLoadingNetworks] = useState(true)
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false)
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false)
-  const [showDataTypeDropdown, setShowDataTypeDropdown] = useState(false)
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const [showPlanDropdown, setShowPlanDropdown] = useState(false)
   const [showPinVerification, setShowPinVerification] = useState(false)
   const [showPinReset, setShowPinReset] = useState(false)
+  const [purchaseSuccess, setPurchaseSuccess] = useState<any>(null)
+  
 
-  const availableDataTypes = selectedNetwork 
-    ? dataTypes.filter(type => type.network === selectedNetwork.name)
-    : []
 
-  const filteredPlans = selectedNetwork && selectedDataType
-    ? dataPlans.filter(plan => plan.network === selectedNetwork.name && plan.type === selectedDataType.name)
-    : []
+  // Load networks on component mount
+  useEffect(() => {
+    loadNetworks()
+  }, [])
 
-  const canProceed = () => {
-    return selectedNetwork && selectedDataType && selectedPlan && phoneNumber.length >= 11 && walletBalance >= selectedPlan.price
+  // Load categories when network changes
+  useEffect(() => {
+    if (selectedNetwork) {
+      loadCategories(selectedNetwork.name)
+      setSelectedCategory(null)
+      setSelectedPlan(null)
+      setDataPlans([])
+    }
+  }, [selectedNetwork])
+
+  // Load plans when category changes
+  useEffect(() => {
+    if (selectedNetwork && selectedCategory) {
+      loadDataPlans(selectedNetwork.name)
+      setSelectedPlan(null)
+    }
+  }, [selectedNetwork, selectedCategory])
+
+  const loadNetworks = async () => {
+    try {
+      setIsLoadingNetworks(true)
+      const response = await apiService.getNetworks()
+      
+      if (response.success && response.data) {
+        const networkOptions: NetworkOption[] = response.data
+          .filter(network => network.isActive)
+          .map(network => ({
+            id: network.id,
+            name: network.name,
+            logo: getNetworkLogo(network.name),
+            color: getNetworkColor(network.name),
+            isActive: network.isActive
+          }))
+        
+        // Rearrange networks: MTN first, then Airtel, Glo, 9mobile
+        const sortedNetworks = networkOptions.sort((a, b) => {
+          const order = { 'MTN': 1, 'AIRTEL': 2, 'GLO': 3, '9MOBILE': 4 }
+          const aOrder = order[a.name.toUpperCase() as keyof typeof order] || 5
+          const bOrder = order[b.name.toUpperCase() as keyof typeof order] || 5
+          return aOrder - bOrder
+        })
+        
+        setNetworks(sortedNetworks)
+      }
+    } catch (error: any) {
+      console.error('Error loading networks:', error)
+      toast.error(error.message || 'Failed to load networks')
+    } finally {
+      setIsLoadingNetworks(false)
+    }
   }
 
-  const handleNetworkSelect = (network: Network) => {
+  const loadCategories = async (networkName: string) => {
+    try {
+      setIsLoadingCategories(true)
+      const response = await apiService.getDataPlanCategories(networkName)
+      
+      if (response.success && response.data) {
+        setCategories(response.data)
+      }
+    } catch (error: any) {
+      console.error('Error loading categories:', error)
+      toast.error(error.message || 'Failed to load data plan categories')
+    } finally {
+      setIsLoadingCategories(false)
+    }
+  }
+
+  const loadDataPlans = async (networkName: string) => {
+    try {
+      setIsLoadingPlans(true)
+      
+      // Load all plans by requesting a very large page size
+      // We'll modify the API call to get all plans at once
+      const response = await apiService.getDataPlans(networkName, 1, 'price', 'asc')
+      
+      if (response.success && response.data) {
+        // If there are more pages, load them all
+        let allPlans = [...response.data.plans]
+        let currentPage = 1
+        
+        while (response.data.hasNext && currentPage < 10) { // Safety limit
+          currentPage++
+          const nextResponse = await apiService.getDataPlans(networkName, currentPage, 'price', 'asc')
+          if (nextResponse.success && nextResponse.data) {
+            allPlans = [...allPlans, ...nextResponse.data.plans]
+            if (!nextResponse.data.hasNext) break
+          } else {
+            break
+          }
+        }
+        
+        setDataPlans(allPlans)
+      }
+    } catch (error: any) {
+      console.error('Error loading data plans:', error)
+      toast.error(error.message || 'Failed to load data plans')
+    } finally {
+      setIsLoadingPlans(false)
+    }
+  }
+
+  // Remove loadMorePlans function as it's no longer needed
+
+  const handleNetworkSelect = (network: NetworkOption) => {
     setSelectedNetwork(network)
-    setSelectedDataType(null)
-    setSelectedPlan(null)
     setShowNetworkDropdown(false)
   }
 
-  const handleDataTypeSelect = (dataType: DataType) => {
-    setSelectedDataType(dataType)
-    setSelectedPlan(null)
-    setShowDataTypeDropdown(false)
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category)
+    setShowCategoryDropdown(false)
   }
 
   const handlePlanSelect = (plan: DataPlan) => {
     setSelectedPlan(plan)
     setShowPlanDropdown(false)
+  }
+
+
+
+  const canProceed = () => {
+    return selectedNetwork && selectedCategory && selectedPlan && phoneNumber.length >= 11
   }
 
   const handlePurchase = () => {
@@ -769,33 +225,43 @@ const BuyData: React.FC = () => {
 
     setIsLoading(true)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Update wallet balance
-    updateWalletBalance(walletBalance - selectedPlan.price)
-    
-    // Add transaction
-    addTransaction({
-      userId: user?.id || '',
-      type: 'data',
-      amount: selectedPlan.price,
-      description: `${selectedPlan.name} - ${phoneNumber}`,
-      network: selectedPlan.network,
-      status: 'successful',
-      phoneNumber: phoneNumber,
-    })
+    try {
+      // Make actual API call for data purchase
+      const purchaseResponse = await apiService.purchaseData({
+        planId: selectedPlan.planId,
+        phoneNumber: phoneNumber
+      })
+      
+      if (purchaseResponse.success && purchaseResponse.data) {
+        const purchaseData = purchaseResponse.data
+        
+        // Update wallet balance
+        updateWalletBalance(walletBalance - purchaseData.amount)
+        
+        // Add transaction
+        addTransaction({
+          userId: user?.id || '',
+          type: 'data',
+          amount: purchaseData.amount,
+          description: purchaseData.description,
+          network: purchaseData.networkName,
+          status: purchaseData.status,
+          phoneNumber: purchaseData.phoneNumber,
+          reference: purchaseData.reference,
+          transactionId: purchaseData.transactionId
+        })
 
-    toast.success('Data plan purchased successfully!')
-    setShowConfirmation(false)
-    setShowPinVerification(false)
-    
-    // Reset form
-    setSelectedNetwork(null)
-    setSelectedPlan(null)
-    setPhoneNumber('')
-    
-    setIsLoading(false)
+        // Show success modal with purchase details
+        setPurchaseSuccess(purchaseData)
+        setShowConfirmation(false)
+        setShowPinVerification(false)
+      }
+    } catch (error: any) {
+      console.error('Purchase error:', error)
+      toast.error(error.message || 'Failed to purchase data plan')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handlePinSuccess = () => {
@@ -815,6 +281,10 @@ const BuyData: React.FC = () => {
   const formatAmount = (amount: number) => {
     return `₦${amount.toLocaleString()}`
   }
+
+  const filteredPlans = selectedCategory 
+    ? dataPlans.filter(plan => plan.planType === selectedCategory)
+    : dataPlans
 
   return (
     <div className="space-y-6">
@@ -850,150 +320,7 @@ const BuyData: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Network Selection */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Select Network</label>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
-                    className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      {selectedNetwork ? (
-                        <>
-                          <span className="text-2xl">{selectedNetwork.logo}</span>
-                          <span className="font-medium">{selectedNetwork.name}</span>
-                        </>
-                      ) : (
-                        <span className="text-gray-500">Choose a network</span>
-                      )}
-                    </div>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${showNetworkDropdown ? 'rotate-180' : ''}`} />
-                  </button>
-                  
-                  {showNetworkDropdown && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
-                    >
-                      {networks.map((network) => (
-                        <button
-                          key={network.id}
-                          onClick={() => handleNetworkSelect(network)}
-                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="text-2xl">{network.logo}</span>
-                          <span className="font-medium">{network.name}</span>
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-
-              {/* Data Type Selection */}
-              {selectedNetwork && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Select Data Type</label>
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowDataTypeDropdown(!showDataTypeDropdown)}
-                      className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {selectedDataType ? (
-                          <span className="font-medium">{selectedDataType.name}</span>
-                        ) : (
-                          <span className="text-gray-500">Choose data type</span>
-                        )}
-                      </div>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showDataTypeDropdown ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {showDataTypeDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
-                      >
-                        {availableDataTypes.map((dataType) => (
-                          <button
-                            key={dataType.id}
-                            onClick={() => handleDataTypeSelect(dataType)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
-                          >
-                            <span className="font-medium">{dataType.name}</span>
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Data Plans */}
-              {selectedNetwork && selectedDataType && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Select Data Plan</label>
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowPlanDropdown(!showPlanDropdown)}
-                      className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        {selectedPlan ? (
-                          <div className="text-left">
-                            <div className="font-medium">{selectedPlan.name}</div>
-                            <div className="text-sm text-gray-500">{selectedPlan.size} - {selectedPlan.duration} - {formatAmount(selectedPlan.price)}</div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-500">Choose data plan</span>
-                        )}
-                      </div>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showPlanDropdown ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {showPlanDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                      >
-                        {filteredPlans.map((plan) => (
-                          <button
-                            key={plan.id}
-                            onClick={() => handlePlanSelect(plan)}
-                            className="w-full flex items-center justify-between p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                          >
-                            <div className="text-left">
-                              <div className="font-medium text-sm">{plan.name}</div>
-                              <div className="text-xs text-gray-600">{plan.description}</div>
-                              <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                                <span className="flex items-center gap-1">
-                                  <Download className="w-3 h-3" />
-                                  {plan.size}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {plan.validity}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm font-bold text-primary">
-                                {formatAmount(plan.price)}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Phone Number */}
+              {/* Phone Number - POSITION 1 */}
               <div className="space-y-2">
                 <Input
                   label="Phone Number"
@@ -1005,6 +332,183 @@ const BuyData: React.FC = () => {
                 />
               </div>
 
+              {/* Network Selection - POSITION 2 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Select Network</label>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
+                    disabled={isLoadingNetworks}
+                    className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      {isLoadingNetworks ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-gray-500">Loading networks...</span>
+                        </>
+                      ) : selectedNetwork ? (
+                        <>
+                          <span className="text-2xl">{selectedNetwork.logo}</span>
+                          <span className="font-medium">{selectedNetwork.name}</span>
+                        </>
+                      ) : (
+                        <span className="text-gray-500">Choose a network</span>
+                      )}
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showNetworkDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {showNetworkDropdown && !isLoadingNetworks && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
+                    >
+                      {networks.length > 0 ? (
+                        networks.map((network) => (
+                          <button
+                            key={network.id}
+                            onClick={() => handleNetworkSelect(network)}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
+                          >
+                            <span className="text-2xl">{network.logo}</span>
+                            <span className="font-medium">{network.name}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-3 text-center text-gray-500">
+                          No networks available
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
+              {/* Category Selection - ALWAYS VISIBLE */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Select Data Type</label>
+                <div className="relative">
+                  <button
+                    onClick={() => selectedNetwork && setShowCategoryDropdown(!showCategoryDropdown)}
+                    disabled={isLoadingCategories || !selectedNetwork}
+                    className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      {!selectedNetwork ? (
+                        <span className="text-gray-400">Select network first</span>
+                      ) : isLoadingCategories ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-gray-500">Loading categories...</span>
+                        </>
+                      ) : selectedCategory ? (
+                        <span className="font-medium">{selectedCategory}</span>
+                      ) : (
+                        <span className="text-gray-500">Choose data type</span>
+                      )}
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {showCategoryDropdown && !isLoadingCategories && selectedNetwork && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
+                    >
+                      {categories.length > 0 ? (
+                        <>
+                          {categories.map((category) => (
+                            <button
+                              key={category}
+                              onClick={() => handleCategorySelect(category)}
+                              className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
+                            >
+                              <span className="font-medium">{category}</span>
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="p-3 text-center text-gray-500">
+                          No categories available
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
+              {/* Data Plans - ALWAYS VISIBLE */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Select Data Plan</label>
+                </div>
+                <div className="relative">
+                  <button
+                    onClick={() => selectedNetwork && selectedCategory && setShowPlanDropdown(!showPlanDropdown)}
+                    disabled={isLoadingPlans || !selectedNetwork || !selectedCategory}
+                    className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      {!selectedNetwork ? (
+                        <span className="text-gray-400">Select network first</span>
+                      ) : !selectedCategory ? (
+                        <span className="text-gray-400">Select data type first</span>
+                      ) : isLoadingPlans ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-gray-500">Loading plans...</span>
+                        </>
+                      ) : selectedPlan ? (
+                        <div className="text-left">
+                          <div className="font-medium">{selectedPlan.name}</div>
+                          <div className="text-sm text-gray-500">{selectedPlan.description} - {selectedPlan.formattedPrice}</div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500">Choose data plan</span>
+                      )}
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showPlanDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {showPlanDropdown && !isLoadingPlans && selectedNetwork && selectedCategory && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                    >
+                      {filteredPlans.length > 0 ? (
+                        <>
+                          {filteredPlans.map((plan) => (
+                            <button
+                              key={plan.planId}
+                              onClick={() => handlePlanSelect(plan)}
+                              className="w-full flex items-center justify-between p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="text-left">
+                                <div className="font-medium text-sm">{plan.name}</div>
+                                <div className="text-xs text-gray-600">{plan.description}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-bold text-primary">
+                                  {plan.formattedPrice}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="p-3 text-center text-gray-500">
+                          No plans available for this category
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
               {/* Purchase Button */}
               <Button
                 onClick={() => setShowConfirmation(true)}
@@ -1012,7 +516,7 @@ const BuyData: React.FC = () => {
                 className="w-full"
                 size="lg"
               >
-                {isLoading ? 'Processing...' : `Buy Data - ${selectedPlan ? formatAmount(selectedPlan.price) : '₦0'}`}
+                {isLoading ? 'Processing...' : `Buy Data - ${selectedPlan ? selectedPlan.formattedPrice : '₦0'}`}
               </Button>
 
               {/* Payment Method */}
@@ -1067,10 +571,10 @@ const BuyData: React.FC = () => {
                 </div>
               )}
 
-              {selectedDataType && (
+              {selectedCategory && (
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <div className="font-medium">{selectedDataType.name}</div>
+                    <div className="font-medium">{selectedCategory}</div>
                     <div className="text-sm text-gray-500">Data Type</div>
                   </div>
                 </div>
@@ -1081,19 +585,9 @@ const BuyData: React.FC = () => {
                   <div>
                     <div className="font-medium">{selectedPlan.name}</div>
                     <div className="text-sm text-gray-500">{selectedPlan.description}</div>
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
-                      <span className="flex items-center gap-1">
-                        <Download className="w-3 h-3" />
-                        {selectedPlan.size}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {selectedPlan.validity}
-                      </span>
-                    </div>
                   </div>
                   <div className="text-lg font-bold text-primary">
-                    {formatAmount(selectedPlan.price)}
+                    {selectedPlan.formattedPrice}
                   </div>
                 </div>
               )}
@@ -1163,18 +657,18 @@ const BuyData: React.FC = () => {
                   <span>Network:</span>
                   <span className="font-medium">{selectedNetwork?.name}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Plan:</span>
-                  <span className="font-medium">{selectedPlan?.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Amount (₦):</span>
-                  <span className="font-medium">{selectedPlan ? formatAmount(selectedPlan.price) : '₦0'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Phone:</span>
-                  <span className="font-medium">{phoneNumber}</span>
-                </div>
+                                 <div className="flex justify-between">
+                   <span>Plan:</span>
+                   <span className="font-medium">{selectedPlan?.name}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span>Amount:</span>
+                   <span className="font-medium">{selectedPlan?.formattedPrice}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span>Phone:</span>
+                   <span className="font-medium">{phoneNumber}</span>
+                 </div>
                 <div className="flex justify-between">
                   <span>Payment:</span>
                   <span className="font-medium capitalize">{paymentMethod}</span>
@@ -1218,6 +712,76 @@ const BuyData: React.FC = () => {
         onClose={() => setShowPinReset(false)}
         onSuccess={handlePinResetSuccess}
       />
+
+      {/* Purchase Success Modal */}
+      {purchaseSuccess && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setPurchaseSuccess(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-lg p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold mb-2 text-green-600">Purchase Successful!</h3>
+              <p className="text-gray-600 mb-6">
+                Your data plan has been purchased successfully.
+              </p>
+              
+              <div className="space-y-3 mb-6 text-left">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Transaction ID:</span>
+                  <span className="font-medium text-sm">{purchaseSuccess.transactionId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Reference:</span>
+                  <span className="font-medium text-sm">{purchaseSuccess.reference}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Network:</span>
+                  <span className="font-medium">{purchaseSuccess.networkName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Plan:</span>
+                  <span className="font-medium">{purchaseSuccess.planName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Phone:</span>
+                  <span className="font-medium">{purchaseSuccess.phoneNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Amount:</span>
+                  <span className="font-medium">₦{purchaseSuccess.amount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="font-medium text-green-600 capitalize">{purchaseSuccess.status}</span>
+                </div>
+              </div>
+              
+              <Button
+                onClick={() => {
+                  setPurchaseSuccess(null)
+                  // Reset form
+                  setSelectedNetwork(null)
+                  setSelectedCategory(null)
+                  setSelectedPlan(null)
+                  setPhoneNumber('')
+                }}
+                className="w-full"
+              >
+                Done
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   )
 }

@@ -178,6 +178,20 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       const response = await apiService.login({ phone, password })
       
       if (response.success && response.data) {
+        // Check if there's existing user data in localStorage to restore PIN
+        const existingUserData = localStorage.getItem('userData')
+        let existingPin = ''
+        if (existingUserData) {
+          try {
+            const existingUser = JSON.parse(existingUserData)
+            if (existingUser.phone === response.data.user.phone) {
+              existingPin = existingUser.transferPin || ''
+            }
+          } catch (error) {
+            // Silent fail - existing user data parsing error
+          }
+        }
+        
         const user: User = {
           id: response.data.user.id || '',
           name: `${response.data.user.firstName || ''} ${response.data.user.lastName || ''}`,
@@ -188,8 +202,8 @@ export const useAuthStore = create<AuthStore>((set, get) => {
           walletBalance: response.data.user.wallet || 0,
           createdAt: new Date().toISOString(),
           isActive: response.data.user.isActive || true,
-          hasTransferPin: true,
-          transferPin: '', // PIN not returned from login, will be set separately if needed
+          hasTransferPin: !!existingPin,
+          transferPin: existingPin,
           state: '', // State will be fetched from profile
         }
         

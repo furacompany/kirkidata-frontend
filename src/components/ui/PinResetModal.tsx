@@ -8,6 +8,7 @@ import { Button } from './Button'
 import { Input } from './Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './Card'
 import { useAuthStore } from '../../store/authStore'
+import { apiService } from '../../services/api'
 import toast from 'react-hot-toast'
 
 const emailSchema = yup.object({
@@ -98,15 +99,15 @@ const PinResetModal: React.FC<PinResetModalProps> = ({
   const onPinSubmit = async (data: PinFormData) => {
     setIsLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500)) // Simulate API delay
-      
+      // For PIN reset, we use the local update since this is a reset flow
+      // In a real implementation, you'd verify the user's identity first
       await updateUserPin(data.newPin)
       toast.success('Transfer PIN updated successfully!')
       
       handleClose()
       onSuccess()
-    } catch (error) {
-      toast.error('Failed to update PIN. Please try again.')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update PIN. Please try again.')
     } finally {
       setIsLoading(false)
     }
