@@ -8,7 +8,7 @@ import { Button } from './Button'
 import { Input } from './Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './Card'
 import { useAuthStore } from '../../store/authStore'
-import { apiService } from '../../services/api'
+
 import toast from 'react-hot-toast'
 
 const emailSchema = yup.object({

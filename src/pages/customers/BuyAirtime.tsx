@@ -1,61 +1,119 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Smartphone, CreditCard, Wallet, CheckCircle,
-  ChevronDown, Phone, Banknote, Shield
+  ChevronDown, Phone, Banknote, Shield, Loader2
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useUserStore } from '../../store/userStore'
 import { useAuthStore } from '../../store/authStore'
+import { apiService, AirtimePurchaseRequest } from '../../services/api'
 import toast from 'react-hot-toast'
 import PinVerificationModal from '../../components/ui/PinVerificationModal'
 import PinResetModal from '../../components/ui/PinResetModal'
 
-interface Network {
+interface NetworkOption {
   id: string
   name: string
   logo: string
   color: string
+  isActive: boolean
 }
 
-interface AmountOption {
-  value: number
-  label: string
-  bonus?: string
+
+
+const getNetworkLogo = (networkName: string): string => {
+  switch (networkName.toUpperCase()) {
+    case 'MTN':
+      return '🟡'
+    case 'AIRTEL':
+      return '🔴'
+    case 'GLO':
+      return '🟢'
+    case '9MOBILE':
+      return '🟢'
+    default:
+      return '📱'
+  }
 }
 
-const networks: Network[] = [
-  { id: 'mtn', name: 'MTN', logo: '🟡', color: 'bg-yellow-500' },
-  { id: 'airtel', name: 'Airtel', logo: '🔴', color: 'bg-red-500' },
-  { id: 'glo', name: 'Glo', logo: '🟢', color: 'bg-green-500' },
-  { id: '9mobile', name: '9mobile', logo: '🟢', color: 'bg-green-600' },
-]
-
-const amountOptions: AmountOption[] = [
-  { value: 50, label: '₦50' },
-  { value: 100, label: '₦100' },
-  { value: 200, label: '₦200' },
-  { value: 500, label: '₦500' },
-  { value: 1000, label: '₦1,000' },
-  { value: 2000, label: '₦2,000' },
-]
+const getNetworkColor = (networkName: string): string => {
+  switch (networkName.toUpperCase()) {
+    case 'MTN':
+      return 'bg-yellow-500'
+    case 'AIRTEL':
+      return 'bg-red-500'
+    case 'GLO':
+      return 'bg-green-500'
+    case '9MOBILE':
+      return 'bg-green-600'
+    default:
+      return 'bg-gray-500'
+  }
+}
 
 const BuyAirtime: React.FC = () => {
   const { walletBalance, updateWalletBalance, addTransaction } = useUserStore()
   const { user } = useAuthStore()
   
-  const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null)
+  // State for API data
+  const [networks, setNetworks] = useState<NetworkOption[]>([])
+  
+  // State for selections
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkOption | null>(null)
   const [selectedAmount, setSelectedAmount] = useState<number>(100)
   const [customAmount, setCustomAmount] = useState<string>('')
   const [phoneNumber, setPhoneNumber] = useState<string>('')
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'card'>('wallet')
+  
+  // State for UI
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingNetworks, setIsLoadingNetworks] = useState(true)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false)
   const [showPinVerification, setShowPinVerification] = useState(false)
   const [showPinReset, setShowPinReset] = useState(false)
+  const [purchaseSuccess, setPurchaseSuccess] = useState<any>(null)
+
+  // Load networks on component mount
+  useEffect(() => {
+    loadNetworks()
+  }, [])
+
+  const loadNetworks = async () => {
+    try {
+      setIsLoadingNetworks(true)
+      const response = await apiService.getNetworks()
+      
+      if (response.success && response.data) {
+        const networkOptions: NetworkOption[] = response.data
+          .filter(network => network.isActive)
+          .map(network => ({
+            id: network.id,
+            name: network.name,
+            logo: getNetworkLogo(network.name),
+            color: getNetworkColor(network.name),
+            isActive: network.isActive
+          }))
+        
+        // Rearrange networks: MTN first, then Airtel, Glo, 9mobile
+        const sortedNetworks = networkOptions.sort((a, b) => {
+          const order = { 'MTN': 1, 'AIRTEL': 2, 'GLO': 3, '9MOBILE': 4 }
+          const aOrder = order[a.name.toUpperCase() as keyof typeof order] || 5
+          const bOrder = order[b.name.toUpperCase() as keyof typeof order] || 5
+          return aOrder - bOrder
+        })
+        
+        setNetworks(sortedNetworks)
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to load networks')
+    } finally {
+      setIsLoadingNetworks(false)
+    }
+  }
 
   const handleAmountSelect = (amount: number) => {
     setSelectedAmount(amount)
@@ -74,7 +132,7 @@ const BuyAirtime: React.FC = () => {
   }
 
   const canProceed = () => {
-    return selectedNetwork && getFinalAmount() > 0 && phoneNumber.length >= 11 && walletBalance >= getFinalAmount()
+    return selectedNetwork && getFinalAmount() > 0 && phoneNumber.length >= 11
   }
 
   const handlePurchase = () => {
@@ -85,38 +143,61 @@ const BuyAirtime: React.FC = () => {
   }
 
   const completePurchase = async () => {
+    if (!selectedNetwork) return
+
     setIsLoading(true)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    const amount = getFinalAmount()
-    
-    // Update wallet balance
-    updateWalletBalance(walletBalance - amount)
-    
-    // Add transaction
-    addTransaction({
-      userId: user?.id || '',
-      type: 'airtime',
-      amount: amount,
-      description: `${selectedNetwork?.name} Airtime - ${phoneNumber}`,
-      network: selectedNetwork?.name || '',
-      status: 'successful',
-      phoneNumber: phoneNumber,
-    })
+    try {
+      const purchaseData: AirtimePurchaseRequest = {
+        networkName: selectedNetwork.name,
+        phoneNumber: phoneNumber,
+        amount: getFinalAmount()
+      }
 
-    toast.success('Airtime purchased successfully!')
-    setShowConfirmation(false)
-    setShowPinVerification(false)
-    
-    // Reset form
-    setSelectedNetwork(null)
-    setSelectedAmount(100)
-    setCustomAmount('')
-    setPhoneNumber('')
-    
-    setIsLoading(false)
+      // Make actual API call for airtime purchase
+      const purchaseResponse = await apiService.purchaseAirtime(purchaseData)
+      
+      if (purchaseResponse.success && purchaseResponse.data) {
+        const airtimeData = purchaseResponse.data
+        
+        // Update wallet balance
+        updateWalletBalance(walletBalance - airtimeData.totalCost)
+        
+        // Add transaction
+        addTransaction({
+          userId: user?.id || '',
+          type: 'airtime',
+          amount: airtimeData.totalCost,
+          currency: 'NGN',
+          status: airtimeData.status as 'pending' | 'successful' | 'failed' | 'completed',
+          reference: airtimeData.reference,
+          description: airtimeData.description,
+          network: airtimeData.networkName,
+          phoneNumber: airtimeData.phoneNumber,
+          transactionId: airtimeData.transactionId,
+          otobillRef: airtimeData.otobillRef
+        })
+
+        // Show success modal with purchase details
+        setPurchaseSuccess(airtimeData)
+        setShowConfirmation(false)
+        setShowPinVerification(false)
+      }
+    } catch (error: any) {
+      // Handle specific error cases from API
+      if (error.message?.includes('Insufficient balance')) {
+        toast.error(error.message)
+      } else if (error.message?.includes('Amount must be at least')) {
+        toast.error(error.message)
+      } else if (error.message?.includes('400')) {
+        // Handle 400 Bad Request errors
+        toast.error(error.message || 'Invalid request. Please check your input.')
+      } else {
+        toast.error(error.message || 'Failed to purchase airtime')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handlePinSuccess = () => {
@@ -171,16 +252,34 @@ const BuyAirtime: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Network Selection */}
+              {/* Phone Number - POSITION 1 */}
+              <div className="space-y-2">
+                <Input
+                  label="Phone Number"
+                  type="tel"
+                  placeholder="Enter phone number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  icon={<Phone className="w-4 h-4" />}
+                />
+              </div>
+
+              {/* Network Selection - POSITION 2 */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Select Network</label>
                 <div className="relative">
                   <button
                     onClick={() => setShowNetworkDropdown(!showNetworkDropdown)}
-                    className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors"
+                    disabled={isLoadingNetworks}
+                    className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
                     <div className="flex items-center gap-3">
-                      {selectedNetwork ? (
+                      {isLoadingNetworks ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-gray-500">Loading networks...</span>
+                        </>
+                      ) : selectedNetwork ? (
                         <>
                           <span className="text-2xl">{selectedNetwork.logo}</span>
                           <span className="font-medium">{selectedNetwork.name}</span>
@@ -192,25 +291,31 @@ const BuyAirtime: React.FC = () => {
                     <ChevronDown className={`w-4 h-4 transition-transform ${showNetworkDropdown ? 'rotate-180' : ''}`} />
                   </button>
                   
-                  {showNetworkDropdown && (
+                  {showNetworkDropdown && !isLoadingNetworks && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
                     >
-                      {networks.map((network) => (
-                        <button
-                          key={network.id}
-                          onClick={() => {
-                            setSelectedNetwork(network)
-                            setShowNetworkDropdown(false)
-                          }}
-                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="text-2xl">{network.logo}</span>
-                          <span className="font-medium">{network.name}</span>
-                        </button>
-                      ))}
+                      {networks.length > 0 ? (
+                        networks.map((network) => (
+                          <button
+                            key={network.id}
+                            onClick={() => {
+                              setSelectedNetwork(network)
+                              setShowNetworkDropdown(false)
+                            }}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
+                          >
+                            <span className="text-2xl">{network.logo}</span>
+                            <span className="font-medium">{network.name}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-3 text-center text-gray-500">
+                          No networks available
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </div>
@@ -220,20 +325,17 @@ const BuyAirtime: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Select Amount (₦)</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {amountOptions.map((option) => (
+                  {[50, 100, 200, 500, 1000, 2000].map((amount) => (
                     <button
-                      key={option.value}
-                      onClick={() => handleAmountSelect(option.value)}
+                      key={amount}
+                      onClick={() => handleAmountSelect(amount)}
                       className={`p-2 md:p-3 rounded-lg border transition-colors ${
-                        selectedAmount === option.value && !customAmount
+                        selectedAmount === amount && !customAmount
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-gray-300 hover:border-primary/50'
                       }`}
                     >
-                      <div className="font-medium text-sm md:text-base">{option.label}</div>
-                      {option.bonus && (
-                        <div className="text-xs text-success">{option.bonus}</div>
-                      )}
+                      <div className="font-medium text-sm md:text-base">{formatAmount(amount)}</div>
                     </button>
                   ))}
                 </div>
@@ -241,26 +343,14 @@ const BuyAirtime: React.FC = () => {
                 {/* Custom Amount */}
                 <div className="mt-4">
                   <Input
-                                          label="Custom Amount (₦)"
+                    label="Custom Amount (₦)"
                     type="number"
-                                          placeholder="Enter custom amount (₦)"
+                    placeholder="Enter custom amount (₦)"
                     value={customAmount}
                     onChange={(e) => handleCustomAmountChange(e.target.value)}
                     icon={<Banknote className="w-4 h-4" />}
                   />
                 </div>
-              </div>
-
-              {/* Phone Number */}
-              <div className="space-y-2">
-                <Input
-                  label="Phone Number"
-                  type="tel"
-                  placeholder="Enter phone number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  icon={<Phone className="w-4 h-4" />}
-                />
               </div>
 
               {/* Purchase Button */}
@@ -453,6 +543,76 @@ const BuyAirtime: React.FC = () => {
         onClose={() => setShowPinReset(false)}
         onSuccess={handlePinResetSuccess}
       />
+
+      {/* Purchase Success Modal */}
+      {purchaseSuccess && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setPurchaseSuccess(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-lg p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold mb-2 text-green-600">Purchase Successful!</h3>
+              <p className="text-gray-600 mb-6">
+                Your airtime has been purchased successfully.
+              </p>
+              
+              <div className="space-y-3 mb-6 text-left">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Transaction ID:</span>
+                  <span className="font-medium text-sm">{purchaseSuccess.transactionId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Reference:</span>
+                  <span className="font-medium text-sm">{purchaseSuccess.reference}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Network:</span>
+                  <span className="font-medium">{purchaseSuccess.networkName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Phone:</span>
+                  <span className="font-medium">{purchaseSuccess.phoneNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Amount:</span>
+                  <span className="font-medium">₦{purchaseSuccess.amount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Cost:</span>
+                  <span className="font-medium">₦{purchaseSuccess.totalCost.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="font-medium text-green-600 capitalize">{purchaseSuccess.status}</span>
+                </div>
+              </div>
+              
+              <Button
+                onClick={() => {
+                  setPurchaseSuccess(null)
+                  // Reset form
+                  setSelectedNetwork(null)
+                  setSelectedAmount(100)
+                  setCustomAmount('')
+                  setPhoneNumber('')
+                }}
+                className="w-full"
+              >
+                Done
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   )
 }

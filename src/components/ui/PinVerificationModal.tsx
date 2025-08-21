@@ -57,8 +57,11 @@ const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
 
     setIsLoading(true)
     try {
-      // Check if user has a PIN set locally (from registration)
-      if (user.transferPin && data.pin === user.transferPin) {
+      // Use the validatePin function from authStore which calls the correct API endpoint
+      const { validatePin } = useAuthStore.getState()
+      const isValid = await validatePin(data.pin)
+      
+      if (isValid) {
         toast.success('PIN verified successfully!')
         reset()
         onSuccess()
@@ -70,7 +73,22 @@ const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
         })
       }
     } catch (error: any) {
-      toast.error('Verification failed. Please try again.')
+      // Check if the error is due to incorrect current PIN
+      if (error.message?.includes('Current PIN is incorrect') || 
+          error.message?.includes('Incorrect PIN') ||
+          error.message?.includes('Invalid PIN')) {
+        toast.error('Incorrect PIN. Please try again.')
+        setError('pin', { 
+          type: 'manual', 
+          message: 'Incorrect PIN. Please try again.' 
+        })
+      } else {
+        toast.error('Verification failed. Please try again.')
+        setError('pin', { 
+          type: 'manual', 
+          message: 'Verification failed. Please try again.' 
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -122,24 +140,24 @@ const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
               </CardDescription>
             </CardHeader>
             
-                         <CardContent>
-               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                 <div>
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                <div>
                   <div className="relative">
-                                         <Input
-                       label="Transfer PIN"
-                       type={showPin ? 'text' : 'password'}
-                       placeholder="Enter your 4-digit PIN"
-                       error={errors.pin?.message}
-                       {...register('pin')}
-                       icon={<Lock className="h-4 w-4" />}
-                       maxLength={4}
-                     />
-                                         <button
-                       type="button"
-                       className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 transition-colors"
-                       onClick={() => setShowPin(!showPin)}
-                     >
+                    <Input
+                      label="Transfer PIN"
+                      type={showPin ? 'text' : 'password'}
+                      placeholder="Enter your 4-digit PIN"
+                      error={errors.pin?.message}
+                      {...register('pin')}
+                      icon={<Lock className="h-4 w-4" />}
+                      maxLength={4}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 transition-colors"
+                      onClick={() => setShowPin(!showPin)}
+                    >
                       {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -155,12 +173,12 @@ const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
                   >
                     Cancel
                   </Button>
-                                     <Button
-                     type="submit"
-                     className="flex-1 bg-primary hover:bg-primary/90 text-white transition-all duration-200 shadow-md"
-                     loading={isLoading}
-                     disabled={isLoading}
-                   >
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white transition-all duration-200 shadow-md"
+                    loading={isLoading}
+                    disabled={isLoading}
+                  >
                     <Shield className="w-4 h-4 mr-2" />
                     Verify PIN
                   </Button>

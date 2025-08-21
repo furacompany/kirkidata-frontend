@@ -514,8 +514,15 @@ export const useAuthStore = create<AuthStore>((set, get) => {
      try {
        const response = await apiService.validatePin(pin)
        return response.success && response.data?.isValid === true
-     } catch (error) {
-       return false
+     } catch (error: any) {
+       // If the error message indicates incorrect PIN, return false
+       if (error.message?.includes('Current PIN is incorrect') || 
+           error.message?.includes('Incorrect PIN') ||
+           error.message?.includes('Invalid PIN')) {
+         return false
+       }
+       // For other errors, throw the error to be handled by the calling component
+       throw error
      }
    },
 

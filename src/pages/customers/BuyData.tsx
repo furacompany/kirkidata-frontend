@@ -133,7 +133,6 @@ const BuyData: React.FC = () => {
         setNetworks(sortedNetworks)
       }
     } catch (error: any) {
-      console.error('Error loading networks:', error)
       toast.error(error.message || 'Failed to load networks')
     } finally {
       setIsLoadingNetworks(false)
@@ -149,7 +148,6 @@ const BuyData: React.FC = () => {
         setCategories(response.data)
       }
     } catch (error: any) {
-      console.error('Error loading categories:', error)
       toast.error(error.message || 'Failed to load data plan categories')
     } finally {
       setIsLoadingCategories(false)
@@ -183,7 +181,6 @@ const BuyData: React.FC = () => {
         setDataPlans(allPlans)
       }
     } catch (error: any) {
-      console.error('Error loading data plans:', error)
       toast.error(error.message || 'Failed to load data plans')
     } finally {
       setIsLoadingPlans(false)
@@ -245,7 +242,7 @@ const BuyData: React.FC = () => {
           amount: purchaseData.amount,
           description: purchaseData.description,
           network: purchaseData.networkName,
-          status: purchaseData.status,
+          status: purchaseData.status as 'pending' | 'successful' | 'failed' | 'completed',
           phoneNumber: purchaseData.phoneNumber,
           reference: purchaseData.reference,
           transactionId: purchaseData.transactionId
@@ -257,7 +254,6 @@ const BuyData: React.FC = () => {
         setShowPinVerification(false)
       }
     } catch (error: any) {
-      console.error('Purchase error:', error)
       toast.error(error.message || 'Failed to purchase data plan')
     } finally {
       setIsLoading(false)

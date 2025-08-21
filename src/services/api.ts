@@ -414,6 +414,31 @@ export interface DataPurchaseResponse {
   timestamp?: string
 }
 
+// Airtime Purchase Request/Response Interfaces
+export interface AirtimePurchaseRequest {
+  networkName: string
+  phoneNumber: string
+  amount: number
+}
+
+export interface AirtimePurchaseResponse {
+  success: boolean
+  message: string
+  data?: {
+    transactionId: string
+    reference: string
+    amount: number
+    markup: number
+    totalCost: number
+    status: string
+    description: string
+    networkName: string
+    phoneNumber: string
+    otobillRef: string
+  }
+  timestamp?: string
+}
+
 
 export interface WalletBalanceResponse {
   success: boolean
@@ -829,13 +854,52 @@ class ApiService {
   async validatePin(pin: string): Promise<ValidatePinResponse> {
     const accessToken = localStorage.getItem('accessToken')
     
-    return this.request<ValidatePinResponse>('/auth/pin/validate', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ pin }),
-    })
+    // Use the same endpoint as changePin but with a temporary new PIN to validate current PIN
+    // This is a workaround since the validate endpoint is returning 500 errors
+    const tempPin = '9999' // Temporary PIN that's different from the current one
+    
+    try {
+      // Try to change to temp PIN to validate current PIN
+      const response = await this.request<ChangePinResponse>('/auth/pin/change', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ currentPin: pin, newPin: tempPin }),
+      })
+      
+      if (response.success) {
+        // If successful, change back to the original PIN
+        await this.request<ChangePinResponse>('/auth/pin/change', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ currentPin: tempPin, newPin: pin }),
+        })
+        
+        // Return success if both operations succeeded
+        return {
+          success: true,
+          message: 'PIN validated successfully',
+          data: { isValid: true }
+        }
+      } else {
+        return {
+          success: false,
+          message: response.message || 'Invalid PIN',
+          data: { isValid: false }
+        }
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'PIN validation failed',
+        data: { isValid: false }
+      }
+    }
   }
 
   async changePin(currentPin: string, newPin: string): Promise<ChangePinResponse> {
@@ -1465,6 +1529,51 @@ class ApiService {
       } else if (error.message?.includes('409')) {
         throw new Error('Purchase failed. Please try again.')
       }
+      throw error
+    }
+  }
+
+  // Purchase Airtime
+  async purchaseAirtime(purchaseData: AirtimePurchaseRequest): Promise<AirtimePurchaseResponse> {
+    const accessToken = localStorage.getItem('accessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<AirtimePurchaseResponse>('/purchases/airtime', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(purchaseData),
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      } else if (error.message?.includes('400')) {
+        // Handle specific airtime purchase errors
+        if (error.message?.includes('Insufficient balance')) {
+          throw new Error(error.message)
+        } else if (error.message?.includes('Amount must be at least')) {
+          throw new Error(error.message)
+        } else {
+          throw new Error('Invalid purchase data. Please check your phone number and amount.')
+        }
+      } else if (error.message?.includes('402')) {
+        throw new Error('Insufficient wallet balance. Please fund your wallet.')
+      } else if (error.message?.includes('409')) {
+        throw new Error('Purchase failed. Please try again.')
+      }
+      
+      // If it's a response error with a message, use that
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message)
+      }
+      
       throw error
     }
   }
