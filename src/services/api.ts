@@ -1577,6 +1577,53 @@ class ApiService {
       throw error
     }
   }
+
+  // OtoBill API Methods
+  async getOtoBillProfile(): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request('/otobill/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getOtoBillWalletBalance(): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request('/otobill/wallet/balance', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
 }
 
 export const apiService = new ApiService(API_BASE_URL)

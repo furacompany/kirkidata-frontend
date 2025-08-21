@@ -4,7 +4,7 @@ import {
   Users, Banknote, Activity,
   Smartphone, Wifi, CreditCard, CheckCircle,
   Clock, ArrowUpRight, ArrowDownRight, Shield,
-  Zap, PieChart, Globe, BarChart3
+  Zap, PieChart, Globe, BarChart3, Wallet
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -516,6 +516,42 @@ const AdminHome: React.FC = () => {
                   <Shield className="w-4 h-4 mr-2" />
                   System Settings
                 </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* OtoBill Quick Access */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              OtoBill Management
+            </CardTitle>
+            <CardDescription>
+              Manage your OtoBill API profile and wallet
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+              <Link to="/admin/otobill-wallet">
+                <div className="p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-md">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-green-100 rounded-lg">
+                      <Wallet className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">OtoBill Wallet</h3>
+                      <p className="text-sm text-gray-600">Monitor wallet balance</p>
+                    </div>
+                  </div>
+                </div>
               </Link>
             </div>
           </CardContent>

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { apiService } from '../services/api'
 import { getVirtualAccountTransactions } from '../features/virtual-accounts/api'
 import toast from 'react-hot-toast'
-import { AdminStats, User, Transaction, WalletLog } from '../types'
+import { AdminStats, User, Transaction, WalletLog, OtoBillProfile, OtoBillWalletBalance } from '../types'
 import { clearAdminAuth } from '../utils/auth'
 
 interface Admin {
@@ -23,6 +23,8 @@ interface AdminAuthState {
   users: User[]
   transactions: Transaction[]
   walletLogs: WalletLog[]
+  otobillProfile: OtoBillProfile | null
+  otobillWalletBalance: OtoBillWalletBalance | null
 }
 
 interface AdminAuthStore extends AdminAuthState {
@@ -50,6 +52,9 @@ interface AdminAuthStore extends AdminAuthState {
   fetchTransactions: () => Promise<void>
   fetchWalletLogs: () => Promise<void>
   updateTransactionStatus: (transactionId: string, status: 'pending' | 'successful' | 'failed') => Promise<void>
+  // OtoBill methods
+  fetchOtoBillProfile: () => Promise<void>
+  fetchOtoBillWalletBalance: () => Promise<void>
 }
 
 export const useAdminStore = create<AdminAuthStore>((set, _get) => ({
@@ -60,6 +65,8 @@ export const useAdminStore = create<AdminAuthStore>((set, _get) => ({
   users: [],
   transactions: [],
   walletLogs: [],
+  otobillProfile: null,
+  otobillWalletBalance: null,
 
   restoreAuthState: () => {
     const accessToken = localStorage.getItem('adminAccessToken')
@@ -496,6 +503,37 @@ export const useAdminStore = create<AdminAuthStore>((set, _get) => ({
     } catch (error: any) {
       console.error('Failed to update transaction status:', error)
       toast.error('Failed to update transaction status')
+      throw error
+    }
+  },
+
+  // OtoBill methods
+  fetchOtoBillProfile: async () => {
+    try {
+      const response = await apiService.getOtoBillProfile()
+      if (response.success && response.data) {
+        set({ otobillProfile: response.data })
+      } else {
+        throw new Error(response.message || 'Failed to fetch OtoBill profile')
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch OtoBill profile:', error)
+      toast.error('Failed to fetch OtoBill profile')
+      throw error
+    }
+  },
+
+  fetchOtoBillWalletBalance: async () => {
+    try {
+      const response = await apiService.getOtoBillWalletBalance()
+      if (response.success && response.data) {
+        set({ otobillWalletBalance: response.data })
+      } else {
+        throw new Error(response.message || 'Failed to fetch OtoBill wallet balance')
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch OtoBill wallet balance:', error)
+      toast.error('Failed to fetch OtoBill wallet balance')
       throw error
     }
   },

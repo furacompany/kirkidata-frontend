@@ -34,6 +34,7 @@ import TransactionsPanel from './pages/admin/TransactionsPanel'
 import WalletLogs from './pages/admin/WalletLogs'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminProfile from './pages/admin/AdminProfile'
+import OtobillProfile from './pages/admin/OtobillProfile'
 
 // Layouts
 import DashboardLayout from './components/layout/DashboardLayout'
@@ -258,6 +259,16 @@ const App: React.FC = () => {
               <ProtectedRoute adminOnly>
                 <AdminLayout>
                   <AdminProfile />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/otobill-profile"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminLayout>
+                  <OtobillProfile />
                 </AdminLayout>
               </ProtectedRoute>
             }

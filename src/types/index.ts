@@ -102,6 +102,31 @@ export interface WalletLog {
   createdAt: string
 }
 
+export interface OtoBillProfile {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  phoneNumber: string
+  role: string
+  walletBalance: number
+  formattedWalletBalance: string
+  apiKeyName: string
+  ipWhitelist: string
+  apiKeyCreatedAt: string
+  apiKeyLastUsed: string
+  isEmailVerified: boolean
+  hasSetPin: boolean
+  isActive: boolean
+}
+
+export interface OtoBillWalletBalance {
+  balance: number
+  formattedBalance: string
+  userId: string
+  email: string
+}
+
 export interface Network {
   id: string
   name: string

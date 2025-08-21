@@ -29,12 +29,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate()
   const { admin, logout } = useAdminStore()
 
+
+
+
+
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Users Management', href: '/admin/users', icon: Users },
     { name: 'Data Plans', href: '/admin/data-plans', icon: Wifi },
     { name: 'All Transactions', href: '/admin/transactions', icon: FileText },
     { name: 'Wallet Logs', href: '/admin/wallet-logs', icon: CreditCard },
+    { name: 'OtoBill Profile', href: '/admin/otobill-profile', icon: Shield },
     { name: 'Profile', href: '/admin/profile', icon: User },
     { name: 'System Settings', href: '/admin/settings', icon: Settings },
   ]
