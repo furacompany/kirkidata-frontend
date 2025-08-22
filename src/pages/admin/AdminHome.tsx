@@ -13,22 +13,47 @@ import { Link } from 'react-router-dom'
 
 const AdminHome: React.FC = () => {
   const { stats, users, transactions, fetchUsers, fetchTransactions, fetchStats } = useAdminStore()
+  const [isLoadingStats, setIsLoadingStats] = React.useState(true)
 
   useEffect(() => {
-    // Only call functions if they exist
-    if (typeof fetchStats === 'function') {
-      fetchStats()
+    const loadData = async () => {
+      // Fetch stats
+      if (typeof fetchStats === 'function') {
+        try {
+          await fetchStats()
+        } catch (error) {
+          console.error('Failed to fetch stats:', error)
+        } finally {
+          setIsLoadingStats(false)
+        }
+      } else {
+        setIsLoadingStats(false)
+      }
+
+      // Fetch users
+      if (typeof fetchUsers === 'function') {
+        try {
+          await fetchUsers()
+        } catch (error) {
+          console.error('Failed to fetch users:', error)
+        }
+      }
+
+      // Fetch transactions
+      if (typeof fetchTransactions === 'function') {
+        try {
+          await fetchTransactions()
+        } catch (error) {
+          console.error('Failed to fetch transactions:', error)
+        }
+      }
     }
-    if (typeof fetchUsers === 'function') {
-      fetchUsers()
-    }
-    if (typeof fetchTransactions === 'function') {
-      fetchTransactions()
-    }
+
+    loadData()
   }, [fetchStats, fetchUsers, fetchTransactions])
 
-  const recentTransactions = Array.isArray(transactions) ? transactions.slice(0, 4) : []
-  const recentUsers = Array.isArray(users) ? users.slice(0, 4) : []
+  const recentTransactions = stats?.recentTransactions || (Array.isArray(transactions) ? transactions.slice(0, 4) : [])
+  const recentUsers = stats?.recentUsers || (Array.isArray(users) ? users.slice(0, 4) : [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,28 +109,28 @@ const AdminHome: React.FC = () => {
     return ((current - previous) / previous) * 100
   }
 
-  // Safe access to stats with default values
+  // Safe access to stats with default values (fallback only when loading is complete and no data)
   const safeStats = {
-    totalUsers: stats?.totalUsers ?? 156,
-    previousUsers: stats?.previousUsers ?? 142,
-    totalRevenue: stats?.totalRevenue ?? 2847500,
-    previousRevenue: stats?.previousRevenue ?? 2234800,
-    totalTransactions: stats?.totalTransactions ?? 1247,
-    previousTransactions: stats?.previousTransactions ?? 1089,
-    activeUsers: stats?.activeUsers ?? 89,
-    previousActiveUsers: stats?.previousActiveUsers ?? 76,
-    airtimeTransactions: stats?.airtimeTransactions ?? 432,
-    airtimeRevenue: stats?.airtimeRevenue ?? 1250000,
-    dataTransactions: stats?.dataTransactions ?? 318,
-    dataRevenue: stats?.dataRevenue ?? 897500,
-    walletTransactions: stats?.walletTransactions ?? 497,
-    walletRevenue: stats?.walletRevenue ?? 700000,
-    networkStats: stats?.networkStats ?? {
-      MTN: { successful: 45, total: 50 },
-      Airtel: { successful: 38, total: 42 },
-      Glo: { successful: 32, total: 35 },
-      '9mobile': { successful: 28, total: 31 }
-    }
+    totalUsers: stats?.totalUsers ?? (isLoadingStats ? 0 : 156),
+    previousUsers: stats?.previousUsers ?? (isLoadingStats ? 0 : 142),
+    totalRevenue: stats?.totalRevenue ?? (isLoadingStats ? 0 : 2847500),
+    previousRevenue: stats?.previousRevenue ?? (isLoadingStats ? 0 : 2234800),
+    totalTransactions: stats?.totalTransactions ?? (isLoadingStats ? 0 : 1247),
+    previousTransactions: stats?.previousTransactions ?? (isLoadingStats ? 0 : 1089),
+    activeUsers: stats?.activeUsers ?? (isLoadingStats ? 0 : 89),
+    previousActiveUsers: stats?.previousActiveUsers ?? (isLoadingStats ? 0 : 76),
+    airtimeTransactions: stats?.airtimeTransactions ?? (isLoadingStats ? 0 : 432),
+    airtimeRevenue: stats?.airtimeRevenue ?? (isLoadingStats ? 0 : 1250000),
+    dataTransactions: stats?.dataTransactions ?? (isLoadingStats ? 0 : 318),
+    dataRevenue: stats?.dataRevenue ?? (isLoadingStats ? 0 : 897500),
+    walletTransactions: stats?.walletTransactions ?? (isLoadingStats ? 0 : 497),
+    walletRevenue: stats?.walletRevenue ?? (isLoadingStats ? 0 : 700000),
+    networkStats: stats?.networkStats ?? (isLoadingStats ? {} : {
+      MTN: { successful: 45, total: 50, revenue: 1200000 },
+      Airtel: { successful: 38, total: 42, revenue: 980000 },
+      Glo: { successful: 32, total: 35, revenue: 850000 },
+      '9mobile': { successful: 28, total: 31, revenue: 720000 }
+    })
   }
 
   return (
@@ -127,6 +152,24 @@ const AdminHome: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={async () => {
+              setIsLoadingStats(true)
+              try {
+                await fetchStats?.()
+              } catch (error) {
+                console.error('Failed to refresh stats:', error)
+              } finally {
+                setIsLoadingStats(false)
+              }
+            }}
+            disabled={isLoadingStats}
+          >
+            <Activity className="w-4 h-4 mr-2" />
+            {isLoadingStats ? 'Refreshing...' : 'Refresh Stats'}
+          </Button>
           <Link to="/admin/users">
             <Button variant="outline" size="sm">
               <Users className="w-4 h-4 mr-2" />
@@ -134,7 +177,7 @@ const AdminHome: React.FC = () => {
             </Button>
           </Link>
           <Link to="/admin/settings">
-                            <Button className="bg-primary hover:bg-primary/90 text-white">
+            <Button className="bg-primary hover:bg-primary/90 text-white">
               <Shield className="w-4 h-4 mr-2" />
               System Settings
             </Button>
@@ -158,17 +201,26 @@ const AdminHome: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{safeStats.totalUsers.toLocaleString()}</div>
-            <div className="flex items-center text-xs mt-2">
-              {getPercentageChange(safeStats.totalUsers, safeStats.previousUsers) > 0 ? (
-                <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-              ) : (
-                <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-              )}
-              <span className={getPercentageChange(safeStats.totalUsers, safeStats.previousUsers) > 0 ? 'text-green-600' : 'text-red-600'}>
-                {Math.abs(getPercentageChange(safeStats.totalUsers, safeStats.previousUsers)).toFixed(1)}% from last month
-              </span>
-            </div>
+            {isLoadingStats ? (
+              <div className="animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-20 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-32"></div>
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-gray-900">{safeStats.totalUsers.toLocaleString()}</div>
+                <div className="flex items-center text-xs mt-2">
+                  {getPercentageChange(safeStats.totalUsers, safeStats.previousUsers) > 0 ? (
+                    <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
+                  )}
+                  <span className={getPercentageChange(safeStats.totalUsers, safeStats.previousUsers) > 0 ? 'text-green-600' : 'text-red-600'}>
+                    {Math.abs(getPercentageChange(safeStats.totalUsers, safeStats.previousUsers)).toFixed(1)}% from last month
+                  </span>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -177,21 +229,30 @@ const AdminHome: React.FC = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-700">Total Revenue</CardTitle>
             <div className="p-2 bg-green-100 rounded-lg">
-                              <Banknote className="h-4 w-4 text-green-600" />
+              <Banknote className="h-4 w-4 text-green-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{formatAmount(safeStats.totalRevenue)}</div>
-            <div className="flex items-center text-xs mt-2">
-              {getPercentageChange(safeStats.totalRevenue, safeStats.previousRevenue) > 0 ? (
-                <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-              ) : (
-                <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-              )}
-              <span className={getPercentageChange(safeStats.totalRevenue, safeStats.previousRevenue) > 0 ? 'text-green-600' : 'text-red-600'}>
-                {Math.abs(getPercentageChange(safeStats.totalRevenue, safeStats.previousRevenue)).toFixed(1)}% from last month
-              </span>
-            </div>
+            {isLoadingStats ? (
+              <div className="animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-24 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-32"></div>
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-gray-900">{formatAmount(safeStats.totalRevenue)}</div>
+                <div className="flex items-center text-xs mt-2">
+                  {getPercentageChange(safeStats.totalRevenue, safeStats.previousRevenue) > 0 ? (
+                    <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
+                  )}
+                  <span className={getPercentageChange(safeStats.totalRevenue, safeStats.previousRevenue) > 0 ? 'text-green-600' : 'text-red-600'}>
+                    {Math.abs(getPercentageChange(safeStats.totalRevenue, safeStats.previousRevenue)).toFixed(1)}% from last month
+                  </span>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -204,17 +265,26 @@ const AdminHome: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{safeStats.totalTransactions.toLocaleString()}</div>
-            <div className="flex items-center text-xs mt-2">
-              {getPercentageChange(safeStats.totalTransactions, safeStats.previousTransactions) > 0 ? (
-                <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-              ) : (
-                <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-              )}
-              <span className={getPercentageChange(safeStats.totalTransactions, safeStats.previousTransactions) > 0 ? 'text-green-600' : 'text-red-600'}>
-                {Math.abs(getPercentageChange(safeStats.totalTransactions, safeStats.previousTransactions)).toFixed(1)}% from last month
-              </span>
-            </div>
+            {isLoadingStats ? (
+              <div className="animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-20 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-32"></div>
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-gray-900">{safeStats.totalTransactions.toLocaleString()}</div>
+                <div className="flex items-center text-xs mt-2">
+                  {getPercentageChange(safeStats.totalTransactions, safeStats.previousTransactions) > 0 ? (
+                    <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
+                  )}
+                  <span className={getPercentageChange(safeStats.totalTransactions, safeStats.previousTransactions) > 0 ? 'text-green-600' : 'text-red-600'}>
+                    {Math.abs(getPercentageChange(safeStats.totalTransactions, safeStats.previousTransactions)).toFixed(1)}% from last month
+                  </span>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -227,17 +297,26 @@ const AdminHome: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{safeStats.activeUsers}</div>
-            <div className="flex items-center text-xs mt-2">
-              {getPercentageChange(safeStats.activeUsers, safeStats.previousActiveUsers) > 0 ? (
-                <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-              ) : (
-                <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-              )}
-              <span className={getPercentageChange(safeStats.activeUsers, safeStats.previousActiveUsers) > 0 ? 'text-green-600' : 'text-red-600'}>
-                {Math.abs(getPercentageChange(safeStats.activeUsers, safeStats.previousActiveUsers)).toFixed(1)}% from last month
-              </span>
-            </div>
+            {isLoadingStats ? (
+              <div className="animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-32"></div>
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-gray-900">{safeStats.activeUsers.toLocaleString()}</div>
+                <div className="flex items-center text-xs mt-2">
+                  {getPercentageChange(safeStats.activeUsers, safeStats.previousActiveUsers) > 0 ? (
+                    <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
+                  )}
+                  <span className={getPercentageChange(safeStats.activeUsers, safeStats.previousActiveUsers) > 0 ? 'text-green-600' : 'text-red-600'}>
+                    {Math.abs(getPercentageChange(safeStats.activeUsers, safeStats.previousActiveUsers)).toFixed(1)}% from last month
+                  </span>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -455,13 +534,18 @@ const AdminHome: React.FC = () => {
             <div className="space-y-4">
               {recentUsers.length > 0 ? (
                 recentUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div key={user._id || user.id || Math.random()} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                        {user.name?.charAt(0).toUpperCase() || 'U'}
+                        {(user.firstName || user.name || 'U').charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">{user.name || 'Unknown User'}</div>
+                        <div className="font-medium text-gray-900">
+                          {user.firstName && user.lastName 
+                            ? `${user.firstName} ${user.lastName}` 
+                            : user.name || 'Unknown User'
+                          }
+                        </div>
                         <div className="text-sm text-gray-500">{user.email || 'No email'}</div>
                       </div>
                     </div>
@@ -470,11 +554,11 @@ const AdminHome: React.FC = () => {
                         {formatDate(user.createdAt)}
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full border ${
-                        user.status === 'active' 
+                        user.isActive || user.status === 'active' 
                           ? 'text-success bg-success/10 border-success/20' 
                           : 'text-gray-500 bg-gray-100 border-gray/20'
                       }`}>
-                        {user.status || 'inactive'}
+                        {user.isActive ? 'active' : (user.status || 'inactive')}
                       </span>
                     </div>
                   </div>

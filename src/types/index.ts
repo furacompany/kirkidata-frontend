@@ -155,8 +155,11 @@ export interface AdminStats {
     [key: string]: {
       successful: number
       total: number
+      revenue?: number
     }
   }
+  recentTransactions?: any[]
+  recentUsers?: any[]
 }
 
 export interface AuthState {

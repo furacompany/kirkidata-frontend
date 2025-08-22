@@ -268,6 +268,40 @@ export interface UserStatsResponse {
   timestamp?: string
 }
 
+export interface AdminStatsResponse {
+  success: boolean
+  message: string
+  data?: {
+    totalUsers: number
+    activeUsers: number
+    totalRevenue: number
+    totalTransactions: number
+    pendingTransactions: number
+    successfulTransactions: number
+    failedTransactions: number
+    airtimeTransactions: number
+    airtimeRevenue: number
+    dataTransactions: number
+    dataRevenue: number
+    walletTransactions: number
+    walletRevenue: number
+    previousUsers?: number
+    previousRevenue?: number
+    previousTransactions?: number
+    previousActiveUsers?: number
+    networkStats?: {
+      [key: string]: {
+        successful: number
+        total: number
+        revenue: number
+      }
+    }
+    recentTransactions?: any[]
+    recentUsers?: any[]
+  }
+  timestamp?: string
+}
+
 export interface BulkUserOperationRequest {
   userIds: string[]
   operation: 'activate' | 'deactivate' | 'delete'
@@ -1262,6 +1296,30 @@ class ApiService {
       const endpoint = `/users/stats/aggregate${queryString ? `?${queryString}` : ''}`
       
       const response = await this.request<UserStatsResponse>(endpoint, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in as admin.')
+      }
+      throw error
+    }
+  }
+
+  // Get Admin Dashboard Statistics
+  async getAdminStats(): Promise<AdminStatsResponse> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Admin access token required')
+    }
+    
+    try {
+      const response = await this.request<AdminStatsResponse>('/admin/stats/dashboard', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
