@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 import { 
   UserCheck, UserX, Trash2, Users, 
   AlertTriangle, CheckCircle, XCircle,
-  Search, Eye, Edit, ChevronLeft, ChevronRight
+  Eye, Edit, ChevronLeft, ChevronRight
 } from 'lucide-react'
 
 interface UserData {
@@ -78,7 +78,7 @@ const UsersManagement: React.FC = () => {
     hasPrev: false
   })
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
-  const [selectedUserForEdit, setSelectedUserForEdit] = useState<any>(null)
+  // const [selectedUserForEdit, setSelectedUserForEdit] = useState<any>(null)
   const [showAllUsers, setShowAllUsers] = useState(false)
 
   // Load all users with pagination
@@ -105,7 +105,7 @@ const UsersManagement: React.FC = () => {
 
   // Handle user edit from list
   const handleUserEditFromList = (user: any) => {
-    setSelectedUserForEdit(user)
+    // setSelectedUserForEdit(user)
     setUserData(user)
     setError(null)
     setSearchValue('')

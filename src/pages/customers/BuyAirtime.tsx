@@ -66,6 +66,7 @@ const BuyAirtime: React.FC = () => {
   const [selectedAmount, setSelectedAmount] = useState<number>(100)
   const [customAmount, setCustomAmount] = useState<string>('')
   const [phoneNumber, setPhoneNumber] = useState<string>('')
+  const [phoneNumberError, setPhoneNumberError] = useState<string>('')
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'card'>('wallet')
   
   // State for UI
@@ -76,6 +77,7 @@ const BuyAirtime: React.FC = () => {
   const [showPinVerification, setShowPinVerification] = useState(false)
   const [showPinReset, setShowPinReset] = useState(false)
   const [purchaseSuccess, setPurchaseSuccess] = useState<any>(null)
+  const [isVerifying, setIsVerifying] = useState(false)
 
   // Load networks on component mount
   useEffect(() => {
@@ -132,11 +134,17 @@ const BuyAirtime: React.FC = () => {
   }
 
   const canProceed = () => {
-    return selectedNetwork && getFinalAmount() > 0 && phoneNumber.length >= 11
+    return selectedNetwork && getFinalAmount() > 0 && phoneNumber.length === 11 && !phoneNumberError
   }
 
   const handlePurchase = () => {
     if (!canProceed()) return
+    
+    // Validate phone number before proceeding
+    if (phoneNumber.length !== 11) {
+      setPhoneNumberError("Phone number must be exactly 11 digits")
+      return
+    }
     
     // Show PIN verification modal
     setShowPinVerification(true)
@@ -200,6 +208,19 @@ const BuyAirtime: React.FC = () => {
     }
   }
 
+  const handleVerifyPin = async () => {
+    setIsVerifying(true)
+    try {
+      await completePurchase()
+      setIsVerifying(false)
+      setShowPinVerification(false)
+    } catch (error: any) {
+      setIsVerifying(false)
+      setShowPinVerification(false)
+      // Error is already handled in completePurchase function
+    }
+  }
+
   const handlePinSuccess = () => {
     completePurchase()
   }
@@ -257,11 +278,20 @@ const BuyAirtime: React.FC = () => {
                 <Input
                   label="Phone Number"
                   type="tel"
-                  placeholder="Enter phone number"
+                  placeholder="Enter 11-digit phone number"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                    if (value.length <= 11) {
+                      setPhoneNumber(value);
+                      setPhoneNumberError(''); // Clear error when user types
+                    }
+                  }}
+                  maxLength={11}
+                  error={phoneNumberError}
                   icon={<Phone className="w-4 h-4" />}
                 />
+                <p className="text-xs text-gray-500">Phone number must be exactly 11 digits</p>
               </div>
 
               {/* Network Selection - POSITION 2 */}
@@ -535,6 +565,8 @@ const BuyAirtime: React.FC = () => {
         onForgotPin={handleForgotPin}
         title="Verify Purchase"
         description={`Enter your PIN to confirm ${formatAmount(getFinalAmount())} airtime purchase`}
+        isVerifying={isVerifying}
+        onVerifyPin={handleVerifyPin}
       />
 
       {/* PIN Reset Modal */}
