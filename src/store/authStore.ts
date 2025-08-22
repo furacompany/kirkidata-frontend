@@ -25,7 +25,7 @@ interface AuthStore extends AuthState {
 
 export const useAuthStore = create<AuthStore>((set, get) => {
   // Set up periodic token refresh
-  let refreshInterval: NodeJS.Timeout | null = null
+  let refreshInterval: number | null = null
 
   const startTokenRefresh = () => {
     // Clear any existing interval
