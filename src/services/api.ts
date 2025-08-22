@@ -1099,9 +1099,6 @@ class ApiService {
   async getUserByPhone(phone: string): Promise<UserByPhoneResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
     
-    console.log('API: getUserByPhone called with phone:', phone)
-    console.log('API: adminAccessToken exists:', !!accessToken)
-    
     if (!accessToken) {
       throw new Error('401: Admin access token required')
     }
@@ -1113,10 +1110,8 @@ class ApiService {
           'Authorization': `Bearer ${accessToken}`,
         },
       })
-      console.log('API: getUserByPhone response:', response)
       return response
     } catch (error: any) {
-      console.error('API: getUserByPhone error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('404')) {
@@ -1129,9 +1124,6 @@ class ApiService {
   async getUserByEmail(email: string): Promise<UserByEmailResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
     
-    console.log('API: getUserByEmail called with email:', email)
-    console.log('API: adminAccessToken exists:', !!accessToken)
-    
     if (!accessToken) {
       throw new Error('401: Admin access token required')
     }
@@ -1143,10 +1135,8 @@ class ApiService {
           'Authorization': `Bearer ${accessToken}`,
         },
       })
-      console.log('API: getUserByEmail response:', response)
       return response
     } catch (error: any) {
-      console.error('API: getUserByEmail error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('404')) {
@@ -1159,9 +1149,6 @@ class ApiService {
   // Update User Profile by Admin
   async updateUserProfileByAdmin(userId: string, profileData: UpdateUserProfileByAdminRequest): Promise<UpdateUserProfileByAdminResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
-    
-    console.log('API: updateUserProfileByAdmin called with userId:', userId, 'data:', profileData)
-    console.log('API: adminAccessToken exists:', !!accessToken)
     
     if (!accessToken) {
       throw new Error('401: Admin access token required')
@@ -1176,10 +1163,8 @@ class ApiService {
         },
         body: JSON.stringify(profileData),
       })
-      console.log('API: updateUserProfileByAdmin response:', response)
       return response
     } catch (error: any) {
-      console.error('API: updateUserProfileByAdmin error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('404')) {
@@ -1192,9 +1177,6 @@ class ApiService {
   // Update User Wallet Balance by Admin
   async updateUserWallet(userId: string, walletData: UpdateUserWalletRequest): Promise<UpdateUserWalletResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
-    
-    console.log('API: updateUserWallet called with userId:', userId, 'data:', walletData)
-    console.log('API: adminAccessToken exists:', !!accessToken)
     
     if (!accessToken) {
       throw new Error('401: Admin access token required')
@@ -1209,10 +1191,8 @@ class ApiService {
         },
         body: JSON.stringify(walletData),
       })
-      console.log('API: updateUserWallet response:', response)
       return response
     } catch (error: any) {
-      console.error('API: updateUserWallet error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('404')) {
@@ -1225,9 +1205,6 @@ class ApiService {
   // Search Users with Filters and Pagination
   async searchUsers(filters: SearchUsersRequest): Promise<SearchUsersResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
-    
-    console.log('API: searchUsers called with filters:', filters)
-    console.log('API: adminAccessToken exists:', !!accessToken)
     
     if (!accessToken) {
       throw new Error('401: Admin access token required')
@@ -1256,10 +1233,8 @@ class ApiService {
           'Authorization': `Bearer ${accessToken}`,
         },
       })
-      console.log('API: searchUsers response:', response)
       return response
     } catch (error: any) {
-      console.error('API: searchUsers error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       }
@@ -1270,9 +1245,6 @@ class ApiService {
   // Get User Statistics
   async getUserStats(filters: UserStatsRequest): Promise<UserStatsResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
-    
-    console.log('API: getUserStats called with filters:', filters)
-    console.log('API: adminAccessToken exists:', !!accessToken)
     
     if (!accessToken) {
       throw new Error('401: Admin access token required')
@@ -1295,10 +1267,8 @@ class ApiService {
           'Authorization': `Bearer ${accessToken}`,
         },
       })
-      console.log('API: getUserStats response:', response)
       return response
     } catch (error: any) {
-      console.error('API: getUserStats error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       }
@@ -1309,9 +1279,6 @@ class ApiService {
   // Bulk User Operations
   async bulkUserOperation(operationData: BulkUserOperationRequest): Promise<BulkUserOperationResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
-    
-    console.log('API: bulkUserOperation called with data:', operationData)
-    console.log('API: adminAccessToken exists:', !!accessToken)
     
     if (!accessToken) {
       throw new Error('401: Admin access token required')
@@ -1326,10 +1293,8 @@ class ApiService {
         },
         body: JSON.stringify(operationData),
       })
-      console.log('API: bulkUserOperation response:', response)
       return response
     } catch (error: any) {
-      console.error('API: bulkUserOperation error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('400')) {
@@ -1343,9 +1308,6 @@ class ApiService {
   async deactivateUser(userId: string): Promise<DeactivateUserResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
     
-    console.log('API: deactivateUser called with userId:', userId)
-    console.log('API: adminAccessToken exists:', !!accessToken)
-    
     if (!accessToken) {
       throw new Error('401: Admin access token required')
     }
@@ -1357,10 +1319,8 @@ class ApiService {
           'Authorization': `Bearer ${accessToken}`,
         },
       })
-      console.log('API: deactivateUser response:', response)
       return response
     } catch (error: any) {
-      console.error('API: deactivateUser error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('404')) {
@@ -1374,9 +1334,6 @@ class ApiService {
   async reactivateUser(userId: string): Promise<ReactivateUserResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
     
-    console.log('API: reactivateUser called with userId:', userId)
-    console.log('API: adminAccessToken exists:', !!accessToken)
-    
     if (!accessToken) {
       throw new Error('401: Admin access token required')
     }
@@ -1388,10 +1345,8 @@ class ApiService {
           'Authorization': `Bearer ${accessToken}`,
         },
       })
-      console.log('API: reactivateUser response:', response)
       return response
     } catch (error: any) {
-      console.error('API: reactivateUser error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('404')) {
@@ -1405,9 +1360,6 @@ class ApiService {
   async deleteUser(userId: string): Promise<DeleteUserResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
     
-    console.log('API: deleteUser called with userId:', userId)
-    console.log('API: adminAccessToken exists:', !!accessToken)
-    
     if (!accessToken) {
       throw new Error('401: Admin access token required')
     }
@@ -1419,10 +1371,8 @@ class ApiService {
           'Authorization': `Bearer ${accessToken}`,
         },
       })
-      console.log('API: deleteUser response:', response)
       return response
     } catch (error: any) {
-      console.error('API: deleteUser error:', error)
       if (error.message?.includes('401')) {
         throw new Error('401: Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('404')) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAdminStore } from '../../store/adminStore'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -6,7 +6,8 @@ import { Input } from '../../components/ui/Input'
 import toast from 'react-hot-toast'
 import { 
   UserCheck, UserX, Trash2, Users, 
-  AlertTriangle, CheckCircle, XCircle 
+  AlertTriangle, CheckCircle, XCircle,
+  Search, Eye, Edit, ChevronLeft, ChevronRight
 } from 'lucide-react'
 
 interface UserData {
@@ -34,7 +35,8 @@ const UsersManagement: React.FC = () => {
     deactivateUser,
     reactivateUser,
     deleteUser,
-    bulkUserOperation
+    bulkUserOperation,
+    searchUsers
   } = useAdminStore()
   const [searchType, setSearchType] = useState<'phone' | 'email'>('phone')
   const [searchValue, setSearchValue] = useState('')
@@ -65,21 +67,65 @@ const UsersManagement: React.FC = () => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   const [bulkOperationResult, setBulkOperationResult] = useState<any>(null)
 
-  // Users list state - commented out as not currently used
-  // const [usersList, setUsersList] = useState<any[]>([])
-  // const [pagination, setPagination] = useState({
-  //   page: 1,
-  //   limit: 20,
-  //   total: 0,
-  //   totalPages: 0,
-  //   hasNext: false,
-  //   hasPrev: false
-  // })
-  // const [isLoadingUsers, setIsLoadingUsers] = useState(false)
-  // const [selectedUserForEdit, setSelectedUserForEdit] = useState<any>(null)
+  // Users list state
+  const [usersList, setUsersList] = useState<any[]>([])
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false
+  })
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false)
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<any>(null)
+  const [showAllUsers, setShowAllUsers] = useState(false)
 
-  // Get searchUsers function from store
-  // const { searchUsers } = useAdminStore() // Not currently used
+  // Load all users with pagination
+  const loadUsers = async (page: number = 1) => {
+    setIsLoadingUsers(true)
+    try {
+      const response = await searchUsers({
+        page,
+        limit: 20,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      })
+      
+      if (response.success && response.data) {
+        setUsersList(response.data.users)
+        setPagination(response.data.pagination)
+      }
+    } catch (error: any) {
+      toast.error('Failed to load users')
+    } finally {
+      setIsLoadingUsers(false)
+    }
+  }
+
+  // Handle user edit from list
+  const handleUserEditFromList = (user: any) => {
+    setSelectedUserForEdit(user)
+    setUserData(user)
+    setError(null)
+    setSearchValue('')
+    setIsEditing(false)
+    setIsUpdatingWallet(false)
+    setEditForm({ firstName: '', lastName: '', state: '' })
+    setWalletForm({ amount: '', operation: 'add', description: '' })
+  }
+
+  // Handle pagination
+  const handlePageChange = (newPage: number) => {
+    loadUsers(newPage)
+  }
+
+  // Load users on component mount and when showAllUsers changes
+  useEffect(() => {
+    if (showAllUsers) {
+      loadUsers(1)
+    }
+  }, [showAllUsers])
 
   const handleSearch = async () => {
     if (!searchValue.trim()) {
@@ -87,7 +133,6 @@ const UsersManagement: React.FC = () => {
       return
     }
 
-    console.log('Searching for:', searchType, searchValue.trim())
     setIsLoading(true)
     setError(null)
     setUserData(null)
@@ -95,14 +140,10 @@ const UsersManagement: React.FC = () => {
     try {
       let response
       if (searchType === 'phone') {
-        console.log('Calling getUserByPhone...')
         response = await getUserByPhone(searchValue.trim())
       } else {
-        console.log('Calling getUserByEmail...')
         response = await getUserByEmail(searchValue.trim())
       }
-
-      console.log('Response:', response)
 
       if (response.success && response.data) {
         setUserData(response.data)
@@ -116,7 +157,6 @@ const UsersManagement: React.FC = () => {
         setError(response.message || 'User not found')
       }
     } catch (error: any) {
-      console.error('Search error:', error)
       if (error.message?.includes('401')) {
         setError('Unauthorized access. Please log in as admin.')
       } else if (error.message?.includes('404')) {
@@ -324,47 +364,6 @@ const UsersManagement: React.FC = () => {
     setBulkUserIds('')
     setBulkOperation('activate')
   }
-
-  // Load all users with pagination - commented out as not currently used
-  // const loadUsers = async (page: number = 1) => {
-  //   setIsLoadingUsers(true)
-  //   try {
-  //     const response = await searchUsers({
-  //       page,
-  //       limit: 20,
-  //       sortBy: 'createdAt',
-  //       sortOrder: 'desc'
-  //     })
-  //     
-  //     if (response.success && response.data) {
-  //       setUsersList(response.data.users)
-  //       setPagination(response.data.pagination)
-  //     }
-  //   } catch (error: any) {
-  //     console.error('Load users error:', error)
-  //     toast.error('Failed to load users')
-  //     toast.error('Failed to load users')
-  //   } finally {
-  //     setIsLoadingUsers(false)
-  //   }
-  // }
-
-  // Handle user edit from list - commented out as not currently used
-  // const handleUserEditFromList = (user: any) => {
-  //   setSelectedUserForEdit(user)
-  //   setUserData(user)
-  //   setError(null)
-  //   setSearchValue('')
-  //   setIsEditing(false)
-  //   setIsUpdatingWallet(false)
-  //   setEditForm({ firstName: '', lastName: '', state: '' })
-  //   setWalletForm({ amount: '', operation: 'add', description: '' })
-  // }
-
-  // Handle pagination - commented out as not currently used
-  // const handlePageChange = (newPage: number) => {
-  //   loadUsers(newPage)
-  // }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -956,7 +955,7 @@ const UsersManagement: React.FC = () => {
       )}
 
       {/* Instructions */}
-      {!userData && !error && (
+      {!userData && !error && !showAllUsers && (
         <Card className="p-6 bg-blue-50 border-blue-200">
           <div className="text-center space-y-2">
             <h3 className="text-lg font-medium text-blue-900">How to Search</h3>
@@ -967,6 +966,137 @@ const UsersManagement: React.FC = () => {
           </div>
         </Card>
       )}
+
+      {/* Show All Users Section */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            All Users
+          </h3>
+          <Button
+            onClick={() => setShowAllUsers(!showAllUsers)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            {showAllUsers ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            {showAllUsers ? 'Hide All Users' : 'Show All Users'}
+          </Button>
+        </div>
+
+        {showAllUsers && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-md font-medium text-gray-900">Users List</h4>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Page {pagination.page} of {pagination.totalPages}</span>
+                <Button
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={!pagination.hasPrev}
+                  variant="outline"
+                  className="px-3 py-2"
+                >
+                  Previous
+                </Button>
+                <Button
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={!pagination.hasNext}
+                  variant="outline"
+                  className="px-3 py-2"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+
+            {isLoadingUsers ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Loading users...</p>
+              </div>
+            ) : usersList.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No users found.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Wallet
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {usersList.map((user) => (
+                      <tr key={user._id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <button
+                            onClick={() => handleUserEditFromList(user)}
+                            className="flex items-center text-blue-600 hover:underline"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            {user._id}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{user.firstName} {user.lastName}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {user.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {user.phone}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {user.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ₦{user.wallet.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <Button
+                            onClick={() => handleUserEditFromList(user)}
+                            variant="outline"
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

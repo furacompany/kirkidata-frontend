@@ -119,12 +119,9 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // User Management Methods
   getUserByPhone: async (phone: string) => {
     try {
-      console.log('Admin store: getUserByPhone called with:', phone)
       const response = await apiService.getUserByPhone(phone)
-      console.log('Admin store: getUserByPhone response:', response)
       return response
     } catch (error: any) {
-      console.error('Admin store: getUserByPhone error:', error)
       toast.error(error.message || 'Failed to get user by phone')
       throw error
     }
@@ -132,12 +129,9 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   getUserByEmail: async (email: string) => {
     try {
-      console.log('Admin store: getUserByEmail called with:', email)
       const response = await apiService.getUserByEmail(email)
-      console.log('Admin store: getUserByEmail response:', response)
       return response
     } catch (error: any) {
-      console.error('Admin store: getUserByEmail error:', error)
       toast.error(error.message || 'Failed to get user by email')
       throw error
     }
@@ -146,13 +140,10 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Update User Profile by Admin
   updateUserProfile: async (userId: string, firstName: string, lastName: string, state: string) => {
     try {
-      console.log('Admin store: updateUserProfile called with:', { userId, firstName, lastName, state })
       const response = await apiService.updateUserProfileByAdmin(userId, { firstName, lastName, state })
-      console.log('Admin store: updateUserProfile response:', response)
       toast.success('User profile updated successfully!')
       return response
     } catch (error: any) {
-      console.error('Admin store: updateUserProfile error:', error)
       toast.error(error.message || 'Failed to update user profile')
       throw error
     }
@@ -161,13 +152,10 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Update User Wallet by Admin
   updateUserWallet: async (userId: string, amount: number, operation: 'add' | 'subtract', description: string) => {
     try {
-      console.log('Admin store: updateUserWallet called with:', { userId, amount, operation, description })
       const response = await apiService.updateUserWallet(userId, { amount, operation, description })
-      console.log('Admin store: updateUserWallet response:', response)
       toast.success('User wallet updated successfully!')
       return response
     } catch (error: any) {
-      console.error('Admin store: updateUserWallet error:', error)
       toast.error(error.message || 'Failed to update user wallet')
       throw error
     }
@@ -176,12 +164,9 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Search Users with Filters and Pagination
   searchUsers: async (filters: any) => {
     try {
-      console.log('Admin store: searchUsers called with filters:', filters)
       const response = await apiService.searchUsers(filters)
-      console.log('Admin store: searchUsers response:', response)
       return response
     } catch (error: any) {
-      console.error('Admin store: searchUsers error:', error)
       toast.error(error.message || 'Failed to search users')
       throw error
     }
@@ -190,12 +175,9 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Get User Statistics
   getUserStats: async (filters: any) => {
     try {
-      console.log('Admin store: getUserStats called with filters:', filters)
       const response = await apiService.getUserStats(filters)
-      console.log('Admin store: getUserStats response:', response)
       return response
     } catch (error: any) {
-      console.error('Admin store: getUserStats error:', error)
       toast.error(error.message || 'Failed to get user statistics')
       throw error
     }
@@ -204,9 +186,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Bulk User Operations
   bulkUserOperation: async (userIds: string[], operation: 'activate' | 'deactivate' | 'delete', additionalData?: any) => {
     try {
-      console.log('Admin store: bulkUserOperation called with:', { userIds, operation, additionalData })
       const response = await apiService.bulkUserOperation({ userIds, operation, additionalData })
-      console.log('Admin store: bulkUserOperation response:', response)
       
       if (response.success) {
         const operationText = operation.charAt(0).toUpperCase() + operation.slice(1)
@@ -215,7 +195,6 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       
       return response
     } catch (error: any) {
-      console.error('Admin store: bulkUserOperation error:', error)
       toast.error(error.message || 'Failed to perform bulk user operation')
       throw error
     }
@@ -224,9 +203,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Deactivate User
   deactivateUser: async (userId: string) => {
     try {
-      console.log('Admin store: deactivateUser called with userId:', userId)
       const response = await apiService.deactivateUser(userId)
-      console.log('Admin store: deactivateUser response:', response)
       
       if (response.success) {
         toast.success('User deactivated successfully!')
@@ -234,7 +211,6 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       
       return response
     } catch (error: any) {
-      console.error('Admin store: deactivateUser error:', error)
       toast.error(error.message || 'Failed to deactivate user')
       throw error
     }
@@ -243,9 +219,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Reactivate User
   reactivateUser: async (userId: string) => {
     try {
-      console.log('Admin store: reactivateUser called with userId:', userId)
       const response = await apiService.reactivateUser(userId)
-      console.log('Admin store: reactivateUser response:', response)
       
       if (response.success) {
         toast.success('User reactivated successfully!')
@@ -253,7 +227,6 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       
       return response
     } catch (error: any) {
-      console.error('Admin store: reactivateUser error:', error)
       toast.error(error.message || 'Failed to reactivate user')
       throw error
     }
@@ -262,9 +235,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Delete User
   deleteUser: async (userId: string) => {
     try {
-      console.log('Admin store: deleteUser called with userId:', userId)
       const response = await apiService.deleteUser(userId)
-      console.log('Admin store: deleteUser response:', response)
       
       if (response.success) {
         toast.success('User deleted successfully!')
@@ -272,7 +243,6 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       
       return response
     } catch (error: any) {
-      console.error('Admin store: deleteUser error:', error)
       toast.error(error.message || 'Failed to delete user')
       throw error
     }
@@ -465,7 +435,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       // if (response.success && response.data) {
       //   set({ stats: response.data })
       // }
-      console.log('fetchStats: Method not yet implemented in apiService')
+      // Method not yet implemented in apiService
     } catch (error: any) {
       console.error('Failed to fetch stats:', error)
       toast.error('Failed to fetch statistics')
@@ -478,7 +448,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       // if (response.success && response.data) {
       //   set({ users: response.data })
       // }
-      console.log('fetchUsers: Method not yet implemented in apiService')
+      // Method not yet implemented in apiService
     } catch (error: any) {
       console.error('Failed to fetch users:', error)
       toast.error('Failed to fetch users')
@@ -505,7 +475,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       // if (response.success && response.data) {
       //   set({ walletLogs: response.data })
       // }
-      console.log('fetchWalletLogs: Method not yet implemented in apiService')
+      // Method not yet implemented in apiService
     } catch (error: any) {
       console.error('Failed to fetch wallet logs:', error)
       toast.error('Failed to fetch wallet logs')
@@ -524,7 +494,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       //   set({ transactions: updatedTransactions })
       //   toast.success('Transaction status updated successfully!')
       // }
-      console.log('updateTransactionStatus: Method not yet implemented in apiService')
+      // Method not yet implemented in apiService
     } catch (error: any) {
       console.error('Failed to update transaction status:', error)
       toast.error('Failed to update transaction status')
