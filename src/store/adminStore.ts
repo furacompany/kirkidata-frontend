@@ -2,7 +2,16 @@ import { create } from 'zustand'
 import { apiService } from '../services/api'
 import { getVirtualAccountTransactions } from '../features/virtual-accounts/api'
 import toast from 'react-hot-toast'
-import { AdminStats, User, Transaction, WalletLog, OtoBillProfile, OtoBillWalletBalance } from '../types'
+import { 
+  AdminStats, 
+  User, 
+  Transaction, 
+  WalletLog, 
+  OtoBillProfile, 
+  OtoBillWalletBalance,
+  OtoBillTransaction,
+  OtoBillTransactionStats
+} from '../types'
 import { clearAdminAuth } from '../utils/auth'
 
 interface Admin {
@@ -25,6 +34,16 @@ interface AdminAuthState {
   walletLogs: WalletLog[]
   otobillProfile: OtoBillProfile | null
   otobillWalletBalance: OtoBillWalletBalance | null
+  otobillTransactions: OtoBillTransaction[]
+  otobillTransactionStats: OtoBillTransactionStats | null
+  otobillTransactionsPagination: {
+    page: number
+    limit: number
+    total: number
+    pages: number
+    hasNext: boolean
+    hasPrev: boolean
+  } | null
 }
 
 interface AdminAuthStore extends AdminAuthState {
@@ -55,9 +74,12 @@ interface AdminAuthStore extends AdminAuthState {
   // OtoBill methods
   fetchOtoBillProfile: () => Promise<void>
   fetchOtoBillWalletBalance: () => Promise<void>
+  fetchOtoBillTransactions: (page?: number, limit?: number, filters?: any) => Promise<void>
+  fetchOtoBillTransaction: (transactionId: string) => Promise<OtoBillTransaction | null>
+  fetchOtoBillTransactionStats: (startDate?: string, endDate?: string, type?: 'all' | 'data' | 'airtime') => Promise<void>
 }
 
-export const useAdminStore = create<AdminAuthStore>((set, _get) => ({
+export const useAdminStore = create<AdminAuthStore>((set) => ({
   admin: null,
   isAuthenticated: false,
   isLoading: false,
@@ -67,6 +89,9 @@ export const useAdminStore = create<AdminAuthStore>((set, _get) => ({
   walletLogs: [],
   otobillProfile: null,
   otobillWalletBalance: null,
+  otobillTransactions: [],
+  otobillTransactionStats: null,
+  otobillTransactionsPagination: null,
 
   restoreAuthState: () => {
     const accessToken = localStorage.getItem('adminAccessToken')
@@ -535,6 +560,61 @@ export const useAdminStore = create<AdminAuthStore>((set, _get) => ({
       console.error('Failed to fetch OtoBill wallet balance:', error)
       toast.error('Failed to fetch OtoBill wallet balance')
       throw error
+    }
+  },
+
+  fetchOtoBillTransactions: async (page?: number, limit?: number, filters?: any) => {
+    try {
+      const response = await apiService.getOtoBillTransactions(page, limit, filters);
+      if (response.success && response.data) {
+        set({
+          otobillTransactions: response.data.transactions,
+          otobillTransactionsPagination: {
+            page: response.data.page,
+            limit: limit || 20,
+            total: response.data.total,
+            pages: response.data.pages,
+            hasNext: response.data.hasNext,
+            hasPrev: response.data.hasPrev
+          }
+        });
+      } else {
+        throw new Error(response.message || 'Failed to fetch OtoBill transactions');
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch OtoBill transactions:', error);
+      toast.error('Failed to fetch OtoBill transactions');
+      throw error;
+    }
+  },
+
+  fetchOtoBillTransaction: async (transactionId: string) => {
+    try {
+      const response = await apiService.getOtoBillTransaction(transactionId);
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        return null;
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch OtoBill transaction:', error);
+      toast.error('Failed to fetch OtoBill transaction');
+      throw error;
+    }
+  },
+
+  fetchOtoBillTransactionStats: async (startDate?: string, endDate?: string, type?: 'all' | 'data' | 'airtime') => {
+    try {
+      const response = await apiService.getOtoBillTransactionStats(startDate, endDate, type);
+      if (response.success && response.data) {
+        set({ otobillTransactionStats: response.data });
+      } else {
+        throw new Error(response.message || 'Failed to fetch OtoBill transaction stats');
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch OtoBill transaction stats:', error);
+      toast.error('Failed to fetch OtoBill transaction stats');
+      throw error;
     }
   },
 })) 

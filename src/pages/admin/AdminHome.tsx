@@ -4,7 +4,7 @@ import {
   Users, Banknote, Activity,
   Smartphone, Wifi, CreditCard, CheckCircle,
   Clock, ArrowUpRight, ArrowDownRight, Shield,
-  Zap, PieChart, Globe, BarChart3, Wallet
+  Zap, PieChart, Globe, BarChart3, Wallet, User
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -535,11 +535,11 @@ const AdminHome: React.FC = () => {
               OtoBill Management
             </CardTitle>
             <CardDescription>
-              Manage your OtoBill API profile and wallet
+              Manage your OtoBill API profile, wallet, transactions, and analytics
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link to="/admin/otobill-wallet">
                 <div className="p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-md">
                   <div className="flex items-center gap-4">
@@ -549,6 +549,48 @@ const AdminHome: React.FC = () => {
                     <div>
                       <h3 className="font-semibold text-gray-900">OtoBill Wallet</h3>
                       <p className="text-sm text-gray-600">Monitor wallet balance</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+              
+              <Link to="/admin/otobill-transactions">
+                <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <Activity className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">OtoBill Transactions</h3>
+                      <p className="text-sm text-gray-600">Manage all transactions</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+              
+              <Link to="/admin/otobill-stats">
+                <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200 hover:border-purple-300 transition-all duration-200 hover:shadow-md">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-purple-100 rounded-lg">
+                      <BarChart3 className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">OtoBill Analytics</h3>
+                      <p className="text-sm text-gray-600">View statistics & insights</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+              
+              <Link to="/admin/otobill-profile">
+                <div className="p-6 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200 hover:border-orange-300 transition-all duration-200 hover:shadow-md">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-orange-100 rounded-lg">
+                      <User className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">OtoBill Profile</h3>
+                      <p className="text-sm text-gray-600">Manage API profile</p>
                     </div>
                   </div>
                 </div>

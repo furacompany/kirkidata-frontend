@@ -4,7 +4,10 @@ import {
   OtoBillDataPlansResponse, 
   OtoBillPricingSummaryResponse,
   OtoBillDataPlansPricingResponse,
-  OtoBillPricingUpdateResponse
+  OtoBillPricingUpdateResponse,
+  OtoBillTransactionsResponse,
+  OtoBillTransactionResponse,
+  OtoBillStatsResponse
 } from '../types'
 
 const API_BASE_URL = 'https://api.kirkidata.ng/api/v1'
@@ -1769,6 +1772,110 @@ class ApiService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ adminPrice }),
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  // OtoBill Transaction Management Methods
+  async getOtoBillTransactions(
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+      transactionType?: 'data' | 'airtime'
+      status?: 'successful' | 'pending' | 'failed'
+      startDate?: string
+      endDate?: string
+      userId?: string
+    }
+  ): Promise<OtoBillTransactionsResponse> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      })
+      
+      if (filters?.transactionType) queryParams.append('transactionType', filters.transactionType)
+      if (filters?.status) queryParams.append('status', filters.status)
+      if (filters?.startDate) queryParams.append('startDate', filters.startDate)
+      if (filters?.endDate) queryParams.append('endDate', filters.endDate)
+      if (filters?.userId) queryParams.append('userId', filters.userId)
+      
+      const response = await this.request<OtoBillTransactionsResponse>(`/otobill/transactions?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getOtoBillTransaction(transactionId: string): Promise<OtoBillTransactionResponse> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<OtoBillTransactionResponse>(`/otobill/transactions/${transactionId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      } else if (error.message?.includes('404')) {
+        throw new Error('404: Transaction not found')
+      }
+      throw error
+    }
+  }
+
+  // OtoBill Statistics Methods
+  async getOtoBillTransactionStats(
+    startDate?: string,
+    endDate?: string,
+    type?: 'all' | 'data' | 'airtime'
+  ): Promise<OtoBillStatsResponse> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const queryParams = new URLSearchParams()
+      
+      if (startDate) queryParams.append('startDate', startDate)
+      if (endDate) queryParams.append('endDate', endDate)
+      if (type) queryParams.append('type', type)
+      
+      const response = await this.request<OtoBillStatsResponse>(`/otobill/stats/transactions?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
       })
       return response
     } catch (error: any) {

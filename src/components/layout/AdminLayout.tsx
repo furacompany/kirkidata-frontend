@@ -13,7 +13,9 @@ import {
   Shield,
   Bell,
   User,
-  Wifi
+  Wifi,
+  Activity,
+  BarChart3
 } from 'lucide-react'
 import { useAdminStore } from '../../store/adminStore'
 import { Button } from '../ui/Button'
@@ -40,6 +42,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: 'All Transactions', href: '/admin/transactions', icon: FileText },
     { name: 'Wallet Logs', href: '/admin/wallet-logs', icon: CreditCard },
     { name: 'OtoBill Profile', href: '/admin/otobill-profile', icon: Shield },
+    { name: 'OtoBill Transactions', href: '/admin/otobill-transactions', icon: Activity },
+    { name: 'OtoBill Analytics', href: '/admin/otobill-stats', icon: BarChart3 },
     { name: 'Profile', href: '/admin/profile', icon: User },
     { name: 'System Settings', href: '/admin/settings', icon: Settings },
   ]

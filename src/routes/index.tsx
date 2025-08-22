@@ -27,6 +27,8 @@ const AdminSettings = lazy(() => import('../pages/admin/AdminSettings'));
 
 const OtoBillWallet = lazy(() => import('../pages/admin/OtoBillWallet'));
 const OtobillProfile = lazy(() => import('../pages/admin/OtobillProfile'));
+const OtoBillTransactions = lazy(() => import('../pages/admin/OtoBillTransactions'));
+const OtoBillStats = lazy(() => import('../pages/admin/OtoBillStats'));
 const NotFound = lazy(() => import('../pages/notfound'));
 
 // Protected route wrapper for admin routes
@@ -108,6 +110,8 @@ const AppRoutes = () => (
         <Route path="debug-test" element={<div>Debug route working! Path: /admin/debug-test</div>} />
         <Route path="otobill-wallet" element={<OtoBillWallet />} />
         <Route path="otobill-profile" element={<OtobillProfile />} />
+        <Route path="otobill-transactions" element={<OtoBillTransactions />} />
+        <Route path="otobill-stats" element={<OtoBillStats />} />
         <Route path="test-route" element={<div>Test route working!</div>} />
         <Route path="profile" element={<AdminProfile />} />
         <Route path="settings" element={<AdminSettings />} />

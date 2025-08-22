@@ -285,4 +285,102 @@ export interface OtoBillPricingUpdateResponse {
     adminPrice: number
     profit: number
   }
+}
+
+// OtoBill Transaction Management Interfaces
+export interface OtoBillTransaction {
+  _id: string
+  userId: {
+    _id: string
+    firstName: string
+    lastName: string
+    email: string
+    phoneNumber: string
+    fullName: string
+    accountStatus: string
+    maskedPhoneNumber: string
+    maskedEmail: string
+    maskedApiKey: string | null
+    upgradeCost: number | null
+    id: string
+  }
+  transactionType: 'data' | 'airtime'
+  status: 'successful' | 'pending' | 'failed'
+  userRole: string
+  amount: number
+  originalAmount?: number
+  topupmateRef: string
+  dataPlanId?: string
+  dataPlanName?: string
+  dataNetworkId?: string
+  dataNetworkName?: string
+  dataPhoneNumber?: string
+  dataPlanType?: string
+  dataValidityDays?: number
+  airtimeNetworkId?: string
+  airtimeNetworkName?: string
+  airtimePhoneNumber?: string
+  airtimeAmount?: number
+  description: string
+  createdAt: string
+  updatedAt: string
+  processedAt?: string
+  topupmateResponse?: {
+    status: string
+    Status: string
+  }
+  topupmateStatus: string
+  formattedAmount: string
+  formattedOriginalAmount?: string
+  profitMargin?: number
+  formattedProfitMargin?: string
+  duration: number
+  formattedDuration: string
+  id: string
+}
+
+export interface OtoBillTransactionsResponse {
+  success: boolean
+  message: string
+  data: {
+    transactions: OtoBillTransaction[]
+    total: number
+    page: number
+    pages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+  timestamp?: string
+}
+
+export interface OtoBillTransactionResponse {
+  success: boolean
+  message: string
+  data: OtoBillTransaction
+  timestamp?: string
+}
+
+// OtoBill Statistics Interfaces
+export interface OtoBillTransactionStats {
+  totalTransactions: number
+  totalAmount: number
+  totalProfit: number
+  airtime: {
+    count: number
+    amount: number
+    profit: number
+  }
+  data: {
+    count: number
+    amount: number
+    profit: number
+  }
+  period: string
+}
+
+export interface OtoBillStatsResponse {
+  success: boolean
+  message: string
+  data: OtoBillTransactionStats
+  timestamp?: string
 } 
