@@ -12,7 +12,16 @@ import { useAdminStore } from '../../store/adminStore'
 import { Link } from 'react-router-dom'
 
 const AdminHome: React.FC = () => {
-  const { stats, users, transactions, fetchUsers, fetchTransactions, fetchStats } = useAdminStore()
+  const { 
+    stats, 
+    users, 
+    transactions, 
+    otobillTransactionStats,
+    fetchUsers, 
+    fetchTransactions, 
+    fetchStats,
+    fetchOtoBillTransactionStats
+  } = useAdminStore()
   const [isLoadingStats, setIsLoadingStats] = React.useState(true)
 
   useEffect(() => {
@@ -28,6 +37,15 @@ const AdminHome: React.FC = () => {
         }
       } else {
         setIsLoadingStats(false)
+      }
+
+      // Fetch OtoBill transaction stats for revenue calculation
+      if (typeof fetchOtoBillTransactionStats === 'function') {
+        try {
+          await fetchOtoBillTransactionStats()
+        } catch (error) {
+          console.error('Failed to fetch OtoBill transaction stats:', error)
+        }
       }
 
       // Fetch users
@@ -50,7 +68,7 @@ const AdminHome: React.FC = () => {
     }
 
     loadData()
-  }, [fetchStats, fetchUsers, fetchTransactions])
+  }, [fetchStats, fetchUsers, fetchTransactions, fetchOtoBillTransactionStats])
 
   const recentTransactions = stats?.recentTransactions || (Array.isArray(transactions) ? transactions.slice(0, 4) : [])
   const recentUsers = stats?.recentUsers || (Array.isArray(users) ? users.slice(0, 4) : [])
@@ -113,7 +131,8 @@ const AdminHome: React.FC = () => {
   const safeStats = {
     totalUsers: stats?.totalUsers ?? (isLoadingStats ? 0 : 156),
     previousUsers: stats?.previousUsers ?? (isLoadingStats ? 0 : 142),
-    totalRevenue: stats?.totalRevenue ?? (isLoadingStats ? 0 : 2847500),
+    // Use OtoBill transaction stats for revenue if available, otherwise fallback to stats
+    totalRevenue: otobillTransactionStats?.totalAmount ?? stats?.totalRevenue ?? (isLoadingStats ? 0 : 2847500),
     previousRevenue: stats?.previousRevenue ?? (isLoadingStats ? 0 : 2234800),
     totalTransactions: stats?.totalTransactions ?? (isLoadingStats ? 0 : 1247),
     previousTransactions: stats?.previousTransactions ?? (isLoadingStats ? 0 : 1089),
@@ -158,7 +177,10 @@ const AdminHome: React.FC = () => {
             onClick={async () => {
               setIsLoadingStats(true)
               try {
-                await fetchStats?.()
+                await Promise.all([
+                  fetchStats?.(),
+                  fetchOtoBillTransactionStats?.()
+                ])
               } catch (error) {
                 console.error('Failed to refresh stats:', error)
               } finally {
@@ -272,15 +294,17 @@ const AdminHome: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="text-2xl font-bold text-gray-900">{safeStats.totalTransactions.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {(otobillTransactionStats?.totalTransactions ?? safeStats.totalTransactions).toLocaleString()}
+                </div>
                 <div className="flex items-center text-xs mt-2">
-                  {getPercentageChange(safeStats.totalTransactions, safeStats.previousTransactions) > 0 ? (
+                  {getPercentageChange(otobillTransactionStats?.totalTransactions ?? safeStats.totalTransactions, safeStats.previousTransactions) > 0 ? (
                     <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
                   ) : (
                     <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
                   )}
-                  <span className={getPercentageChange(safeStats.totalTransactions, safeStats.previousTransactions) > 0 ? 'text-green-600' : 'text-red-600'}>
-                    {Math.abs(getPercentageChange(safeStats.totalTransactions, safeStats.previousTransactions)).toFixed(1)}% from last month
+                  <span className={getPercentageChange(otobillTransactionStats?.totalTransactions ?? safeStats.totalTransactions, safeStats.previousTransactions) > 0 ? 'text-green-600' : 'text-red-600'}>
+                    {Math.abs(getPercentageChange(otobillTransactionStats?.totalTransactions ?? safeStats.totalTransactions, safeStats.previousTransactions)).toFixed(1)}% from last month
                   </span>
                 </div>
               </>
@@ -333,9 +357,9 @@ const AdminHome: React.FC = () => {
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-gray-900">Service Performance</CardTitle>
+                <CardTitle className="text-lg font-bold text-gray-900">OtoBill Service Performance</CardTitle>
                 <CardDescription className="text-gray-600">
-                  Revenue breakdown by service type
+                  Revenue breakdown by service type from OtoBill transactions
                 </CardDescription>
               </div>
               <div className="p-3 bg-primary/10 rounded-lg">
@@ -351,12 +375,21 @@ const AdminHome: React.FC = () => {
                 </div>
                 <div>
                   <div className="font-semibold text-gray-900">Airtime Recharge</div>
-                  <div className="text-sm text-gray-600">{safeStats.airtimeTransactions.toLocaleString()} transactions</div>
+                  <div className="text-sm text-gray-600">
+                    {(otobillTransactionStats?.airtime.count ?? safeStats.airtimeTransactions).toLocaleString()} transactions
+                  </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">{formatAmount(safeStats.airtimeRevenue)}</div>
-                <div className="text-xs text-green-600 font-medium">44% of revenue</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {formatAmount(otobillTransactionStats?.airtime.amount ?? safeStats.airtimeRevenue)}
+                </div>
+                <div className="text-xs text-green-600 font-medium">
+                  {safeStats.totalRevenue > 0 ? 
+                    `${Math.round(((otobillTransactionStats?.airtime.amount ?? safeStats.airtimeRevenue) / safeStats.totalRevenue) * 100)}% of revenue` : 
+                    '0% of revenue'
+                  }
+                </div>
               </div>
             </div>
             
@@ -367,12 +400,21 @@ const AdminHome: React.FC = () => {
                 </div>
                 <div>
                   <div className="font-semibold text-gray-900">Data Bundles</div>
-                  <div className="text-sm text-gray-600">{safeStats.dataTransactions.toLocaleString()} transactions</div>
+                  <div className="text-sm text-gray-600">
+                    {(otobillTransactionStats?.data.count ?? safeStats.dataTransactions).toLocaleString()} transactions
+                  </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">{formatAmount(safeStats.dataRevenue)}</div>
-                <div className="text-xs text-blue-600 font-medium">32% of revenue</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {formatAmount(otobillTransactionStats?.data.amount ?? safeStats.dataRevenue)}
+                </div>
+                <div className="text-xs text-blue-600 font-medium">
+                  {safeStats.totalRevenue > 0 ? 
+                    `${Math.round(((otobillTransactionStats?.data.amount ?? safeStats.dataRevenue) / safeStats.totalRevenue) * 100)}% of revenue` : 
+                    '0% of revenue'
+                  }
+                </div>
               </div>
             </div>
             
@@ -382,13 +424,25 @@ const AdminHome: React.FC = () => {
                   <CreditCard className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">Wallet Funding</div>
-                  <div className="text-sm text-gray-600">{safeStats.walletTransactions.toLocaleString()} transactions</div>
+                  <div className="font-semibold text-gray-900">Total Profit</div>
+                  <div className="text-sm text-gray-600">
+                    {otobillTransactionStats?.totalTransactions ? 
+                      `${((otobillTransactionStats.totalProfit / otobillTransactionStats.totalAmount) * 100).toFixed(1)}% margin` : 
+                      'Profit margin'
+                    }
+                  </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">{formatAmount(safeStats.walletRevenue)}</div>
-                <div className="text-xs text-purple-600 font-medium">24% of revenue</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {formatAmount(otobillTransactionStats?.totalProfit ?? safeStats.walletRevenue)}
+                </div>
+                <div className="text-xs text-purple-600 font-medium">
+                  {safeStats.totalRevenue > 0 ? 
+                    `${Math.round(((otobillTransactionStats?.totalProfit ?? safeStats.walletRevenue) / safeStats.totalRevenue) * 100)}% of revenue` : 
+                    '0% of revenue'
+                  }
+                </div>
               </div>
             </div>
           </CardContent>

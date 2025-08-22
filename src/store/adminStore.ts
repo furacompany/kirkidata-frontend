@@ -618,14 +618,40 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   fetchWalletLogs: async () => {
     try {
-      // const response = await apiService.getWalletLogs()
-      // if (response.success && response.data) {
-      //   set({ walletLogs: response.data })
-      // }
-      // Method not yet implemented in apiService
+      // Use virtual account transactions as wallet logs
+      const response = await getVirtualAccountTransactions(1, 100)
+      if (response.success && response.data) {
+        // Filter for wallet funding transactions and transform to WalletLog format
+        const walletLogs = response.data.transactions
+          .filter((transaction: any) => 
+            transaction.type === 'wallet_funding' || 
+            transaction.type === 'funding' ||
+            transaction.type === 'wallet_withdrawal' ||
+            transaction.type === 'withdrawal'
+          )
+          .map((transaction: any) => ({
+            id: transaction._id || transaction.id,
+            userId: transaction.userId,
+            userName: transaction.userName || 'Unknown User',
+            userEmail: transaction.metadata?.userEmail || 'No email',
+            type: (transaction.type === 'wallet_withdrawal' || transaction.type === 'withdrawal' ? 'debit' : 'credit') as 'credit' | 'debit',
+            amount: transaction.amount,
+            balance: 0, // Balance not available in transaction data
+            description: transaction.description,
+            reference: transaction.reference,
+            paymentMethod: transaction.metadata?.bankName || 'bank_transfer',
+            status: transaction.status as 'successful' | 'pending' | 'failed',
+            createdAt: transaction.createdAt
+          }))
+        
+        set({ walletLogs })
+      } else {
+        throw new Error(response.message || 'Failed to fetch wallet logs')
+      }
     } catch (error: any) {
       console.error('Failed to fetch wallet logs:', error)
-      toast.error('Failed to fetch wallet logs')
+      // Don't show toast error - we'll use empty array as fallback
+      set({ walletLogs: [] })
     }
   },
 
