@@ -11,7 +11,6 @@ import { useAuthStore } from '../../store/authStore'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 
-import PinSetupModal from '../../components/ui/PinSetupModal'
 import VirtualAccountsCard from '../../features/virtual-accounts/VirtualAccountsCard'
 import NinePSBCard from '../../features/virtual-accounts/NinePSBCard'
 
@@ -19,7 +18,6 @@ const DashboardHome: React.FC = () => {
   const { walletBalance, transactions, fetchTransactions, fetchWalletBalance } = useUserStore()
   const { user } = useAuthStore()
   const [showBalance, setShowBalance] = React.useState(true)
-  const [showPinModal, setShowPinModal] = React.useState(false)
   const [refreshingBalance, setRefreshingBalance] = React.useState(false)
   const [activeVirtualAccount, setActiveVirtualAccount] = React.useState<'9PSB' | 'PALMPAY'>('9PSB')
 
@@ -27,17 +25,6 @@ const DashboardHome: React.FC = () => {
     fetchTransactions()
     fetchWalletBalance()
   }, [fetchTransactions, fetchWalletBalance])
-
-  // Show PIN setup modal if user doesn't have transfer PIN
-  useEffect(() => {
-    if (user && !user.hasTransferPin) {
-      // Small delay to let the dashboard render first
-      const timer = setTimeout(() => {
-        setShowPinModal(true)
-      }, 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [user])
 
   const recentTransactions = transactions.slice(0, 4)
 
@@ -429,12 +416,6 @@ const DashboardHome: React.FC = () => {
           </Card>
         </motion.div>
       )}
-
-      {/* PIN Setup Modal */}
-      <PinSetupModal 
-        isOpen={showPinModal} 
-        onClose={() => setShowPinModal(false)} 
-      />
     </div>
   )
 }
