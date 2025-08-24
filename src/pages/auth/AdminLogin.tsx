@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, Settings } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, Settings } from 'lucide-react'
 import { useAdminStore } from '../../store/adminStore'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -54,7 +54,7 @@ const AdminLogin: React.FC = () => {
             >
               <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4 shadow-lg overflow-hidden">
                 <img 
-                  src="/src/assets/logo.jpg" 
+                  src="/logo.jpg" 
                   alt="Kirkidata Logo" 
                   className="w-full h-full object-cover"
                 />

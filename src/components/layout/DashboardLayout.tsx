@@ -64,7 +64,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden">
                 <img 
-                  src="/src/assets/logo.jpg" 
+                  src="/logo.jpg" 
                   alt="Kirkidata Logo" 
                   className="w-full h-full object-cover"
                 />
@@ -133,7 +133,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden">
                 <img 
-                  src="/src/assets/logo.jpg" 
+                  src="/logo.jpg" 
                   alt="Kirkidata Logo" 
                   className="w-full h-full object-cover"
                 />

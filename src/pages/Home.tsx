@@ -6,6 +6,7 @@ import {
   Shield, Clock, Headphones, Crown, Zap, CheckCircle2
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import SEO from '../components/SEO'
 // import heroImage from '../assets/hero-image.jpg' // Using string path instead
 
 const features = [
@@ -164,6 +165,15 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* SEO Component */}
+      <SEO 
+        title="Kirkidata | Buy Airtime & Data Instantly in Nigeria"
+        description="Kirkidata is your trusted platform for buying airtime and data bundles instantly and securely across all Nigerian networks. Simple, fast, and reliable."
+        keywords="Kirkidata, Kirki, Data, Airtime recharge, Buy data online, MTN data, Airtel data, Glo data, 9mobile data, Airtime purchase, Nigeria, Affordable data plans"
+        canonicalUrl="https://www.kirkidata.com/"
+        ogImage="https://www.kirkidata.com/logo.png"
+      />
+      
       {/* Navigation */}
       <nav className="bg-white/95 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -172,7 +182,7 @@ const Home: React.FC = () => {
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
                 <img 
-                  src="/src/assets/logo.jpg" 
+                  src="/logo.jpg" 
                   alt="Kirkidata Logo" 
                   className="w-full h-full object-cover"
                 />
@@ -349,7 +359,7 @@ const Home: React.FC = () => {
                 {/* Main Hero Image */}
                 <div className="relative">
                   <img
-                    src="/src/assets/hero-image.jpg"
+                    src="/kirki.png"
                     alt="Kirkidata Data Platform - Buy airtime and data bundles for all networks in Nigeria"
                     className="w-full h-auto rounded-3xl shadow-2xl object-cover"
                     loading="eager"
@@ -711,7 +721,7 @@ const Home: React.FC = () => {
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
                   <img 
-                    src="/src/assets/logo.jpg" 
+                    src="/logo.jpg" 
                     alt="Kirkidata Logo" 
                     className="w-full h-full object-cover"
                   />

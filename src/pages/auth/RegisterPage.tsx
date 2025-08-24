@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/authStore'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
+import SEO from '../../components/SEO'
 
 interface RegisterFormData {
   firstName: string
@@ -91,16 +92,14 @@ const RegisterPage: React.FC = () => {
       // Handle specific error cases
       if (errorMessage.toLowerCase().includes('pin must be exactly 4 digits')) {
         setFormErrors({ pin: 'PIN must be exactly 4 digits' })
-      } else if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('phone')) {
-        // Both email and phone exist
-        setFormErrors({ 
-          email: 'Email already exists', 
-          phone: 'Phone number already exists' 
-        })
-      } else if (errorMessage.toLowerCase().includes('email')) {
+      } else if (errorMessage.toLowerCase().includes('email already exists') || errorMessage.toLowerCase().includes('email is already registered')) {
         setFormErrors({ email: 'Email already exists' })
-      } else if (errorMessage.toLowerCase().includes('phone')) {
+      } else if (errorMessage.toLowerCase().includes('phone number already exists') || errorMessage.toLowerCase().includes('phone is already registered')) {
         setFormErrors({ phone: 'Phone number already exists' })
+      } else if (errorMessage.toLowerCase().includes('invalid phone number format')) {
+        setFormErrors({ phone: 'Invalid phone number format' })
+      } else if (errorMessage.toLowerCase().includes('invalid email format')) {
+        setFormErrors({ email: 'Invalid email format' })
       } else {
         setFormErrors({ general: errorMessage })
       }
@@ -109,6 +108,14 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-light flex items-center justify-center px-4 py-8">
+      {/* SEO Component */}
+      <SEO 
+        title="Create Account | Kirkidata"
+        description="Join Kirkidata today and start buying airtime and data bundles instantly. Create your free account for all Nigerian networks."
+        keywords="Kirkidata register, create account, sign up, airtime account, data account, Nigeria recharge account"
+        canonicalUrl="https://www.kirkidata.com/register"
+      />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -124,7 +131,7 @@ const RegisterPage: React.FC = () => {
             >
               <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4 shadow-lg overflow-hidden">
                 <img 
-                  src="/src/assets/logo.jpg" 
+                  src="/logo.jpg" 
                   alt="Kirkidata Logo" 
                   className="w-full h-full object-cover"
                 />
@@ -138,25 +145,44 @@ const RegisterPage: React.FC = () => {
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Basic Info Fields Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="space-y-4">
-                                     <div>
-                     <Input
-                       label="First Name"
-                       type="text"
-                       placeholder="Enter your first name"
-                       error={formErrors.firstName}
-                       {...register('firstName', {
-                         onChange: (e) => {
-                           // Only allow letters and spaces
-                           e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '')
-                         }
-                       })}
-                       icon={<User className="h-4 w-4" />}
-                     />
-                   </div>
+              <div className="space-y-4">
+                {/* First Row - First Name and Last Name */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Input
+                      label="First Name"
+                      type="text"
+                      placeholder="Enter your first name"
+                      error={formErrors.firstName}
+                      {...register('firstName', {
+                        onChange: (e) => {
+                          // Only allow letters and spaces
+                          e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '')
+                        }
+                      })}
+                      icon={<User className="h-4 w-4" />}
+                    />
+                  </div>
 
+                  <div>
+                    <Input
+                      label="Last Name"
+                      type="text"
+                      placeholder="Enter your last name"
+                      error={formErrors.lastName}
+                      {...register('lastName', {
+                        onChange: (e) => {
+                          // Only allow letters and spaces
+                          e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '')
+                        }
+                      })}
+                      icon={<User className="h-4 w-4" />}
+                    />
+                  </div>
+                </div>
+
+                {/* Second Row - Email and Phone */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Input
                       label="Email Address"
@@ -173,31 +199,28 @@ const RegisterPage: React.FC = () => {
                       label="Phone Number"
                       type="tel"
                       placeholder="e.g., 08012345678"
+                      maxLength={11}
                       error={formErrors.phone}
-                      {...register('phone')}
+                      {...register('phone', {
+                        onChange: (e) => {
+                          // Remove any non-digit characters
+                          const value = e.target.value.replace(/\D/g, '')
+                          
+                          // Only allow 11 digits
+                          if (value.length <= 11) {
+                            e.target.value = value
+                          } else {
+                            e.target.value = value.slice(0, 11)
+                          }
+                        }
+                      })}
                       icon={<Phone className="h-4 w-4" />}
                     />
                   </div>
                 </div>
 
-                {/* Right Column */}
-                <div className="space-y-4">
-                                     <div>
-                     <Input
-                       label="Last Name"
-                       type="text"
-                       placeholder="Enter your last name"
-                       error={formErrors.lastName}
-                       {...register('lastName', {
-                         onChange: (e) => {
-                           // Only allow letters and spaces
-                           e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '')
-                         }
-                       })}
-                       icon={<User className="h-4 w-4" />}
-                     />
-                   </div>
-
+                {/* Third Row - Password and PIN */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <div className="relative">
                       <Input

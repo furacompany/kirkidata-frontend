@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { apiService } from '../../services/api'
 import toast from 'react-hot-toast'
+import SEO from '../../components/SEO'
 
 // Step 1: Request password reset
 const requestResetSchema = yup.object({
@@ -107,6 +108,14 @@ const ForgotPasswordPage: React.FC = () => {
   if (currentStep === 'reset') {
     return (
       <div className="min-h-screen bg-light flex items-center justify-center px-4">
+        {/* SEO Component */}
+        <SEO 
+          title="Reset Password | Kirkidata"
+          description="Reset your Kirkidata account password securely. Enter the OTP sent to your email to create a new password."
+          keywords="Kirkidata reset password, forgot password, password recovery, OTP verification"
+          canonicalUrl="https://www.kirkidata.com/forgot-password"
+        />
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -122,7 +131,7 @@ const ForgotPasswordPage: React.FC = () => {
               >
                 <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4 shadow-lg overflow-hidden">
                   <img 
-                    src="/src/assets/logo.jpg" 
+                    src="/logo.jpg" 
                     alt="Kirkidata Logo" 
                     className="w-full h-full object-cover"
                   />
@@ -252,6 +261,14 @@ const ForgotPasswordPage: React.FC = () => {
   // Step 1: Request password reset form
   return (
     <div className="min-h-screen bg-light flex items-center justify-center px-4">
+      {/* SEO Component */}
+      <SEO 
+        title="Forgot Password | Kirkidata"
+        description="Forgot your Kirkidata password? Request a password reset OTP sent to your registered email address."
+        keywords="Kirkidata forgot password, password reset, OTP request, account recovery"
+        canonicalUrl="https://www.kirkidata.com/forgot-password"
+      />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -267,7 +284,7 @@ const ForgotPasswordPage: React.FC = () => {
             >
               <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4 shadow-lg overflow-hidden">
                 <img 
-                  src="/src/assets/logo.jpg" 
+                  src="/logo.jpg" 
                   alt="Kirkidata Logo" 
                   className="w-full h-full object-cover"
                 />

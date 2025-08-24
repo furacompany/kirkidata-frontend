@@ -10,6 +10,7 @@ import { useUserStore } from '../../store/userStore'
 import { useAuthStore } from '../../store/authStore'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import SEO from '../../components/SEO'
 
 import VirtualAccountsCard from '../../features/virtual-accounts/VirtualAccountsCard'
 import NinePSBCard from '../../features/virtual-accounts/NinePSBCard'
@@ -105,7 +106,15 @@ const DashboardHome: React.FC = () => {
 
   return (
     <div className="space-y-8">
-             {/* Welcome Header */}
+      {/* SEO Component */}
+      <SEO 
+        title="Dashboard | Kirkidata"
+        description="Manage your Kirkidata account, view wallet balance, transaction history, and buy airtime and data bundles."
+        keywords="Kirkidata dashboard, wallet balance, transaction history, account management"
+        canonicalUrl="https://www.kirkidata.com/dashboard"
+      />
+      
+      {/* Welcome Section */}
        <motion.div
          initial={{ opacity: 0, y: 20 }}
          animate={{ opacity: 1, y: 0 }}

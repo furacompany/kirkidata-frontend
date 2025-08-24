@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import toast from 'react-hot-toast'
+import SEO from '../../components/SEO'
 
 const schema = yup.object({
   phone: yup.string()
@@ -61,6 +62,14 @@ const CustomerLogin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-light flex items-center justify-center px-4">
+      {/* SEO Component */}
+      <SEO 
+        title="Customer Login | Kirkidata"
+        description="Sign in to your Kirkidata account to buy airtime and data bundles instantly. Secure login for all Nigerian networks."
+        keywords="Kirkidata login, customer login, airtime login, data login, Nigeria recharge login"
+        canonicalUrl="https://www.kirkidata.com/login"
+      />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -76,7 +85,7 @@ const CustomerLogin: React.FC = () => {
             >
               <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4 shadow-lg overflow-hidden">
                 <img 
-                  src="/src/assets/logo.jpg" 
+                  src="/logo.jpg" 
                   alt="Kirkidata Logo" 
                   className="w-full h-full object-cover"
                 />
