@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Smartphone, Wifi, CreditCard, ArrowRight,
   Star, Users, Phone, Mail, MapPin, Menu, X,
-  Shield, Clock, Headphones, Crown, Zap, CheckCircle2
+  Shield, Clock, Headphones, Crown, Zap, CheckCircle2,
+  MessageCircle, Facebook, Instagram, Twitter
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SEO from '../components/SEO'
@@ -713,6 +714,217 @@ const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Contact Us Section */}
+      <section id="contact" className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Get In Touch With Us
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Have questions? Need support? We're here to help you 24/7. 
+              Reach out to us through any of our channels below.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Contact Information */}
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="space-y-8"
+            >
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h3>
+                <div className="space-y-6">
+                  <a 
+                    href="tel:+2347067129511"
+                    className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 hover:border-primary/30 group"
+                  >
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      <Phone className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Phone Number</h4>
+                      <p className="text-gray-600 group-hover:text-primary transition-colors">+234 706 712 9511</p>
+                    </div>
+                  </a>
+
+                  <a 
+                    href="https://wa.me/2347067129511"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 hover:border-green-300 group"
+                  >
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                      <MessageCircle className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">WhatsApp</h4>
+                      <p className="text-gray-600 group-hover:text-green-600 transition-colors">+234 706 712 9511</p>
+                    </div>
+                  </a>
+
+                  <a 
+                    href="mailto:kirkidata@gmail.com"
+                    className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 hover:border-blue-300 group"
+                  >
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                      <Mail className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Email Address</h4>
+                      <p className="text-gray-600 group-hover:text-blue-600 transition-colors">kirkidata@gmail.com</p>
+                    </div>
+                  </a>
+
+                  <div className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-gray-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Location</h4>
+                      <p className="text-gray-600">Kano, Nigeria</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Media */}
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">Follow Us</h3>
+                <div className="flex space-x-4">
+                  <a 
+                    href="https://wa.me/2347067129511" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
+                  >
+                    <MessageCircle className="w-6 h-6" />
+                  </a>
+                  <a 
+                    href="https://facebook.com/kirkidata" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-14 h-14 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
+                  >
+                    <Facebook className="w-6 h-6" />
+                  </a>
+                  <a 
+                    href="https://instagram.com/kirkidata" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
+                  >
+                    <Instagram className="w-6 h-6" />
+                  </a>
+                  <a 
+                    href="https://twitter.com/kirkidata" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-14 h-14 bg-blue-400 hover:bg-blue-500 rounded-full flex items-center justify-center text-white transition-all duration-300 transform hover:scale-110 hover:shadow-lg"
+                  >
+                    <Twitter className="w-6 h-6" />
+                  </a>
+                </div>
+                <p className="text-sm text-gray-500 mt-4">
+                  Click on any social media icon to connect with us
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Contact Form */}
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
+            >
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h3>
+              <form className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                      placeholder="Enter your first name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                      placeholder="Enter your last name"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                    placeholder="Enter your email address"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 resize-none"
+                    placeholder="Tell us how we can help you..."
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-primary text-white font-bold text-lg rounded-xl hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  Send Message
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer id="contact" className="bg-gray-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -733,15 +945,30 @@ const Home: React.FC = () => {
                 services for all your airtime and data needs.
               </p>
               <div className="flex space-x-4">
-                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary transition-colors cursor-pointer">
-                  <span className="text-sm font-bold">f</span>
-                </div>
-                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary transition-colors cursor-pointer">
-                  <span className="text-sm font-bold">t</span>
-                </div>
-                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary transition-colors cursor-pointer">
-                  <span className="text-sm font-bold">in</span>
-                </div>
+                <a 
+                  href="https://facebook.com/kirkidata" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary transition-colors cursor-pointer"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://twitter.com/kirkidata" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary transition-colors cursor-pointer"
+                >
+                  <Twitter className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://instagram.com/kirkidata" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary transition-colors cursor-pointer"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
             </div>
             </div>
             <div>
@@ -755,21 +982,13 @@ const Home: React.FC = () => {
               </ul>
             </div>
             <div>
-              <h4 className="font-bold mb-4">Contact Info</h4>
-              <div className="space-y-3 text-gray-400">
-                <div className="flex items-center space-x-3">
-                  <Phone className="w-4 h-4" />
-                  <span>+234 800 KIRKIDATA</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Mail className="w-4 h-4" />
-                  <span>support@kirkidata.com</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <MapPin className="w-4 h-4" />
-                  <span>Kano, Nigeria</span>
-                </div>
-              </div>
+              <h4 className="font-bold mb-4">Support</h4>
+              <ul className="space-y-3 text-gray-400">
+                <li><a href="#contact" className="hover:text-white transition-colors">Contact Us</a></li>
+                <li><a href="#faq" className="hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors">How It Works</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing Guide</a></li>
+              </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
