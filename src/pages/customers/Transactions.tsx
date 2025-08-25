@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Search, Filter, Download, Eye, Smartphone, Wifi, CreditCard,
-  CheckCircle, Clock, TrendingUp, TrendingDown
+  CheckCircle, Clock, TrendingUp
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -28,6 +28,7 @@ const filterOptions: FilterOption[] = [
 const statusOptions: FilterOption[] = [
   { id: 'all', name: 'All Status', value: 'all' },
   { id: 'successful', name: 'Successful', value: 'successful' },
+  { id: 'completed', name: 'Completed', value: 'completed' },
   { id: 'pending', name: 'Pending', value: 'pending' },
   { id: 'failed', name: 'Failed', value: 'failed' },
 ]
@@ -106,9 +107,8 @@ const Transactions: React.FC = () => {
     const successful = transactions.filter(t => t.status === 'successful' || t.status === 'completed').length
     const pending = transactions.filter(t => t.status === 'pending').length
     const failed = transactions.filter(t => t.status === 'failed').length
-    const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0)
 
-    return { total, successful, pending, failed, totalAmount }
+    return { total, successful, pending, failed }
   }
 
 
@@ -185,7 +185,7 @@ const Transactions: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="hidden sm:grid grid-cols-1 md:grid-cols-4 gap-4"
+        className="hidden sm:grid grid-cols-1 md:grid-cols-3 gap-4"
       >
         <Card>
           <CardContent className="p-4">
@@ -219,18 +219,6 @@ const Transactions: React.FC = () => {
                 <p className="text-2xl font-bold text-yellow">{stats.pending}</p>
               </div>
               <Clock className="w-8 h-8 text-yellow" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Amount</p>
-                <p className="text-2xl font-bold text-primary">{formatAmount(stats.totalAmount)}</p>
-              </div>
-              <TrendingDown className="w-8 h-8 text-primary" />
             </div>
           </CardContent>
         </Card>

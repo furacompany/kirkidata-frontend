@@ -25,6 +25,9 @@ import Transactions from './pages/customers/Transactions'
 import Profile from './pages/customers/Profile'
 import KYC from './pages/customers/KYC'
 import Receipt from './pages/customers/Receipt'
+import Electricity from './pages/customers/Electricity'
+import TVSubscription from './pages/customers/TVSubscription'
+import ExamPins from './pages/customers/ExamPins'
 
 // Admin Pages
 import AdminHome from './pages/admin/AdminHome'
@@ -183,6 +186,36 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <DashboardLayout>
                   <KYC />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/electricity"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Electricity />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tv-subscription"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <TVSubscription />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/exam-pins"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ExamPins />
                 </DashboardLayout>
               </ProtectedRoute>
             }

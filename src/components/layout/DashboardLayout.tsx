@@ -12,7 +12,10 @@ import {
   LogOut,
   Menu,
   X,
-  Bell
+  Bell,
+  Zap,
+  Tv,
+  BookOpen
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { Button } from '../ui/Button'
@@ -33,6 +36,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Buy Airtime', href: '/buy-airtime', icon: Phone },
     { name: 'Buy Data', href: '/buy-data', icon: Wifi },
     { name: 'Fund Wallet', href: '/fund-wallet', icon: CreditCard },
+    { name: 'Electricity', href: '/electricity', icon: Zap },
+    { name: 'TV Subscription', href: '/tv-subscription', icon: Tv },
+    { name: 'Exam Pins', href: '/exam-pins', icon: BookOpen },
     { name: 'Transaction History', href: '/transactions', icon: History },
     { name: 'KYC Verification', href: '/kyc', icon: Shield },
     { name: 'Profile', href: '/profile', icon: User },
@@ -42,11 +48,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     try {
       setIsLoggingOut(true)
       await logout()
-      navigate('/')
+      navigate('/login')
     } catch (error) {
-      console.error('Logout error:', error)
-      // Even if logout fails, redirect to home
-      navigate('/')
+      // Even if logout fails, redirect to login
+      navigate('/login')
     } finally {
       setIsLoggingOut(false)
     }

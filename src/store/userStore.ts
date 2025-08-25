@@ -57,7 +57,6 @@ export const useUserStore = create<UserStore>((set) => ({
         throw new Error(response.message || 'Failed to fetch transactions')
       }
     } catch (error) {
-      console.error('Error fetching transactions:', error)
       set({ isLoading: false })
       // Don't show error toast for transactions as it might be expected for new users
     }

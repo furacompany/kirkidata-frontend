@@ -68,7 +68,7 @@ export const clearAuthAndReload = () => {
  */
 export const clearAdminAuthAndReload = () => {
   clearAdminAuth()
-  console.log('Admin authentication data cleared. Reloading page...')
+  
   window.location.reload()
 }
 

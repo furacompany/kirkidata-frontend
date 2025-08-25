@@ -15,6 +15,10 @@ const BuyData = lazy(() => import('../pages/customers/BuyData'));
 const FundWallet = lazy(() => import('../pages/customers/FundWallet'));
 const Transactions = lazy(() => import('../pages/customers/Transactions'));
 const Receipt = lazy(() => import('../pages/customers/Receipt'));
+const Electricity = lazy(() => import('../pages/customers/Electricity'));
+const TVSubscription = lazy(() => import('../pages/customers/TVSubscription'));
+const ExamPins = lazy(() => import('../pages/customers/ExamPins'));
+const KYC = lazy(() => import('../pages/customers/KYC'));
 const DashboardHome = lazy(() => import('../pages/dashboard/DashboardHome'));
 const AdminLogin = lazy(() => import('../pages/auth/AdminLogin'));
 const AdminHome = lazy(() => import('../pages/admin/AdminHome'));
@@ -100,6 +104,10 @@ const AppRoutes = () => (
         <Route path="/dashboard/wallet" element={<FundWallet />} />
         <Route path="/dashboard/transactions" element={<Transactions />} />
         <Route path="/dashboard/receipt" element={<Receipt />} />
+        <Route path="/dashboard/electricity" element={<Electricity />} />
+        <Route path="/dashboard/tv-subscription" element={<TVSubscription />} />
+        <Route path="/dashboard/exam-pins" element={<ExamPins />} />
+        <Route path="/dashboard/kyc" element={<KYC />} />
       </Route>
       {/* Admin Dashboard */}
       <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>

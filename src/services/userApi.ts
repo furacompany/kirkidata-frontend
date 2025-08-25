@@ -1,4 +1,4 @@
-import { clearAdminAuth } from '../utils/auth'
+import { useAuthStore } from '../store/authStore'
 
 const API_BASE_URL = 'https://api.kirkidata.ng/api/v1'
 
@@ -346,7 +346,24 @@ class UserApiService {
       ...options,
     }
 
-    const response = await fetch(url, config)
+    let response
+    try {
+      response = await fetch(url, config)
+    } catch (error: any) {
+      // Handle network connectivity errors
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Please check your internet connection and try again.')
+      }
+      if (error.name === 'NetworkError' || error.message.includes('network')) {
+        throw new Error('Please check your internet connection and try again.')
+      }
+      if (error.message.includes('Failed to fetch')) {
+        throw new Error('Please check your internet connection and try again.')
+      }
+      // For other fetch errors, provide a user-friendly message
+      throw new Error('Connection error. Please check your internet connection and try again.')
+    }
+
     let data
     try {
       data = await response.json()
@@ -388,13 +405,16 @@ class UserApiService {
             return retryData
           }
         } catch (refreshError: any) {
-          if (refreshError.message?.includes('401') || refreshError.message?.includes('Unauthorized')) {
-            console.warn('Token refresh failed with 401, clearing tokens')
-            clearAdminAuth()
-          }
+          // If refresh fails, silently logout and redirect
+          console.log('Token refresh failed, logging out user')
+          logoutCustomer()
+          // Return a resolved promise to prevent error propagation
+          return Promise.resolve({} as T)
         }
         
-        throw new Error(data?.message || 'Authentication required')
+        // If we reach here, token refresh failed
+        logoutCustomer()
+        return Promise.resolve({} as T)
       } else if (response.status === 400) {
         if (data?.message?.includes('Invalid or expired OTP')) {
           throw new Error('Invalid or expired OTP. Please check your OTP and try again.')
@@ -638,7 +658,8 @@ class UserApiService {
     const accessToken = localStorage.getItem('accessToken')
     
     if (!accessToken) {
-      throw new Error('401: Authentication required')
+      logoutCustomer()
+      return Promise.resolve({} as NetworksResponse)
     }
     
     try {
@@ -651,7 +672,9 @@ class UserApiService {
       return response
     } catch (error: any) {
       if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
+        // Silently logout and redirect for 401 errors
+        logoutCustomer()
+        return Promise.resolve({} as NetworksResponse)
       }
       throw error
     }
@@ -661,7 +684,8 @@ class UserApiService {
     const accessToken = localStorage.getItem('accessToken')
     
     if (!accessToken) {
-      throw new Error('401: Authentication required')
+      logoutCustomer()
+      return Promise.resolve({} as DataPlanCategoriesResponse)
     }
     
     try {
@@ -674,7 +698,9 @@ class UserApiService {
       return response
     } catch (error: any) {
       if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
+        // Silently logout and redirect for 401 errors
+        logoutCustomer()
+        return Promise.resolve({} as DataPlanCategoriesResponse)
       }
       throw error
     }
@@ -689,7 +715,8 @@ class UserApiService {
     const accessToken = localStorage.getItem('accessToken')
     
     if (!accessToken) {
-      throw new Error('401: Authentication required')
+      logoutCustomer()
+      return Promise.resolve({} as DataPlansResponse)
     }
     
     try {
@@ -708,7 +735,9 @@ class UserApiService {
       return response
     } catch (error: any) {
       if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
+        // Silently logout and redirect for 401 errors
+        logoutCustomer()
+        return Promise.resolve({} as DataPlansResponse)
       }
       throw error
     }
@@ -718,7 +747,8 @@ class UserApiService {
     const accessToken = localStorage.getItem('accessToken')
     
     if (!accessToken) {
-      throw new Error('401: Authentication required')
+      logoutCustomer()
+      return Promise.resolve({} as DataPurchaseResponse)
     }
     
     try {
@@ -733,7 +763,9 @@ class UserApiService {
       return response
     } catch (error: any) {
       if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
+        // Silently logout and redirect for 401 errors
+        logoutCustomer()
+        return Promise.resolve({} as DataPurchaseResponse)
       } else if (error.message?.includes('400')) {
         throw new Error('Invalid purchase data. Please check your phone number and plan selection.')
       } else if (error.message?.includes('402')) {
@@ -749,7 +781,8 @@ class UserApiService {
     const accessToken = localStorage.getItem('accessToken')
     
     if (!accessToken) {
-      throw new Error('401: Authentication required')
+      logoutCustomer()
+      return Promise.resolve({} as AirtimePurchaseResponse)
     }
     
     try {
@@ -764,7 +797,9 @@ class UserApiService {
       return response
     } catch (error: any) {
       if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
+        // Silently logout and redirect for 401 errors
+        logoutCustomer()
+        return Promise.resolve({} as AirtimePurchaseResponse)
       } else if (error.message?.includes('400')) {
         if (error.message?.includes('Insufficient balance')) {
           throw new Error(error.message)
@@ -786,6 +821,24 @@ class UserApiService {
       throw error
     }
   }
+}
+
+// Customer logout function to handle expired tokens
+export const logoutCustomer = () => {
+  // Clear all customer-related data
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('userData')
+  
+  // Reset auth state
+  useAuthStore.setState({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+  })
+  
+  // Redirect to login page
+  window.location.href = '/login'
 }
 
 export const userApiService = new UserApiService(API_BASE_URL)

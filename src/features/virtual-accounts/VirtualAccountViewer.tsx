@@ -36,7 +36,6 @@ export default function VirtualAccountViewer() {
             setTransactions(transactionsResponse.data.transactions);
           }
         } catch (transactionError) {
-          console.error('Failed to fetch transactions:', transactionError);
           // Don't show error for transactions as it might be expected for new accounts
         }
         
@@ -46,6 +45,13 @@ export default function VirtualAccountViewer() {
       }
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || "Failed to fetch account";
+      
+      // Handle 401 errors silently - don't show error to user
+      if (message.includes('401') || err?.response?.status === 401) {
+        // Don't show error or toast for 401
+        return;
+      }
+      
       setError(message);
       toast.error(message);
     } finally {

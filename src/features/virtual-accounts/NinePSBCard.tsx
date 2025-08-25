@@ -32,8 +32,14 @@ export default function NinePSBCard() {
         setUserAccounts(accountsResponse.data);
       }
     } catch (err: any) {
+      // Handle 401 errors silently - don't show error to user
+      if (err?.message?.includes('401') || err?.response?.status === 401) {
+        // Don't set error state for 401 - just return silently
+        return;
+      }
+      
+      // Only show non-401 errors to user
       setError(err?.message || "Failed to load 9PSB account data");
-      console.error("Error fetching 9PSB account data:", err);
     } finally {
       setLoading(false);
     }
@@ -55,6 +61,12 @@ export default function NinePSBCard() {
       }
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || "Failed to create 9PSB virtual account";
+      
+      // Handle 401 errors silently - don't show error to user
+      if (message.includes('401') || err?.response?.status === 401) {
+        // Don't show toast or set error for 401
+        return;
+      }
       
       if (message.includes("duplicate reference")) {
         toast.error("Creation failed due to duplicate reference. Please try again.");

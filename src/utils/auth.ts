@@ -9,7 +9,7 @@ export const clearAdminAuth = () => {
   localStorage.removeItem('adminAccessToken')
   localStorage.removeItem('adminRefreshToken')
   localStorage.removeItem('adminData')
-  console.log('Admin authentication data cleared')
+
 }
 
 /**

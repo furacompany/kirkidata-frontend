@@ -52,7 +52,6 @@ const AdminLayout: React.FC = () => {
       await logout()
       navigate('/admin/login')
     } catch (error) {
-      console.error('Logout error:', error)
       // Even if logout fails, redirect to admin login
       navigate('/admin/login')
     } finally {

@@ -45,6 +45,27 @@ const createResponseInterceptor = (httpInstance: any, isAdmin: boolean = false) 
     async (error: any) => {
       const originalRequest = error.config;
 
+      // Handle network connectivity errors
+      if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
+        const networkError = new Error('Please check your internet connection and try again.');
+        networkError.name = 'NetworkError';
+        return Promise.reject(networkError);
+      }
+
+      // Handle timeout errors
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        const timeoutError = new Error('Request timed out. Please check your internet connection and try again.');
+        timeoutError.name = 'TimeoutError';
+        return Promise.reject(timeoutError);
+      }
+
+      // Handle connection refused errors
+      if (error.code === 'ERR_CONNECTION_REFUSED' || error.message?.includes('connection refused')) {
+        const connectionError = new Error('Unable to connect to server. Please check your internet connection and try again.');
+        connectionError.name = 'ConnectionError';
+        return Promise.reject(connectionError);
+      }
+
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 

@@ -282,7 +282,7 @@ const DashboardHome: React.FC = () => {
            </CardHeader>
            <CardContent className="space-y-4">
              <div className="space-y-2">
-               {['1GB - ₦500', '2GB - ₦1,000', '5GB - ₦2,500', '10GB - ₦5,000'].map((plan) => (
+               {['1GB', '2GB', '5GB', '10GB'].map((plan) => (
                  <div key={plan} className="flex justify-between items-center p-2 border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer">
                    <span className="text-sm font-medium text-gray-900">{plan}</span>
                  </div>
