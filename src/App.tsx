@@ -30,6 +30,7 @@ import Receipt from './pages/customers/Receipt'
 import AdminHome from './pages/admin/AdminHome'
 import UsersManagement from './pages/admin/UsersManagement'
 import DataPlans from './pages/admin/DataPlans'
+import SyncOtoBill from './pages/admin/SyncOtoBill'
 import TransactionsPanel from './pages/admin/TransactionsPanel'
 import WalletLogs from './pages/admin/WalletLogs'
 import AdminSettings from './pages/admin/AdminSettings'
@@ -195,117 +196,28 @@ const App: React.FC = () => {
             }
           />
 
-          {/* Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <AdminHome />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/users"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <UsersManagement />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/data-plans"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <DataPlans />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/transactions"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <TransactionsPanel />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/wallet-logs"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <WalletLogs />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/settings"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <AdminSettings />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/profile"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <AdminProfile />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/otobill-profile"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <OtobillProfile />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/otobill-wallet"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <OtoBillWallet />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/otobill-transactions"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <OtoBillTransactions />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/otobill-stats"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLayout>
-                  <OtoBillStats />
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
+                     {/* Admin Routes */}
+           <Route
+             path="/admin"
+             element={
+               <ProtectedRoute adminOnly>
+                 <AdminLayout />
+               </ProtectedRoute>
+             }
+           >
+             <Route index element={<AdminHome />} />
+             <Route path="users" element={<UsersManagement />} />
+             <Route path="data-plans" element={<DataPlans />} />
+             <Route path="sync-otobill" element={<SyncOtoBill />} />
+             <Route path="transactions" element={<TransactionsPanel />} />
+             <Route path="wallet-logs" element={<WalletLogs />} />
+             <Route path="settings" element={<AdminSettings />} />
+             <Route path="profile" element={<AdminProfile />} />
+             <Route path="otobill-profile" element={<OtobillProfile />} />
+             <Route path="otobill-wallet" element={<OtoBillWallet />} />
+             <Route path="otobill-transactions" element={<OtoBillTransactions />} />
+             <Route path="otobill-stats" element={<OtoBillStats />} />
+           </Route>
 
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />

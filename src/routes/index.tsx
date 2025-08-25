@@ -20,6 +20,7 @@ const AdminLogin = lazy(() => import('../pages/auth/AdminLogin'));
 const AdminHome = lazy(() => import('../pages/admin/AdminHome'));
 const UsersManagement = lazy(() => import('../pages/admin/UsersManagement'));
 const DataPlans = lazy(() => import('../pages/admin/DataPlans'));
+const SyncOtoBill = lazy(() => import('../pages/admin/SyncOtoBill'));
 const TransactionsPanel = lazy(() => import('../pages/admin/TransactionsPanel'));
 const WalletLogs = lazy(() => import('../pages/admin/WalletLogs'));
 const AdminProfile = lazy(() => import('../pages/admin/AdminProfile'));
@@ -101,10 +102,11 @@ const AppRoutes = () => (
         <Route path="/dashboard/receipt" element={<Receipt />} />
       </Route>
       {/* Admin Dashboard */}
-      <Route path="/admin" element={<AdminRoute><AdminLayout><Outlet /></AdminLayout></AdminRoute>}>
+      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
         <Route index element={<AdminHome />} />
         <Route path="users" element={<UsersManagement />} />
         <Route path="data-plans" element={<DataPlans />} />
+        <Route path="sync-otobill" element={<SyncOtoBill />} />
         <Route path="transactions" element={<TransactionsPanel />} />
         <Route path="wallet-logs" element={<WalletLogs />} />
         <Route path="debug-test" element={<div>Debug route working! Path: /admin/debug-test</div>} />

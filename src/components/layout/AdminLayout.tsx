@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
   Home, 
@@ -15,16 +15,13 @@ import {
   User,
   Wifi,
   Activity,
-  BarChart3
+  BarChart3,
+  RefreshCw
 } from 'lucide-react'
 import { useAdminStore } from '../../store/adminStore'
 import { Button } from '../ui/Button'
 
-interface AdminLayoutProps {
-  children: React.ReactNode
-}
-
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+const AdminLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const location = useLocation()
@@ -39,6 +36,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Users Management', href: '/admin/users', icon: Users },
     { name: 'Data Plans', href: '/admin/data-plans', icon: Wifi },
+    { name: 'Sync from OtoBill', href: '/admin/sync-otobill', icon: RefreshCw },
     { name: 'All Transactions', href: '/admin/transactions', icon: FileText },
     { name: 'Wallet Logs', href: '/admin/wallet-logs', icon: CreditCard },
     { name: 'OtoBill Profile', href: '/admin/otobill-profile', icon: Shield },
@@ -250,7 +248,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              {children}
+              <Outlet />
             </motion.div>
           </div>
         </main>
