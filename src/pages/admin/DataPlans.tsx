@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import toast from 'react-hot-toast'
-import { apiService } from '../../services/api'
+import { adminApiService } from '../../services/adminApi'
 import { 
   OtoBillNetwork, 
   OtoBillDataPlan, 
@@ -42,8 +42,11 @@ const DataPlans: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [editingPlan, setEditingPlan] = useState<string | null>(null)
   const [editPrice, setEditPrice] = useState<number>(0)
-  const [editingPricingPlan, setEditingPricingPlan] = useState<string | null>(null)
-  const [editAdminPrice, setEditAdminPrice] = useState<number>(0)
+  
+  // Pricing edit modal state
+  const [showPricingModal, setShowPricingModal] = useState(false)
+  const [selectedPlanForPricing, setSelectedPlanForPricing] = useState<OtoBillDataPlanWithPricing | null>(null)
+  const [newAdminPrice, setNewAdminPrice] = useState<string>('')
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -82,7 +85,7 @@ const DataPlans: React.FC = () => {
   const fetchNetworks = async () => {
     setIsLoadingNetworks(true)
     try {
-      const response = await apiService.getOtoBillNetworks()
+      const response = await adminApiService.getOtoBillNetworks()
       if (response.success) {
         setNetworks(response.data)
       } else {
@@ -98,7 +101,7 @@ const DataPlans: React.FC = () => {
 
   const fetchPricingSummary = async () => {
     try {
-      const response = await apiService.getOtoBillPricingSummary()
+      const response = await adminApiService.getOtoBillPricingSummary()
       if (response.success) {
         setPricingSummary(response.data)
       } else {
@@ -120,7 +123,7 @@ const DataPlans: React.FC = () => {
       for (const network of networks) {
         for (const planType of availablePlanTypes) {
           try {
-            const response = await apiService.getOtoBillDataPlansByNetwork(
+            const response = await adminApiService.getOtoBillDataPlansByNetwork(
               network.name,
               planType,
               1,
@@ -170,7 +173,7 @@ const DataPlans: React.FC = () => {
     
     setIsLoadingPricing(true)
     try {
-      const response = await apiService.getOtoBillDataPlansPricing(
+      const response = await adminApiService.getOtoBillDataPlansPricing(
         selectedNetwork.name,
         selectedPlanType,
         currentPage,
@@ -243,39 +246,45 @@ const DataPlans: React.FC = () => {
     }
   }
 
-  const handlePricingEditStart = (planId: string, currentAdminPrice: number) => {
-    setEditingPricingPlan(planId)
-    setEditAdminPrice(currentAdminPrice)
+  const handlePricingEditStart = (plan: OtoBillDataPlanWithPricing) => {
+    setSelectedPlanForPricing(plan)
+    setNewAdminPrice('') // Start with empty input for better UX
+    setShowPricingModal(true)
   }
 
   const handlePricingEditCancel = () => {
-    setEditingPricingPlan(null)
-    setEditAdminPrice(0)
+    setShowPricingModal(false)
+    setSelectedPlanForPricing(null)
+    setNewAdminPrice('')
   }
 
-  const handlePricingEditSave = async (planId: string) => {
-    if (editAdminPrice <= 0) {
+  const handlePricingEditSave = async () => {
+    if (!selectedPlanForPricing) return
+    
+    const priceValue = Number(newAdminPrice)
+    if (isNaN(priceValue) || priceValue <= 0) {
       toast.error('Admin price must be greater than 0')
       return
     }
 
     setIsLoadingPricing(true)
     try {
-      const response = await apiService.updateOtoBillDataPlanPricing(planId, editAdminPrice)
+      const response = await adminApiService.updateOtoBillDataPlanPricing(selectedPlanForPricing.planId, priceValue)
       
       if (response.success) {
         // Update the local state with the new pricing data
         setDataPlansWithPricing(prev => prev.map(plan => 
-          plan.planId === planId ? {
+          plan.planId === selectedPlanForPricing.planId ? {
             ...plan,
             adminPrice: response.data.adminPrice,
             profit: response.data.profit
           } : plan
         ))
         
-        setEditingPricingPlan(null)
-        setEditAdminPrice(0)
-        toast.success('Data plan pricing updated successfully!')
+                 setShowPricingModal(false)
+         setSelectedPlanForPricing(null)
+         setNewAdminPrice('')
+         toast.success('Data plan pricing updated successfully!')
         
         // Refresh pricing summary to get updated counts
         fetchPricingSummary()
@@ -714,40 +723,13 @@ const DataPlans: React.FC = () => {
                         </div>
                         
                         <div className="flex items-center gap-2 ml-3">
-                          {editingPricingPlan === plan.planId ? (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                value={editAdminPrice}
-                                onChange={(e) => setEditAdminPrice(Number(e.target.value))}
-                                className="w-20 h-8 text-base"
-                                min="1"
-                                placeholder="Price"
-                              />
-                              <button
-                                onClick={() => handlePricingEditSave(plan.planId)}
-                                disabled={isLoadingPricing}
-                                className="p-1 text-green-600 hover:text-green-700 transition-colors"
-                              >
-                                <Save className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={handlePricingEditCancel}
-                                disabled={isLoadingPricing}
-                                className="p-1 text-gray-500 hover:text-gray-600 transition-colors"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => handlePricingEditStart(plan.planId, plan.adminPrice)}
-                              className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
-                              title="Edit Admin Price"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handlePricingEditStart(plan)}
+                            className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
+                            title="Edit Pricing"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                       
@@ -821,20 +803,9 @@ const DataPlans: React.FC = () => {
                                 ₦{plan.originalPrice.toLocaleString()}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                {editingPricingPlan === plan.planId ? (
-                                  <Input
-                                    type="number"
-                                    value={editAdminPrice}
-                                    onChange={(e) => setEditAdminPrice(Number(e.target.value))}
-                                    className="w-24 h-8 text-sm"
-                                    min="1"
-                                    placeholder="Price"
-                                  />
-                                ) : (
-                                  <div className="text-sm font-medium text-primary">
-                                    ₦{plan.adminPrice.toLocaleString()}
-                                  </div>
-                                )}
+                                <div className="text-sm font-medium text-primary">
+                                  ₦{plan.adminPrice.toLocaleString()}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm">
                                 <span className={`font-medium ${getProfitColor(plan.profit)}`}>
@@ -850,32 +821,13 @@ const DataPlans: React.FC = () => {
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                {editingPricingPlan === plan.planId ? (
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => handlePricingEditSave(plan.planId)}
-                                      disabled={isLoadingPricing}
-                                      className="text-green-600 hover:text-green-700"
-                                    >
-                                      <Save className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={handlePricingEditCancel}
-                                      disabled={isLoadingPricing}
-                                      className="text-gray-500 hover:text-gray-600"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => handlePricingEditStart(plan.planId, plan.adminPrice)}
-                                    className="text-blue-600 hover:text-blue-700"
-                                    title="Edit Admin Price"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </button>
-                                )}
+                                <button
+                                  onClick={() => handlePricingEditStart(plan)}
+                                  className="text-blue-600 hover:text-blue-700"
+                                  title="Edit Pricing"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
                               </td>
                             </tr>
                           ))}
@@ -1206,6 +1158,129 @@ const DataPlans: React.FC = () => {
             <Button onClick={() => setSearchTerm('')}>Clear Search</Button>
           </CardContent>
         </Card>
+      )}
+
+      {/* Pricing Edit Modal */}
+      {showPricingModal && selectedPlanForPricing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="p-6 max-w-md mx-4 w-full">
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Edit Data Plan Pricing</h3>
+                <p className="text-sm text-gray-600">Update pricing for {selectedPlanForPricing.name}</p>
+              </div>
+
+              {/* Plan Details */}
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Network:</span>
+                      <p className="font-medium text-gray-900">{selectedPlanForPricing.networkName}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Plan Type:</span>
+                      <p className="font-medium text-gray-900">{selectedPlanForPricing.planType}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Plan Name:</span>
+                      <p className="font-medium text-gray-900">{selectedPlanForPricing.name}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Validity:</span>
+                      <p className="font-medium text-gray-900">{selectedPlanForPricing.validityDays} days</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Current Pricing Display */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-gray-900">Current Pricing</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Original Price:</span>
+                      <span className="text-lg font-bold text-gray-900">₦{selectedPlanForPricing.originalPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Current Admin Price:</span>
+                      <span className="text-lg font-bold text-primary">₦{selectedPlanForPricing.adminPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Current Profit:</span>
+                      <span className={`text-lg font-bold ${getProfitColor(selectedPlanForPricing.profit)}`}>
+                        {getProfitIcon(selectedPlanForPricing.profit)} ₦{selectedPlanForPricing.profit.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* New Admin Price Input */}
+                                 <div className="space-y-2">
+                   <label className="block text-sm font-medium text-gray-700">
+                     New Admin Price (₦)
+                   </label>
+                   <Input
+                     type="number"
+                     value={newAdminPrice}
+                     onChange={(e) => setNewAdminPrice(e.target.value)}
+                     placeholder="Enter new admin price"
+                     min="1"
+                     className="text-lg font-medium"
+                   />
+                 </div>
+
+                                 {/* Preview of New Profit */}
+                 {newAdminPrice && Number(newAdminPrice) > 0 && (
+                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                     <div className="flex items-center justify-between">
+                       <span className="text-sm font-medium text-gray-700">New Profit:</span>
+                       <span className={`text-lg font-bold ${getProfitColor(Number(newAdminPrice) - selectedPlanForPricing.originalPrice)}`}>
+                         {getProfitIcon(Number(newAdminPrice) - selectedPlanForPricing.originalPrice)} ₦{(Number(newAdminPrice) - selectedPlanForPricing.originalPrice).toLocaleString()}
+                       </span>
+                     </div>
+                     <div className="text-xs text-gray-600 mt-1">
+                       {Number(newAdminPrice) > selectedPlanForPricing.originalPrice 
+                         ? `Profit margin: ${(((Number(newAdminPrice) - selectedPlanForPricing.originalPrice) / selectedPlanForPricing.originalPrice) * 100).toFixed(1)}%`
+                         : 'This will result in a loss'
+                       }
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Warning for loss */}
+                 {newAdminPrice && Number(newAdminPrice) > 0 && Number(newAdminPrice) < selectedPlanForPricing.originalPrice && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-600">⚠️</span>
+                      <span className="text-sm text-red-700">
+                        <strong>Warning:</strong> The new admin price is lower than the original price. This will result in a loss.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <Button
+                  onClick={handlePricingEditCancel}
+                  variant="outline"
+                  disabled={isLoadingPricing}
+                >
+                  Cancel
+                </Button>
+                                 <Button
+                   onClick={handlePricingEditSave}
+                   disabled={isLoadingPricing || !newAdminPrice || Number(newAdminPrice) <= 0}
+                   className="bg-primary hover:bg-primary/90"
+                 >
+                   {isLoadingPricing ? 'Updating...' : 'Update Pricing'}
+                 </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
     </div>
   )

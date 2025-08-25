@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import { apiService } from '../services/api'
-import { getVirtualAccountTransactions } from '../features/virtual-accounts/api'
+import { adminApiService } from '../services/adminApi'
 import toast from 'react-hot-toast'
 import { 
   AdminStats, 
@@ -119,7 +118,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // User Management Methods
   getUserByPhone: async (phone: string) => {
     try {
-      const response = await apiService.getUserByPhone(phone)
+      const response = await adminApiService.getUserByPhone(phone)
       return response
     } catch (error: any) {
       toast.error(error.message || 'Failed to get user by phone')
@@ -129,7 +128,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   getUserByEmail: async (email: string) => {
     try {
-      const response = await apiService.getUserByEmail(email)
+      const response = await adminApiService.getUserByEmail(email)
       return response
     } catch (error: any) {
       toast.error(error.message || 'Failed to get user by email')
@@ -140,7 +139,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Update User Profile by Admin
   updateUserProfile: async (userId: string, firstName: string, lastName: string, state: string) => {
     try {
-      const response = await apiService.updateUserProfileByAdmin(userId, { firstName, lastName, state })
+      const response = await adminApiService.updateUserProfileByAdmin(userId, { firstName, lastName, state })
       toast.success('User profile updated successfully!')
       return response
     } catch (error: any) {
@@ -152,7 +151,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Update User Wallet by Admin
   updateUserWallet: async (userId: string, amount: number, operation: 'add' | 'subtract', description: string) => {
     try {
-      const response = await apiService.updateUserWallet(userId, { amount, operation, description })
+      const response = await adminApiService.updateUserWallet(userId, { amount, operation, description })
       toast.success('User wallet updated successfully!')
       return response
     } catch (error: any) {
@@ -164,7 +163,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Search Users with Filters and Pagination
   searchUsers: async (filters: any) => {
     try {
-      const response = await apiService.searchUsers(filters)
+      const response = await adminApiService.searchUsers(filters)
       return response
     } catch (error: any) {
       toast.error(error.message || 'Failed to search users')
@@ -175,7 +174,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Get User Statistics
   getUserStats: async (filters: any) => {
     try {
-      const response = await apiService.getUserStats(filters)
+      const response = await adminApiService.getUserStats(filters)
       return response
     } catch (error: any) {
       toast.error(error.message || 'Failed to get user statistics')
@@ -186,7 +185,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Bulk User Operations
   bulkUserOperation: async (userIds: string[], operation: 'activate' | 'deactivate' | 'delete', additionalData?: any) => {
     try {
-      const response = await apiService.bulkUserOperation({ userIds, operation, additionalData })
+      const response = await adminApiService.bulkUserOperation({ userIds, operation, additionalData })
       
       if (response.success) {
         const operationText = operation.charAt(0).toUpperCase() + operation.slice(1)
@@ -203,7 +202,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Deactivate User
   deactivateUser: async (userId: string) => {
     try {
-      const response = await apiService.deactivateUser(userId)
+      const response = await adminApiService.deactivateUser(userId)
       
       if (response.success) {
         toast.success('User deactivated successfully!')
@@ -219,7 +218,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Reactivate User
   reactivateUser: async (userId: string) => {
     try {
-      const response = await apiService.reactivateUser(userId)
+      const response = await adminApiService.reactivateUser(userId)
       
       if (response.success) {
         toast.success('User reactivated successfully!')
@@ -235,7 +234,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // Delete User
   deleteUser: async (userId: string) => {
     try {
-      const response = await apiService.deleteUser(userId)
+      const response = await adminApiService.deleteUser(userId)
       
       if (response.success) {
         toast.success('User deleted successfully!')
@@ -252,7 +251,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
     set({ isLoading: true })
     
     try {
-      const response = await apiService.adminLogin({ email, password })
+      const response = await adminApiService.adminLogin({ email, password })
       
       if (response.success && response.data) {
         const admin: Admin = {
@@ -289,7 +288,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   logout: async () => {
     try {
       // Call admin logout API endpoint
-      await apiService.adminLogout()
+      await adminApiService.adminLogout()
       toast.success('Admin logged out successfully')
     } catch (error) {
       // Even if API call fails, we still want to clear local state
@@ -307,7 +306,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   fetchAdminProfile: async () => {
     try {
-      const response = await apiService.getAdminProfile()
+      const response = await adminApiService.getAdminProfile()
       if (response.success && response.data) {
         const admin: Admin = {
           id: response.data._id,
@@ -332,7 +331,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   updateAdminProfile: async (firstName: string, lastName: string, phone: string) => {
     try {
-      const response = await apiService.updateAdminProfile({ firstName, lastName, phone })
+      const response = await adminApiService.updateAdminProfile({ firstName, lastName, phone })
       if (response.success && response.data) {
         const admin: Admin = {
           id: response.data._id,
@@ -358,7 +357,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   changeAdminPassword: async (currentPassword: string, newPassword: string) => {
     try {
-      const response = await apiService.changeAdminPassword({ currentPassword, newPassword })
+      const response = await adminApiService.changeAdminPassword({ currentPassword, newPassword })
       if (response.success) {
         toast.success('Password changed successfully!')
       } else {
@@ -395,7 +394,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
     // If no admin data in localStorage but tokens exist, try to fetch admin data
     try {
-      const response = await apiService.getAdminProfile()
+      const response = await adminApiService.getAdminProfile()
       if (response.success && response.data) {
         const admin: Admin = {
           id: response.data._id,
@@ -432,21 +431,21 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   fetchStats: async () => {
     try {
       // Fetch user statistics
-      const userStatsResponse = await apiService.getUserStats({
+      const userStatsResponse = await adminApiService.getUserStats({
         period: 'month',
         startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
         endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
       })
 
-      // Try to fetch transactions for revenue calculation
+      // Use OtoBill transactions for revenue calculation instead of virtual account transactions
       let transactions: any[] = []
       try {
-        const transactionsResponse = await getVirtualAccountTransactions(1, 50)
-        if (transactionsResponse.success && transactionsResponse.data) {
-          transactions = transactionsResponse.data.transactions
+        const otobillTransactionsResponse = await adminApiService.getOtoBillTransactions(1, 50)
+        if (otobillTransactionsResponse.success && otobillTransactionsResponse.data) {
+          transactions = otobillTransactionsResponse.data.transactions
         }
       } catch (transactionError) {
-        console.warn('Virtual account transactions failed, using fallback data:', transactionError)
+        console.warn('OtoBill transactions failed, using fallback data:', transactionError)
         // Use fallback transaction data
         transactions = []
       }
@@ -456,7 +455,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       
       // Calculate revenue and transaction stats
       const totalRevenue = transactions.reduce((sum: number, t: any) => {
-        if (t.status === 'successful' && (t.type === 'airtime' || t.type === 'data' || t.type === 'wallet_funding')) {
+        if (t.status === 'successful' && (t.transactionType === 'airtime' || t.transactionType === 'data')) {
           return sum + (t.amount || 0)
         }
         return sum
@@ -468,49 +467,46 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       const failedTransactions = transactions.filter((t: any) => t.status === 'failed').length
 
       // Calculate transaction type breakdown
-      const airtimeTransactions = transactions.filter((t: any) => t.type === 'airtime' && t.status === 'successful').length
+      const airtimeTransactions = transactions.filter((t: any) => t.transactionType === 'airtime' && t.status === 'successful').length
       const airtimeRevenue = transactions.reduce((sum: number, t: any) => {
-        if (t.type === 'airtime' && t.status === 'successful') {
+        if (t.transactionType === 'airtime' && t.status === 'successful') {
           return sum + (t.amount || 0)
         }
         return sum
       }, 0)
 
-      const dataTransactions = transactions.filter((t: any) => t.type === 'data' && t.status === 'successful').length
+      const dataTransactions = transactions.filter((t: any) => t.transactionType === 'data' && t.status === 'successful').length
       const dataRevenue = transactions.reduce((sum: number, t: any) => {
-        if (t.type === 'data' && t.status === 'successful') {
+        if (t.transactionType === 'data' && t.status === 'successful') {
           return sum + (t.amount || 0)
         }
         return sum
       }, 0)
 
-      const walletTransactions = transactions.filter((t: any) => t.type === 'wallet_funding' && t.status === 'successful').length
-      const walletRevenue = transactions.reduce((sum: number, t: any) => {
-        if (t.type === 'wallet_funding' && t.status === 'successful') {
-          return sum + (t.amount || 0)
-        }
-        return sum
-      }, 0)
+      const walletTransactions = 0 // OtoBill doesn't have wallet funding transactions
+      const walletRevenue = 0 // OtoBill doesn't have wallet funding transactions
 
       // Calculate network stats
       const networkStats: any = {}
-      const networkTransactions = transactions.filter((t: any) => t.network && t.status === 'successful')
+      const networkTransactions = transactions.filter((t: any) => (t.dataNetworkName || t.airtimeNetworkName) && t.status === 'successful')
       
       networkTransactions.forEach((t: any) => {
-        if (!networkStats[t.network]) {
-          networkStats[t.network] = { successful: 0, total: 0, revenue: 0 }
+        const networkName = t.dataNetworkName || t.airtimeNetworkName
+        if (!networkStats[networkName]) {
+          networkStats[networkName] = { successful: 0, total: 0, revenue: 0 }
         }
-        networkStats[t.network].successful++
-        networkStats[t.network].revenue += t.amount || 0
+        networkStats[networkName].successful++
+        networkStats[networkName].revenue += t.amount || 0
       })
 
       // Add total counts for each network
       transactions.forEach((t: any) => {
-        if (t.network) {
-          if (!networkStats[t.network]) {
-            networkStats[t.network] = { successful: 0, total: 0, revenue: 0 }
+        const networkName = t.dataNetworkName || t.airtimeNetworkName
+        if (networkName) {
+          if (!networkStats[networkName]) {
+            networkStats[networkName] = { successful: 0, total: 0, revenue: 0 }
           }
-          networkStats[t.network].total++
+          networkStats[networkName].total++
         }
       })
 
@@ -547,7 +543,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   fetchUsers: async () => {
     try {
-      const response = await apiService.searchUsers({
+      const response = await adminApiService.searchUsers({
         page: 1,
         limit: 10,
         sortBy: 'createdAt',
@@ -590,15 +586,45 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   fetchTransactions: async () => {
     try {
-      const response = await getVirtualAccountTransactions(1, 50)
+      const response = await adminApiService.getOtoBillTransactions(1, 50)
       if (response.success && response.data) {
-        set({ transactions: response.data.transactions })
+        // Transform OtoBillTransaction to Transaction format
+        const transformedTransactions = response.data.transactions.map((otobillTx: any) => ({
+          _id: otobillTx._id,
+          userId: otobillTx.userId._id,
+          type: otobillTx.transactionType,
+          amount: otobillTx.amount,
+          currency: 'NGN',
+          status: otobillTx.status,
+          reference: otobillTx.topupmateRef,
+          description: otobillTx.description,
+          phoneNumber: otobillTx.dataPhoneNumber || otobillTx.airtimePhoneNumber,
+          network: otobillTx.dataNetworkName || otobillTx.airtimeNetworkName,
+          dataPlan: otobillTx.dataPlanName,
+          transactionId: otobillTx._id,
+          otobillRef: otobillTx.topupmateRef,
+          profit: otobillTx.profitMargin,
+          planId: otobillTx.dataPlanId,
+          planName: otobillTx.dataPlanName,
+          createdAt: otobillTx.createdAt,
+          updatedAt: otobillTx.updatedAt,
+          metadata: {
+            payerAccountNumber: '',
+            bankName: '',
+            accountNumber: '',
+            accountName: ''
+          },
+          id: otobillTx._id,
+          userName: otobillTx.userId.fullName
+        }))
+        
+        set({ transactions: transformedTransactions })
         
         // Also update the recentTransactions in stats
         set((state) => ({
           stats: state.stats ? {
             ...state.stats,
-            recentTransactions: response.data.transactions.slice(0, 4)
+            recentTransactions: transformedTransactions.slice(0, 4)
           } : null
         }))
       } else {
@@ -613,31 +639,24 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   fetchWalletLogs: async () => {
     try {
-      // Use virtual account transactions as wallet logs
-      const response = await getVirtualAccountTransactions(1, 100)
+      // Use OtoBill transactions as wallet logs instead of virtual account transactions
+      const response = await adminApiService.getOtoBillTransactions(1, 100)
       if (response.success && response.data) {
-        // Filter for wallet funding transactions and transform to WalletLog format
-        const walletLogs = response.data.transactions
-          .filter((transaction: any) => 
-            transaction.type === 'wallet_funding' || 
-            transaction.type === 'funding' ||
-            transaction.type === 'wallet_withdrawal' ||
-            transaction.type === 'withdrawal'
-          )
-          .map((transaction: any) => ({
-            id: transaction._id || transaction.id,
-            userId: transaction.userId,
-            userName: transaction.userName || 'Unknown User',
-            userEmail: transaction.metadata?.userEmail || 'No email',
-            type: (transaction.type === 'wallet_withdrawal' || transaction.type === 'withdrawal' ? 'debit' : 'credit') as 'credit' | 'debit',
-            amount: transaction.amount,
-            balance: 0, // Balance not available in transaction data
-            description: transaction.description,
-            reference: transaction.reference,
-            paymentMethod: transaction.metadata?.bankName || 'bank_transfer',
-            status: transaction.status as 'successful' | 'pending' | 'failed',
-            createdAt: transaction.createdAt
-          }))
+        // Transform OtoBill transactions to WalletLog format
+        const walletLogs = response.data.transactions.map((transaction: any) => ({
+          id: transaction._id,
+          userId: transaction.userId._id,
+          userName: transaction.userId.fullName || 'Unknown User',
+          userEmail: transaction.userId.email || 'No email',
+          type: 'credit' as 'credit' | 'debit', // OtoBill transactions are typically credits
+          amount: transaction.amount,
+          balance: 0, // Balance not available in transaction data
+          description: transaction.description,
+          reference: transaction.topupmateRef,
+          paymentMethod: 'otobill',
+          status: transaction.status as 'successful' | 'pending' | 'failed',
+          createdAt: transaction.createdAt
+        }))
         
         set({ walletLogs })
       } else {
@@ -673,7 +692,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   // OtoBill methods
   fetchOtoBillProfile: async () => {
     try {
-      const response = await apiService.getOtoBillProfile()
+      const response = await adminApiService.getOtoBillProfile()
       if (response.success && response.data) {
         set({ otobillProfile: response.data })
       } else {
@@ -688,7 +707,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   fetchOtoBillWalletBalance: async () => {
     try {
-      const response = await apiService.getOtoBillWalletBalance()
+      const response = await adminApiService.getOtoBillWalletBalance()
       if (response.success && response.data) {
         set({ otobillWalletBalance: response.data })
       } else {
@@ -703,7 +722,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   fetchOtoBillTransactions: async (page?: number, limit?: number, filters?: any) => {
     try {
-      const response = await apiService.getOtoBillTransactions(page, limit, filters);
+      const response = await adminApiService.getOtoBillTransactions(page, limit, filters);
       if (response.success && response.data) {
         set({
           otobillTransactions: response.data.transactions,
@@ -728,7 +747,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   fetchOtoBillTransaction: async (transactionId: string) => {
     try {
-      const response = await apiService.getOtoBillTransaction(transactionId);
+      const response = await adminApiService.getOtoBillTransaction(transactionId);
       if (response.success && response.data) {
         return response.data;
       } else {
@@ -743,7 +762,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
   fetchOtoBillTransactionStats: async (startDate?: string, endDate?: string, type?: 'all' | 'data' | 'airtime') => {
     try {
-      const response = await apiService.getOtoBillTransactionStats(startDate, endDate, type);
+      const response = await adminApiService.getOtoBillTransactionStats(startDate, endDate, type);
       if (response.success && response.data) {
         set({ otobillTransactionStats: response.data });
       } else {

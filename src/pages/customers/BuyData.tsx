@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useUserStore } from '../../store/userStore'
 import { useAuthStore } from '../../store/authStore'
-import { apiService, DataPlan } from '../../services/api'
+import { userApiService, DataPlan } from '../../services/userApi'
 import toast from 'react-hot-toast'
 import PinVerificationModal from '../../components/ui/PinVerificationModal'
 import PinResetModal from '../../components/ui/PinResetModal'
@@ -111,7 +111,7 @@ const BuyData: React.FC = () => {
   const loadNetworks = async () => {
     try {
       setIsLoadingNetworks(true)
-      const response = await apiService.getNetworks()
+      const response = await userApiService.getNetworks()
       
       if (response.success && response.data) {
         const networkOptions: NetworkOption[] = response.data
@@ -144,7 +144,7 @@ const BuyData: React.FC = () => {
   const loadCategories = async (networkName: string) => {
     try {
       setIsLoadingCategories(true)
-      const response = await apiService.getDataPlanCategories(networkName)
+      const response = await userApiService.getDataPlanCategories(networkName)
       
       if (response.success && response.data) {
         setCategories(response.data)
@@ -162,7 +162,7 @@ const BuyData: React.FC = () => {
       
       // Load all plans by requesting a very large page size
       // We'll modify the API call to get all plans at once
-      const response = await apiService.getDataPlans(networkName, 1, 'price', 'asc')
+      const response = await userApiService.getDataPlans(networkName, 1, 'price', 'asc')
       
       if (response.success && response.data) {
         // If there are more pages, load them all
@@ -171,7 +171,7 @@ const BuyData: React.FC = () => {
         
         while (response.data.hasNext && currentPage < 10) { // Safety limit
           currentPage++
-          const nextResponse = await apiService.getDataPlans(networkName, currentPage, 'price', 'asc')
+          const nextResponse = await userApiService.getDataPlans(networkName, currentPage, 'price', 'asc')
           if (nextResponse.success && nextResponse.data) {
             allPlans = [...allPlans, ...nextResponse.data.plans]
             if (!nextResponse.data.hasNext) break
@@ -232,7 +232,7 @@ const BuyData: React.FC = () => {
     
     try {
       // Make actual API call for data purchase
-      const purchaseResponse = await apiService.purchaseData({
+      const purchaseResponse = await userApiService.purchaseData({
         planId: selectedPlan.planId,
         phoneNumber: phoneNumber
       })

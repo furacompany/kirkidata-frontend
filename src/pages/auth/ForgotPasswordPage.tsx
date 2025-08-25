@@ -8,7 +8,7 @@ import { Mail, Smartphone, ArrowLeft, Lock, Eye, EyeOff } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
-import { apiService } from '../../services/api'
+import { userApiService } from '../../services/userApi'
 import toast from 'react-hot-toast'
 import SEO from '../../components/SEO'
 
@@ -54,7 +54,7 @@ const ForgotPasswordPage: React.FC = () => {
     setError(null)
     
     try {
-      const response = await apiService.requestPasswordReset({ email: data.email })
+      const response = await userApiService.requestPasswordReset({ email: data.email })
       
       if (response.success) {
         setEmail(data.email)
@@ -75,7 +75,7 @@ const ForgotPasswordPage: React.FC = () => {
     setError(null)
     
     try {
-      const response = await apiService.resetPassword({
+      const response = await userApiService.resetPassword({
         email: data.email,
         otp: data.otp,
         newPassword: data.newPassword,

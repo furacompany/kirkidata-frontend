@@ -7,7 +7,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import toast from 'react-hot-toast'
-import { apiService } from '../../services/api'
+import { adminApiService } from '../../services/adminApi'
 
 interface SyncResponse {
   success: boolean
@@ -37,7 +37,7 @@ const SyncOtoBill: React.FC = () => {
     setShowDataPlansModal(false)
     
     try {
-      const response = await apiService.syncOtoBillDataPlans()
+      const response = await adminApiService.syncOtoBillDataPlans()
       
       if (response.success) {
         toast.success('Data plans sync completed successfully!')
@@ -62,7 +62,7 @@ const SyncOtoBill: React.FC = () => {
     setShowAirtimeModal(false)
     
     try {
-      const response = await apiService.syncOtoBillAirtimePricing()
+      const response = await adminApiService.syncOtoBillAirtimePricing()
       
       if (response.success) {
         toast.success('Airtime pricing sync completed successfully!')

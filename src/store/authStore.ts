@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { User, AuthState } from '../types'
-import { apiService, RegisterRequest } from '../services/api'
+import { userApiService, RegisterRequest } from '../services/userApi'
 import toast from 'react-hot-toast'
 import { useUserStore } from './userStore'
 
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       
              if (accessToken && refreshToken) {
          try {
-           await apiService.validateAndRefreshTokens()
+           await userApiService.validateAndRefreshTokens()
          } catch (error) {
            // Don't logout - user stays logged in
          }
@@ -114,14 +114,14 @@ export const useAuthStore = create<AuthStore>((set, get) => {
                // Always try to refresh tokens in the background to ensure they're valid
          setTimeout(async () => {
            try {
-             const isValid = await apiService.validateAndRefreshTokens()
+             const isValid = await userApiService.validateAndRefreshTokens()
              if (isValid) {
                // Start periodic token refresh
                startTokenRefresh()
              } else {
                // If refresh fails, try to fetch user profile to validate tokens
                try {
-                 const response = await apiService.getUserProfile()
+                 const response = await userApiService.getUserProfile()
                  if (response.success && response.data) {
                    const user: User = {
                      id: response.data._id || '',
@@ -175,7 +175,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     set({ isLoading: true })
     
     try {
-      const response = await apiService.login({ phone, password })
+      const response = await userApiService.login({ phone, password })
       
       if (response.success && response.data) {
         // Check if there's existing user data in localStorage to restore PIN
@@ -243,7 +243,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
      logout: async () => {
      try {
        // Call logout API endpoint
-       await apiService.logout()
+       await userApiService.logout()
        toast.success('Logged out successfully')
      } catch (error) {
        // Even if API call fails, we still want to clear local state
@@ -268,7 +268,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     set({ isLoading: true })
     
     try {
-      const response = await apiService.register(userData)
+      const response = await userApiService.register(userData)
       
       if (response.success && response.data) {
         const user: User = {
@@ -356,7 +356,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
     set({ isLoading: true })
     
     try {
-      const response = await apiService.updateUserProfile({
+      const response = await userApiService.updateUserProfile({
         firstName,
         lastName,
         state
@@ -392,7 +392,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
 
   fetchUserProfile: async () => {
     try {
-      const response = await apiService.getUserProfile()
+      const response = await userApiService.getUserProfile()
       if (response.success && response.data) {
         const user: User = {
           id: response.data._id || '',
@@ -456,7 +456,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
                  // Try to refresh tokens in background
          setTimeout(async () => {
            try {
-             await apiService.validateAndRefreshTokens()
+             await userApiService.validateAndRefreshTokens()
            } catch (error) {
              // Silent fail - background token refresh error
            }
@@ -470,7 +470,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
 
     // If no user data in localStorage but tokens exist, try to fetch user data
     try {
-      const response = await apiService.getUserProfile()
+      const response = await userApiService.getUserProfile()
       if (response.success && response.data) {
         const user: User = {
           id: response.data._id || '',
@@ -512,7 +512,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
 
      validatePin: async (pin: string) => {
      try {
-       const response = await apiService.validatePin(pin)
+       const response = await userApiService.validatePin(pin)
        return response.success && response.data?.isValid === true
      } catch (error: any) {
        // If the error message indicates incorrect PIN, return false
@@ -529,7 +529,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
   changePin: async (currentPin: string, newPin: string) => {
     set({ isLoading: true })
     try {
-      const response = await apiService.changePin(currentPin, newPin)
+      const response = await userApiService.changePin(currentPin, newPin)
       if (response.success) {
         // Update user data in localStorage with new PIN
         const currentUser = get().user
@@ -556,7 +556,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
   changePassword: async (currentPassword: string, newPassword: string) => {
     set({ isLoading: true })
     try {
-      const response = await apiService.changePassword(currentPassword, newPassword)
+      const response = await userApiService.changePassword(currentPassword, newPassword)
       if (response.success) {
         toast.success('Password changed successfully')
       } else {
@@ -571,7 +571,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
   },
      validateAndRefreshTokens: async () => {
      try {
-       const refreshResponse = await apiService.refreshToken()
+       const refreshResponse = await userApiService.refreshToken()
        if (refreshResponse.success && refreshResponse.data) {
          // Update tokens in localStorage
          localStorage.setItem('accessToken', refreshResponse.data.accessToken)

@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 import { 
   UserCheck, UserX, Trash2, Users, 
   AlertTriangle, CheckCircle, XCircle,
-  Eye, Edit, ChevronLeft, ChevronRight
+  Eye, Edit
 } from 'lucide-react'
 
 interface UserData {
@@ -79,7 +79,6 @@ const UsersManagement: React.FC = () => {
   })
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
   // const [selectedUserForEdit, setSelectedUserForEdit] = useState<any>(null)
-  const [showAllUsers, setShowAllUsers] = useState(false)
 
   // Load all users with pagination
   const loadUsers = async (page: number = 1) => {
@@ -120,12 +119,10 @@ const UsersManagement: React.FC = () => {
     loadUsers(newPage)
   }
 
-  // Load users on component mount and when showAllUsers changes
+  // Load users on component mount
   useEffect(() => {
-    if (showAllUsers) {
-      loadUsers(1)
-    }
-  }, [showAllUsers])
+    loadUsers(1)
+  }, [])
 
   const handleSearch = async () => {
     if (!searchValue.trim()) {
@@ -955,7 +952,7 @@ const UsersManagement: React.FC = () => {
       )}
 
       {/* Instructions */}
-      {!userData && !error && !showAllUsers && (
+      {!userData && !error && (
         <Card className="p-6 bg-blue-50 border-blue-200">
           <div className="text-center space-y-2">
             <h3 className="text-lg font-medium text-blue-900">How to Search</h3>
@@ -967,24 +964,16 @@ const UsersManagement: React.FC = () => {
         </Card>
       )}
 
-      {/* Show All Users Section */}
+      {/* All Users Section */}
       <Card className="p-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />
             All Users
           </h3>
-          <Button
-            onClick={() => setShowAllUsers(!showAllUsers)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            {showAllUsers ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            {showAllUsers ? 'Hide All Users' : 'Show All Users'}
-          </Button>
         </div>
 
-        {showAllUsers && (
+        <div className="space-y-4">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="text-md font-medium text-gray-900">Users List</h4>
@@ -1095,7 +1084,7 @@ const UsersManagement: React.FC = () => {
               </div>
             )}
           </div>
-        )}
+        </div>
       </Card>
     </div>
   )

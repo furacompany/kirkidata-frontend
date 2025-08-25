@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useUserStore } from '../../store/userStore'
 import { useAuthStore } from '../../store/authStore'
-import { apiService, AirtimePurchaseRequest } from '../../services/api'
+import { userApiService, AirtimePurchaseRequest } from '../../services/userApi'
 import toast from 'react-hot-toast'
 import PinVerificationModal from '../../components/ui/PinVerificationModal'
 import PinResetModal from '../../components/ui/PinResetModal'
@@ -87,7 +87,7 @@ const BuyAirtime: React.FC = () => {
   const loadNetworks = async () => {
     try {
       setIsLoadingNetworks(true)
-      const response = await apiService.getNetworks()
+      const response = await userApiService.getNetworks()
       
       if (response.success && response.data) {
         const networkOptions: NetworkOption[] = response.data
@@ -163,7 +163,7 @@ const BuyAirtime: React.FC = () => {
       }
 
       // Make actual API call for airtime purchase
-      const purchaseResponse = await apiService.purchaseAirtime(purchaseData)
+      const purchaseResponse = await userApiService.purchaseAirtime(purchaseData)
       
       if (purchaseResponse.success && purchaseResponse.data) {
         const airtimeData = purchaseResponse.data

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { toast } from 'react-hot-toast'
-import { apiService } from '../services/api'
+import { userApiService } from '../services/userApi'
 import { getVirtualAccountTransactions } from '../features/virtual-accounts/api'
 import { UserState, Transaction } from '../types'
 
@@ -69,7 +69,7 @@ export const useUserStore = create<UserStore>((set) => ({
 
   fetchWalletBalance: async () => {
     try {
-      const response = await apiService.getWalletBalance()
+      const response = await userApiService.getWalletBalance()
       if (response.success && response.data) {
         set({ walletBalance: response.data.walletBalance })
       } else {
