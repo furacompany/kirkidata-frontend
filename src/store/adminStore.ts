@@ -516,29 +516,24 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
 
       // Create comprehensive stats object
       const stats = {
-        totalUsers: userStats?.totalUsers || 156,
-        activeUsers: userStats?.activeUsers || 89,
-        totalRevenue: totalRevenue || 2847500,
-        totalTransactions: totalTransactions || 1247,
-        pendingTransactions: pendingTransactions || 45,
-        successfulTransactions: successfulTransactions || 1189,
-        failedTransactions: failedTransactions || 13,
-        airtimeTransactions: airtimeTransactions || 432,
-        airtimeRevenue: airtimeRevenue || 1250000,
-        dataTransactions: dataTransactions || 318,
-        dataRevenue: dataRevenue || 897500,
-        walletTransactions: walletTransactions || 497,
-        walletRevenue: walletRevenue || 700000,
-        previousUsers: Math.floor((userStats?.totalUsers || 156) * 0.9), // Estimate previous month
-        previousRevenue: Math.floor((totalRevenue || 2847500) * 0.85), // Estimate previous month
-        previousTransactions: Math.floor((totalTransactions || 1247) * 0.87), // Estimate previous month
-        previousActiveUsers: Math.floor((userStats?.activeUsers || 89) * 0.85), // Estimate previous month
-        networkStats: Object.keys(networkStats).length > 0 ? networkStats : {
-          MTN: { successful: 45, total: 50, revenue: 1200000 },
-          Airtel: { successful: 38, total: 42, revenue: 980000 },
-          Glo: { successful: 32, total: 35, revenue: 850000 },
-          '9mobile': { successful: 28, total: 31, revenue: 720000 }
-        },
+        totalUsers: userStats?.totalUsers || 0,
+        activeUsers: userStats?.activeUsers || 0,
+        totalRevenue: totalRevenue || 0,
+        totalTransactions: totalTransactions || 0,
+        pendingTransactions: pendingTransactions || 0,
+        successfulTransactions: successfulTransactions || 0,
+        failedTransactions: failedTransactions || 0,
+        airtimeTransactions: airtimeTransactions || 0,
+        airtimeRevenue: airtimeRevenue || 0,
+        dataTransactions: dataTransactions || 0,
+        dataRevenue: dataRevenue || 0,
+        walletTransactions: walletTransactions || 0,
+        walletRevenue: walletRevenue || 0,
+        previousUsers: userStats?.totalUsers ? Math.floor(userStats.totalUsers * 0.9) : 0, // Estimate previous month
+        previousRevenue: totalRevenue ? Math.floor(totalRevenue * 0.85) : 0, // Estimate previous month
+        previousTransactions: totalTransactions ? Math.floor(totalTransactions * 0.87) : 0, // Estimate previous month
+        previousActiveUsers: userStats?.activeUsers ? Math.floor(userStats.activeUsers * 0.85) : 0, // Estimate previous month
+        networkStats: Object.keys(networkStats).length > 0 ? networkStats : {},
         recentTransactions: transactions.slice(0, 4),
         recentUsers: [] // Will be populated by fetchUsers
       }

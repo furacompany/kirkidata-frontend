@@ -45,54 +45,8 @@ const WalletLogs: React.FC = () => {
     fetchWalletLogs()
   }, [fetchWalletLogs])
 
-  // Sample data for demonstration when no real data is available
-  const sampleWalletLogs = [
-    {
-      id: '1',
-      userId: 'user1',
-      userName: 'John Doe',
-      userEmail: 'john.doe@example.com',
-      type: 'credit' as const,
-      amount: 50000,
-      balance: 50000,
-      description: 'Wallet funding via bank transfer',
-      reference: 'REF001',
-      paymentMethod: 'bank_transfer',
-      status: 'successful' as const,
-      createdAt: new Date(Date.now() - 86400000).toISOString() // 1 day ago
-    },
-    {
-      id: '2',
-      userId: 'user2',
-      userName: 'Jane Smith',
-      userEmail: 'jane.smith@example.com',
-      type: 'credit' as const,
-      amount: 25000,
-      balance: 25000,
-      description: 'Wallet funding via card payment',
-      reference: 'REF002',
-      paymentMethod: 'card',
-      status: 'successful' as const,
-      createdAt: new Date(Date.now() - 172800000).toISOString() // 2 days ago
-    },
-    {
-      id: '3',
-      userId: 'user3',
-      userName: 'Mike Johnson',
-      userEmail: 'mike.johnson@example.com',
-      type: 'debit' as const,
-      amount: 15000,
-      balance: 35000,
-      description: 'Wallet withdrawal',
-      reference: 'REF003',
-      paymentMethod: 'bank_transfer',
-      status: 'pending' as const,
-      createdAt: new Date(Date.now() - 259200000).toISOString() // 3 days ago
-    }
-  ]
-
-  // Use sample data if no real wallet logs are available
-  const displayLogs = walletLogs.length > 0 ? walletLogs : sampleWalletLogs
+  // Use real wallet logs from the store
+  const displayLogs = walletLogs
 
   const filteredLogs = displayLogs.filter(log => {
     const matchesSearch = (log.userName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -403,9 +357,7 @@ const WalletLogs: React.FC = () => {
                 <p className="text-gray-500">
                   {searchTerm || selectedStatus !== 'all' || selectedMethod !== 'all'
                     ? 'Try adjusting your search or filters'
-                    : walletLogs.length === 0 
-                      ? 'No real wallet funding activities have been recorded yet. Showing sample data for demonstration.'
-                      : 'No wallet funding activities match your current filters'}
+                    : 'No wallet funding activities have been recorded yet'}
                 </p>
               </div>
             )}
