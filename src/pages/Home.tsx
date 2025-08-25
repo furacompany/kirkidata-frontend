@@ -78,11 +78,11 @@ const dataPlans = [
     headerTextColor: 'text-black',
     popular: false,
     plans: [
-      { size: '500MB', price: '₦200', duration: '3 days' },
-      { size: '1GB', price: '₦350', duration: '7 days' },
-      { size: '2GB', price: '₦650', duration: '14 days' },
-      { size: '5GB', price: '₦1,500', duration: '30 days' },
-      { size: '10GB', price: '₦2,800', duration: '30 days' }
+      { size: '500MB', duration: '3 days' },
+      { size: '1GB', duration: '7 days' },
+      { size: '2GB', duration: '14 days' },
+      { size: '5GB', duration: '30 days' },
+      { size: '10GB', duration: '30 days' }
     ]
   },
   {
@@ -95,11 +95,11 @@ const dataPlans = [
     headerTextColor: 'text-white',
     popular: true,
     plans: [
-      { size: '750MB', price: '₦250', duration: '7 days' },
-      { size: '1.5GB', price: '₦450', duration: '14 days' },
-      { size: '3GB', price: '₦800', duration: '30 days' },
-      { size: '6GB', price: '₦1,800', duration: '30 days' },
-      { size: '12GB', price: '₦3,200', duration: '30 days' }
+      { size: '750MB', duration: '7 days' },
+      { size: '1.5GB', duration: '14 days' },
+      { size: '3GB', duration: '30 days' },
+      { size: '6GB', duration: '30 days' },
+      { size: '12GB', duration: '30 days' }
     ]
   },
   {
@@ -112,11 +112,11 @@ const dataPlans = [
     headerTextColor: 'text-white',
     popular: false,
     plans: [
-      { size: '1GB', price: '₦300', duration: '5 days' },
-      { size: '2.5GB', price: '₦600', duration: '14 days' },
-      { size: '4GB', price: '₦1,200', duration: '30 days' },
-      { size: '7.5GB', price: '₦2,000', duration: '30 days' },
-      { size: '15GB', price: '₦3,500', duration: '30 days' }
+      { size: '1GB', duration: '5 days' },
+      { size: '2.5GB', duration: '14 days' },
+      { size: '4GB', duration: '30 days' },
+      { size: '7.5GB', duration: '30 days' },
+      { size: '15GB', duration: '30 days' }
     ]
   },
   {
@@ -129,37 +129,16 @@ const dataPlans = [
     headerTextColor: 'text-white',
     popular: false,
     plans: [
-      { size: '650MB', price: '₦220', duration: '7 days' },
-      { size: '1.2GB', price: '₦400', duration: '14 days' },
-      { size: '2.8GB', price: '₦750', duration: '30 days' },
-      { size: '5.5GB', price: '₦1,600', duration: '30 days' },
-      { size: '11GB', price: '₦3,000', duration: '30 days' }
+      { size: '650MB', duration: '7 days' },
+      { size: '1.2GB', duration: '14 days' },
+      { size: '2.8GB', duration: '30 days' },
+      { size: '5.5GB', duration: '30 days' },
+      { size: '11GB', duration: '30 days' }
     ]
   }
 ]
 
-const faqs = [
-  {
-    question: 'How quickly are recharges processed?',
-    answer: 'All airtime and data recharges are processed instantly. Once payment is confirmed, your recharge is delivered within seconds.'
-  },
-  {
-    question: 'Which payment methods do you accept?',
-    answer: 'We accept debit/credit cards, bank transfers, USSD payments, and virtual account funding. All methods are secure and instant.'
-  },
-  {
-    question: 'Is my personal and financial data secure?',
-    answer: 'Absolutely! We use bank-grade encryption and security protocols. Your data is never shared with third parties and all transactions are fully protected.'
-  },
-  {
-    question: 'Can I track my transaction history?',
-    answer: 'Yes! Your dashboard provides complete transaction history with downloadable receipts, search filters, and detailed analytics.'
-  },
-  {
-    question: 'Do you offer bulk purchase discounts?',
-    answer: 'Yes, we offer competitive rates for bulk purchases and business accounts. Contact our support team for custom pricing.'
-  },
-]
+
 
 const Home: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -196,7 +175,6 @@ const Home: React.FC = () => {
               <a href="#features" className="text-gray-700 hover:text-primary transition-colors font-medium">Features</a>
               <a href="#pricing" className="text-gray-700 hover:text-primary transition-colors font-medium">Pricing</a>
               <a href="#testimonials" className="text-gray-700 hover:text-primary transition-colors font-medium">Reviews</a>
-              <a href="#faq" className="text-gray-700 hover:text-primary transition-colors font-medium">FAQ</a>
               <a href="#contact" className="text-gray-700 hover:text-primary transition-colors font-medium">Contact</a>
             </div>
 
@@ -239,7 +217,6 @@ const Home: React.FC = () => {
                 <a href="#features" className="block text-gray-700 hover:text-primary transition-colors font-medium">Features</a>
                 <a href="#pricing" className="block text-gray-700 hover:text-primary transition-colors font-medium">Pricing</a>
                 <a href="#testimonials" className="block text-gray-700 hover:text-primary transition-colors font-medium">Reviews</a>
-                <a href="#faq" className="block text-gray-700 hover:text-primary transition-colors font-medium">FAQ</a>
                 <a href="#contact" className="block text-gray-700 hover:text-primary transition-colors font-medium">Contact</a>
                 <div className="pt-4 border-t border-gray-100 space-y-3">
                   <Link to="/login" className="block">
@@ -548,9 +525,6 @@ const Home: React.FC = () => {
                          <div className="font-semibold text-gray-900 text-sm">{plan.size}</div>
                          <div className="text-xs text-gray-600">{plan.duration}</div>
                        </div>
-                       <div className="font-bold text-gray-900 text-sm">
-                         {plan.price}
-                       </div>
                      </div>
                   ))}
                 </div>
@@ -646,41 +620,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-xl text-gray-600">
-              Everything you need to know about using Kirkidata
-            </p>
-          </motion.div>
-          
-          <div className="space-y-6">
-            {faqs.map((faq, index) => (
-              <motion.div
-                key={faq.question}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-gray-50 rounded-xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300"
-              >
-                <h3 className="text-lg font-bold text-gray-900 mb-3">{faq.question}</h3>
-                <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* CTA Section */}
       <section className="py-20 bg-primary">
@@ -978,14 +918,12 @@ const Home: React.FC = () => {
                 <li><Link to="/register" className="hover:text-white transition-colors">Create Account</Link></li>
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#faq" className="hover:text-white transition-colors">Help & FAQ</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold mb-4">Support</h4>
               <ul className="space-y-3 text-gray-400">
                 <li><a href="#contact" className="hover:text-white transition-colors">Contact Us</a></li>
-                <li><a href="#faq" className="hover:text-white transition-colors">Help Center</a></li>
                 <li><a href="#features" className="hover:text-white transition-colors">How It Works</a></li>
                 <li><a href="#pricing" className="hover:text-white transition-colors">Pricing Guide</a></li>
               </ul>

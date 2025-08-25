@@ -11,6 +11,7 @@ import { Input } from '../../components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import toast from 'react-hot-toast'
 import SEO from '../../components/SEO'
+import AuthNavbar from '../../components/AuthNavbar'
 
 const schema = yup.object({
   phone: yup.string()
@@ -61,7 +62,7 @@ const CustomerLogin: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-light flex items-center justify-center px-4">
+    <div className="min-h-screen bg-light">
       {/* SEO Component */}
       <SEO 
         title="Customer Login | Kirkidata"
@@ -69,6 +70,11 @@ const CustomerLogin: React.FC = () => {
         keywords="Kirkidata login, customer login, airtime login, data login, Nigeria recharge login"
         canonicalUrl="https://www.kirkidata.com/login"
       />
+      
+      {/* Auth Navbar */}
+      <AuthNavbar currentPage="login" />
+      
+      <div className="flex items-start justify-center px-4 pt-16">
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -201,6 +207,7 @@ const CustomerLogin: React.FC = () => {
           </CardContent>
         </Card>
       </motion.div>
+      </div>
     </div>
   )
 }

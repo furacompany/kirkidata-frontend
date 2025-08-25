@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import SEO from '../../components/SEO'
+import AuthNavbar from '../../components/AuthNavbar'
 
 interface RegisterFormData {
   firstName: string
@@ -107,7 +108,7 @@ const RegisterPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-light flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-light">
       {/* SEO Component */}
       <SEO 
         title="Create Account | Kirkidata"
@@ -115,6 +116,11 @@ const RegisterPage: React.FC = () => {
         keywords="Kirkidata register, create account, sign up, airtime account, data account, Nigeria recharge account"
         canonicalUrl="https://www.kirkidata.com/register"
       />
+      
+      {/* Auth Navbar */}
+      <AuthNavbar currentPage="register" />
+      
+      <div className="flex items-center justify-center px-4 py-8">
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -294,6 +300,7 @@ const RegisterPage: React.FC = () => {
           </CardContent>
         </Card>
       </motion.div>
+      </div>
     </div>
   )
 }
