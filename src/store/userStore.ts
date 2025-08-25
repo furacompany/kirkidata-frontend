@@ -13,7 +13,7 @@ interface UserStore extends UserState {
 }
 
 export const useUserStore = create<UserStore>((set) => ({
-  walletBalance: 5000,
+  walletBalance: 0,
   transactions: [],
   isLoading: false,
 
