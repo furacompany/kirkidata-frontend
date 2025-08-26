@@ -22,13 +22,22 @@ const AdminHome: React.FC = () => {
     fetchStats,
     fetchOtoBillTransactionStats
   } = useAdminStore()
+  
+  // Improved loading state management
   const [isLoadingStats, setIsLoadingStats] = React.useState(true)
+  const [isLoadingUsers, setIsLoadingUsers] = React.useState(true)
+  const [isLoadingTransactions, setIsLoadingTransactions] = React.useState(true)
+  const [isLoadingOtoBillStats, setIsLoadingOtoBillStats] = React.useState(true)
+  
+  // Combined loading state for the entire dashboard
+  const isDashboardLoading = isLoadingStats || isLoadingUsers || isLoadingTransactions || isLoadingOtoBillStats
 
   useEffect(() => {
     const loadData = async () => {
       // Fetch stats
       if (typeof fetchStats === 'function') {
         try {
+          setIsLoadingStats(true)
           await fetchStats()
         } catch (error) {
           console.error('Failed to fetch stats:', error)
@@ -42,36 +51,57 @@ const AdminHome: React.FC = () => {
       // Fetch OtoBill transaction stats for revenue calculation
       if (typeof fetchOtoBillTransactionStats === 'function') {
         try {
+          setIsLoadingOtoBillStats(true)
           await fetchOtoBillTransactionStats()
         } catch (error) {
           console.error('Failed to fetch OtoBill transaction stats:', error)
+        } finally {
+          setIsLoadingOtoBillStats(false)
         }
+      } else {
+        setIsLoadingOtoBillStats(false)
       }
 
       // Fetch users
       if (typeof fetchUsers === 'function') {
         try {
+          setIsLoadingUsers(true)
           await fetchUsers()
         } catch (error) {
           console.error('Failed to fetch users:', error)
+        } finally {
+          setIsLoadingUsers(false)
         }
+      } else {
+        setIsLoadingUsers(false)
       }
 
       // Fetch transactions
       if (typeof fetchTransactions === 'function') {
         try {
+          setIsLoadingTransactions(true)
           await fetchTransactions()
         } catch (error) {
           console.error('Failed to fetch transactions:', error)
+        } finally {
+          setIsLoadingTransactions(false)
         }
+      } else {
+        setIsLoadingTransactions(false)
       }
     }
 
     loadData()
   }, [fetchStats, fetchUsers, fetchTransactions, fetchOtoBillTransactionStats])
 
-  const recentTransactions = stats?.recentTransactions || (Array.isArray(transactions) ? transactions.slice(0, 4) : [])
-  const recentUsers = stats?.recentUsers || (Array.isArray(users) ? users.slice(0, 4) : [])
+  // Only show data when not loading and data exists
+  const recentTransactions = !isDashboardLoading && stats?.recentTransactions ? 
+    stats.recentTransactions : 
+    (!isDashboardLoading && Array.isArray(transactions) ? transactions.slice(0, 4) : [])
+    
+  const recentUsers = !isDashboardLoading && stats?.recentUsers ? 
+    stats.recentUsers : 
+    (!isDashboardLoading && Array.isArray(users) ? users.slice(0, 4) : [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -153,6 +183,7 @@ const AdminHome: React.FC = () => {
             size="sm"
             onClick={async () => {
               setIsLoadingStats(true)
+              setIsLoadingOtoBillStats(true)
               try {
                 await Promise.all([
                   fetchStats?.(),
@@ -162,12 +193,13 @@ const AdminHome: React.FC = () => {
                 console.error('Failed to refresh stats:', error)
               } finally {
                 setIsLoadingStats(false)
+                setIsLoadingOtoBillStats(false)
               }
             }}
-            disabled={isLoadingStats}
+            disabled={isDashboardLoading}
           >
             <Activity className="w-4 h-4 mr-2" />
-            {isLoadingStats ? 'Refreshing...' : 'Refresh Stats'}
+            {isDashboardLoading ? 'Refreshing...' : 'Refresh Stats'}
           </Button>
           <Link to="/admin/users">
             <Button variant="outline" size="sm">
@@ -175,12 +207,7 @@ const AdminHome: React.FC = () => {
               Manage Users
             </Button>
           </Link>
-          <Link to="/admin/settings">
-            <Button className="bg-primary hover:bg-primary/90 text-white">
-              <Shield className="w-4 h-4 mr-2" />
-              System Settings
-            </Button>
-          </Link>
+
         </div>
       </motion.div>
 
@@ -200,7 +227,7 @@ const AdminHome: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoadingStats ? (
+            {isDashboardLoading ? (
               <div className="animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-20 mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-32"></div>
@@ -236,7 +263,7 @@ const AdminHome: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoadingStats ? (
+            {isDashboardLoading ? (
               <div className="animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-24 mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-32"></div>
@@ -272,7 +299,7 @@ const AdminHome: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoadingStats ? (
+            {isDashboardLoading ? (
               <div className="animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-20 mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-32"></div>
@@ -310,7 +337,7 @@ const AdminHome: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoadingStats ? (
+            {isDashboardLoading ? (
               <div className="animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-32"></div>
@@ -361,83 +388,142 @@ const AdminHome: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <Smartphone className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Airtime Recharge</div>
-                  <div className="text-sm text-gray-600">
-                    {(otobillTransactionStats?.airtime.count || stats?.airtimeTransactions || 0).toLocaleString()} transactions
+            {isDashboardLoading ? (
+              // Loading skeleton for service performance cards
+              <>
+                <div className="animate-pulse">
+                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-green-100 rounded-lg">
+                        <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                      </div>
+                      <div>
+                        <div className="h-4 bg-gray-300 rounded w-32 mb-2"></div>
+                        <div className="h-3 bg-gray-300 rounded w-24"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
+                      <div className="h-3 bg-gray-300 rounded w-16"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-bold text-gray-900">
-                  {formatAmount(otobillTransactionStats?.airtime.amount || stats?.airtimeRevenue || 0)}
-                </div>
-                <div className="text-xs text-green-600 font-medium">
-                  {(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0) > 0 ? 
-                    `${Math.round(((otobillTransactionStats?.airtime.amount || stats?.airtimeRevenue || 0) / (otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)) * 100)}% of revenue` : 
-                    '0% of revenue'
-                  }
-                </div>
-              </div>
-            </div>
-            
-                            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Wifi className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Data Bundles</div>
-                  <div className="text-sm text-gray-600">
-                    {(otobillTransactionStats?.data.count || stats?.dataTransactions || 0).toLocaleString()} transactions
+                <div className="animate-pulse">
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-blue-100 rounded-lg">
+                        <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                      </div>
+                      <div>
+                        <div className="h-4 bg-gray-300 rounded w-28 mb-2"></div>
+                        <div className="h-3 bg-gray-300 rounded w-24"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
+                      <div className="h-3 bg-gray-300 rounded w-16"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="text-right">
-                                 <div className="text-lg font-bold text-gray-900">
-                   {formatAmount(otobillTransactionStats?.data.amount || stats?.dataRevenue || 0)}
-                 </div>
-                 <div className="text-xs text-blue-600 font-medium">
-                   {(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0) > 0 ? 
-                     `${Math.round(((otobillTransactionStats?.data.amount || stats?.dataRevenue || 0) / (otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)) * 100)}% of revenue` : 
-                     '0% of revenue'
-                   }
-                 </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-xl border border-purple-200">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <CreditCard className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900">Total Profit</div>
-                  <div className="text-sm text-gray-600">
-                    {otobillTransactionStats?.totalTransactions ? 
-                      `${((otobillTransactionStats.totalProfit / otobillTransactionStats.totalAmount) * 100).toFixed(1)}% margin` : 
-                      'Profit margin'
-                    }
+                <div className="animate-pulse">
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-xl border border-purple-200">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-purple-100 rounded-lg">
+                        <div className="w-5 h-5 bg-gray-300 rounded"></div>
+                      </div>
+                      <div>
+                        <div className="h-4 bg-gray-300 rounded w-24 mb-2"></div>
+                        <div className="h-3 bg-gray-300 rounded w-20"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
+                      <div className="h-3 bg-gray-300 rounded w-16"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="text-right">
-                                 <div className="text-lg font-bold text-gray-900">
-                   {formatAmount(otobillTransactionStats?.totalProfit || stats?.walletRevenue || 0)}
-                 </div>
-                 <div className="text-xs text-purple-600 font-medium">
-                   {(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0) > 0 ? 
-                     `${Math.round(((otobillTransactionStats?.totalProfit || stats?.walletRevenue || 0) / (otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)) * 100)}% of revenue` : 
-                     '0% of revenue'
-                   }
-                 </div>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-green-100 rounded-lg">
+                      <Smartphone className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Airtime Recharge</div>
+                      <div className="text-sm text-gray-600">
+                        {(otobillTransactionStats?.airtime.count || stats?.airtimeTransactions || 0).toLocaleString()} transactions
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-gray-900">
+                      {formatAmount(otobillTransactionStats?.airtime.amount || stats?.airtimeRevenue || 0)}
+                    </div>
+                    <div className="text-xs text-green-600 font-medium">
+                      {(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0) > 0 ? 
+                        `${Math.round(((otobillTransactionStats?.airtime.amount || stats?.airtimeRevenue || 0) / (otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)) * 100)}% of revenue` : 
+                        '0% of revenue'
+                      }
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <Wifi className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Data Bundles</div>
+                      <div className="text-sm text-gray-600">
+                        {(otobillTransactionStats?.data.count || stats?.dataTransactions || 0).toLocaleString()} transactions
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-gray-900">
+                      {formatAmount(otobillTransactionStats?.data.amount || stats?.dataRevenue || 0)}
+                    </div>
+                    <div className="text-xs text-blue-600 font-medium">
+                      {(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0) > 0 ? 
+                        `${Math.round(((otobillTransactionStats?.data.amount || stats?.dataRevenue || 0) / (otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)) * 100)}% of revenue` : 
+                        '0% of revenue'
+                      }
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-xl border border-purple-200">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-purple-100 rounded-lg">
+                      <CreditCard className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Total Profit</div>
+                      <div className="text-sm text-gray-600">
+                        {otobillTransactionStats?.totalTransactions ? 
+                          `${((otobillTransactionStats.totalProfit / otobillTransactionStats.totalAmount) * 100).toFixed(1)}% margin` : 
+                          'Profit margin'
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-gray-900">
+                      {formatAmount(otobillTransactionStats?.totalProfit || stats?.walletRevenue || 0)}
+                    </div>
+                    <div className="text-xs text-purple-600 font-medium">
+                      {(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0) > 0 ? 
+                        `${Math.round(((otobillTransactionStats?.totalProfit || stats?.walletRevenue || 0) / (otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)) * 100)}% of revenue` : 
+                        '0% of revenue'
+                      }
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -457,41 +543,89 @@ const AdminHome: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-                                      {Object.entries(stats?.networkStats || {}).map(([network, networkStats]) => {
-               const successRate = networkStats && networkStats.total > 0 ? (networkStats.successful / networkStats.total) * 100 : 0
-               const getNetworkColor = (network: string) => {
-                 switch (network) {
-                   case 'MTN': return 'yellow'
-                   case 'Airtel': return 'red'
-                   case 'Glo': return 'green'
-                   case '9mobile': return 'blue'
-                   default: return 'gray'
-                 }
-               }
-               const color = getNetworkColor(network)
-               
-               return (
-                 <div key={network} className={`flex items-center justify-between p-4 bg-${color}-50 rounded-xl border border-${color}-200`}>
-                   <div className="flex items-center gap-4">
-                     <div className={`p-3 bg-${color}-100 rounded-lg`}>
-                       <div className={`w-4 h-4 bg-${color}-600 rounded`}></div>
-                     </div>
-                     <div>
-                       <div className="font-semibold text-gray-900">{network}</div>
-                       <div className="text-sm text-gray-600">
-                         {networkStats?.successful || 0}/{networkStats?.total || 0} successful
-                       </div>
-                     </div>
-                   </div>
-                   <div className="text-right">
-                     <div className="text-lg font-bold text-gray-900">{successRate.toFixed(1)}%</div>
-                     <div className={`text-xs font-medium ${successRate >= 90 ? 'text-green-600' : successRate >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
-                       {successRate >= 90 ? 'Excellent' : successRate >= 75 ? 'Good' : 'Needs Attention'}
-                     </div>
-                   </div>
-                 </div>
-               )
-             })}
+            {isDashboardLoading ? (
+              // Loading skeleton for network status
+              <>
+                <div className="animate-pulse">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-gray-100 rounded-lg">
+                        <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                      </div>
+                      <div>
+                        <div className="h-4 bg-gray-300 rounded w-20 mb-2"></div>
+                        <div className="h-3 bg-gray-300 rounded w-24"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-6 bg-gray-300 rounded w-16 mb-2"></div>
+                      <div className="h-3 bg-gray-300 rounded w-20"></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="animate-pulse">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-gray-100 rounded-lg">
+                        <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                      </div>
+                      <div>
+                        <div className="h-4 bg-gray-300 rounded w-24 mb-2"></div>
+                        <div className="h-3 bg-gray-300 rounded w-24"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-6 bg-gray-300 rounded w-16 mb-2"></div>
+                      <div className="h-3 bg-gray-300 rounded w-20"></div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (stats?.networkStats && Object.keys(stats.networkStats).length > 0) ? (
+              Object.entries(stats.networkStats).map(([network, networkStats]) => {
+                const successRate = networkStats && networkStats.total > 0 ? (networkStats.successful / networkStats.total) * 100 : 0
+                const getNetworkColor = (network: string) => {
+                  switch (network) {
+                    case 'MTN': return 'yellow'
+                    case 'Airtel': return 'red'
+                    case 'Glo': return 'green'
+                    case '9mobile': return 'blue'
+                    default: return 'gray'
+                  }
+                }
+                const color = getNetworkColor(network)
+                
+                return (
+                  <div key={network} className={`flex items-center justify-between p-4 bg-${color}-50 rounded-xl border border-${color}-200`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 bg-${color}-100 rounded-lg`}>
+                        <div className={`w-4 h-4 bg-${color}-600 rounded`}></div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{network}</div>
+                        <div className="text-sm text-gray-600">
+                          {networkStats?.successful || 0}/{networkStats?.total || 0} successful
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-gray-900">{successRate.toFixed(1)}%</div>
+                      <div className={`text-xs font-medium ${successRate >= 90 ? 'text-green-600' : successRate >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
+                        {successRate >= 90 ? 'Excellent' : successRate >= 75 ? 'Good' : 'Needs Attention'}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Globe className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No network data available</h3>
+                <p className="text-gray-500">Network statistics will appear here once transactions are processed.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -523,7 +657,45 @@ const AdminHome: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentTransactions.length > 0 ? (
+              {isDashboardLoading ? (
+                // Loading skeleton for recent transactions
+                <>
+                  <div className="animate-pulse">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-white rounded-lg shadow-sm">
+                          <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                        </div>
+                        <div>
+                          <div className="h-4 bg-gray-300 rounded w-32 mb-2"></div>
+                          <div className="h-3 bg-gray-300 rounded w-24"></div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="h-5 bg-gray-300 rounded w-20 mb-2"></div>
+                        <div className="h-6 bg-gray-300 rounded w-16"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="animate-pulse">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-white rounded-lg shadow-sm">
+                          <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                        </div>
+                        <div>
+                          <div className="h-4 bg-gray-300 rounded w-28 mb-2"></div>
+                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="h-5 bg-gray-300 rounded w-16 mb-2"></div>
+                        <div className="h-6 bg-gray-300 rounded w-20"></div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : recentTransactions.length > 0 ? (
                 recentTransactions.map((transaction) => (
                   <div key={transaction._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-4">
@@ -579,7 +751,41 @@ const AdminHome: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentUsers.length > 0 ? (
+              {isDashboardLoading ? (
+                // Loading skeleton for recent users
+                <>
+                  <div className="animate-pulse">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div>
+                          <div className="h-4 bg-gray-300 rounded w-32 mb-2"></div>
+                          <div className="h-3 bg-gray-300 rounded w-24"></div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="h-3 bg-gray-300 rounded w-16 mb-2"></div>
+                        <div className="h-6 bg-gray-300 rounded w-16"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="animate-pulse">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <div>
+                          <div className="h-4 bg-gray-300 rounded w-28 mb-2"></div>
+                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="h-3 bg-gray-300 rounded w-16 mb-2"></div>
+                        <div className="h-6 bg-gray-300 rounded w-16"></div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : recentUsers.length > 0 ? (
                 recentUsers.map((user) => (
                   <div key={user._id || user.id || Math.random()} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-4">
@@ -642,12 +848,7 @@ const AdminHome: React.FC = () => {
                   <p className="text-sm text-gray-600">Platform is running smoothly with 99.9% uptime</p>
                 </div>
               </div>
-              <Link to="/admin/settings">
-                <Button className="bg-success hover:bg-success/90 text-white">
-                  <Shield className="w-4 h-4 mr-2" />
-                  System Settings
-                </Button>
-              </Link>
+
             </div>
           </CardContent>
         </Card>

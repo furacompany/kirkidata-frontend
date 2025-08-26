@@ -269,7 +269,6 @@ const UsersManagement: React.FC = () => {
       const response = await deactivateUser(userData._id)
       if (response.success && response.data) {
         setUserData(response.data)
-        toast.success('User deactivated successfully!')
       }
     } catch (error: any) {
       console.error('Deactivate user error:', error)
@@ -286,7 +285,6 @@ const UsersManagement: React.FC = () => {
       const response = await reactivateUser(userData._id)
       if (response.success && response.data) {
         setUserData(response.data)
-        toast.success('User reactivated successfully!')
       }
     } catch (error: any) {
       console.error('Reactivate user error:', error)
@@ -305,7 +303,6 @@ const UsersManagement: React.FC = () => {
         setUserData(null)
         setError(null)
         setSearchValue('')
-        toast.success('User deleted successfully!')
       }
     } catch (error: any) {
       console.error('Delete user error:', error)

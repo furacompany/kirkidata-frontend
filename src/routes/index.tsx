@@ -28,7 +28,7 @@ const SyncOtoBill = lazy(() => import('../pages/admin/SyncOtoBill'));
 const TransactionsPanel = lazy(() => import('../pages/admin/TransactionsPanel'));
 const WalletLogs = lazy(() => import('../pages/admin/WalletLogs'));
 const AdminProfile = lazy(() => import('../pages/admin/AdminProfile'));
-const AdminSettings = lazy(() => import('../pages/admin/AdminSettings'));
+
 
 const OtoBillWallet = lazy(() => import('../pages/admin/OtoBillWallet'));
 const OtobillProfile = lazy(() => import('../pages/admin/OtobillProfile'));
@@ -124,7 +124,7 @@ const AppRoutes = () => (
         <Route path="otobill-stats" element={<OtoBillStats />} />
         <Route path="test-route" element={<div>Test route working!</div>} />
         <Route path="profile" element={<AdminProfile />} />
-        <Route path="settings" element={<AdminSettings />} />
+
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

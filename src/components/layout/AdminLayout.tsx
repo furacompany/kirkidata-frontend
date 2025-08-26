@@ -6,7 +6,6 @@ import {
   Users, 
   FileText, 
   CreditCard, 
-  Settings, 
   LogOut,
   Menu,
   X,
@@ -43,7 +42,6 @@ const AdminLayout: React.FC = () => {
     { name: 'OtoBill Transactions', href: '/admin/otobill-transactions', icon: Activity },
     { name: 'OtoBill Analytics', href: '/admin/otobill-stats', icon: BarChart3 },
     { name: 'Profile', href: '/admin/profile', icon: User },
-    { name: 'System Settings', href: '/admin/settings', icon: Settings },
   ]
 
   const handleLogout = async () => {

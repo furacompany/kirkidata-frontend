@@ -36,7 +36,7 @@ import DataPlans from './pages/admin/DataPlans'
 import SyncOtoBill from './pages/admin/SyncOtoBill'
 import TransactionsPanel from './pages/admin/TransactionsPanel'
 import WalletLogs from './pages/admin/WalletLogs'
-import AdminSettings from './pages/admin/AdminSettings'
+
 import AdminProfile from './pages/admin/AdminProfile'
 import OtobillProfile from './pages/admin/OtobillProfile'
 import OtoBillWallet from './pages/admin/OtoBillWallet'
@@ -244,7 +244,7 @@ const App: React.FC = () => {
              <Route path="sync-otobill" element={<SyncOtoBill />} />
              <Route path="transactions" element={<TransactionsPanel />} />
              <Route path="wallet-logs" element={<WalletLogs />} />
-             <Route path="settings" element={<AdminSettings />} />
+
              <Route path="profile" element={<AdminProfile />} />
              <Route path="otobill-profile" element={<OtobillProfile />} />
              <Route path="otobill-wallet" element={<OtoBillWallet />} />
