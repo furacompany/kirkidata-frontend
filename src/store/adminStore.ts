@@ -9,7 +9,8 @@ import {
   OtoBillProfile, 
   OtoBillWalletBalance,
   OtoBillTransaction,
-  OtoBillTransactionStats
+  OtoBillTransactionStats,
+  TransactionStats
 } from '../types'
 import { clearAdminAuth } from '../utils/auth'
 
@@ -43,6 +44,7 @@ interface AdminAuthState {
     hasNext: boolean
     hasPrev: boolean
   } | null
+  transactionStats: TransactionStats | null
 }
 
 interface AdminAuthStore extends AdminAuthState {
@@ -56,6 +58,7 @@ interface AdminAuthStore extends AdminAuthState {
   // User Management
   getUserByPhone: (phone: string) => Promise<any>
   getUserByEmail: (email: string) => Promise<any>
+  getUserById: (userId: string) => Promise<any>
   updateUserProfile: (userId: string, firstName: string, lastName: string, state: string) => Promise<any>
   updateUserWallet: (userId: string, amount: number, operation: 'add' | 'subtract', description: string) => Promise<any>
   searchUsers: (filters: any) => Promise<any>
@@ -76,6 +79,7 @@ interface AdminAuthStore extends AdminAuthState {
   fetchOtoBillTransactions: (page?: number, limit?: number, filters?: any) => Promise<void>
   fetchOtoBillTransaction: (transactionId: string) => Promise<OtoBillTransaction | null>
   fetchOtoBillTransactionStats: (startDate?: string, endDate?: string, type?: 'all' | 'data' | 'airtime') => Promise<void>
+  fetchTransactionStats: (startDate?: string, endDate?: string) => Promise<void>
 }
 
 export const useAdminStore = create<AdminAuthStore>((set) => ({
@@ -91,6 +95,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   otobillTransactions: [],
   otobillTransactionStats: null,
   otobillTransactionsPagination: null,
+  transactionStats: null,
 
   restoreAuthState: () => {
     const accessToken = localStorage.getItem('adminAccessToken')
@@ -771,6 +776,31 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
     } catch (error: any) {
       console.error('Failed to fetch OtoBill transaction stats:', error);
       toast.error('Failed to fetch OtoBill transaction stats');
+      throw error;
+    }
+  },
+
+  fetchTransactionStats: async (startDate?: string, endDate?: string) => {
+    try {
+      const response = await adminApiService.getTransactionStats(startDate, endDate);
+      if (response.success && response.data) {
+        set({ transactionStats: response.data });
+      } else {
+        throw new Error(response.message || 'Failed to fetch transaction stats');
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch transaction stats:', error);
+      toast.error('Failed to fetch transaction stats');
+      throw error;
+    }
+  },
+
+  getUserById: async (userId: string) => {
+    try {
+      const response = await adminApiService.getUserById(userId);
+      return response;
+    } catch (error: any) {
+      console.error('Failed to fetch user by ID:', error);
       throw error;
     }
   },

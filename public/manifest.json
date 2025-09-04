@@ -1,7 +1,7 @@
 {
-  "name": "Kirkidata - Buy Airtime & Data Instantly",
+  "name": "Kirkidata - Affordable Data & Airtime Services in Nigeria",
   "short_name": "Kirkidata",
-  "description": "Your trusted platform for buying airtime and data bundles instantly across all Nigerian networks",
+  "description": "Kirkidata offers affordable data, airtime top-up, cable TV subscriptions, and electricity bill payments with instant delivery and 24/7 support across all Nigerian networks.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -10,18 +10,59 @@
   "scope": "/",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["business", "finance", "utilities"],
+  "categories": ["business", "finance", "utilities", "telecommunications", "productivity"],
+  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
   "icons": [
     {
       "src": "/logo.jpg",
+      "sizes": "72x72",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "96x96",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "128x128",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "144x144",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "152x152",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.jpg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
       "src": "/logo.jpg",
+      "sizes": "384x384",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ],
@@ -30,39 +71,129 @@
       "src": "/kirki.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Kirkidata Desktop View"
     },
     {
       "src": "/kirki.png",
       "sizes": "750x1334",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "Kirkidata Mobile View"
     }
   ],
   "shortcuts": [
     {
       "name": "Buy Airtime",
       "short_name": "Airtime",
-      "description": "Quickly buy airtime for all networks",
+      "description": "Quickly buy airtime for all Nigerian networks",
       "url": "/buy-airtime",
       "icons": [
         {
           "src": "/logo.jpg",
-          "sizes": "96x96"
+          "sizes": "96x96",
+          "type": "image/jpeg"
         }
       ]
     },
     {
       "name": "Buy Data",
       "short_name": "Data",
-      "description": "Purchase data bundles instantly",
+      "description": "Purchase data bundles instantly for all networks",
       "url": "/buy-data",
       "icons": [
         {
           "src": "/logo.jpg",
-          "sizes": "96x96"
+          "sizes": "96x96",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "Fund Wallet",
+      "short_name": "Fund",
+      "description": "Add money to your wallet",
+      "url": "/fund-wallet",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "96x96",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "short_name": "History",
+      "description": "View your transaction history",
+      "url": "/transactions",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "96x96",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "Electricity",
+      "short_name": "Bills",
+      "description": "Pay electricity bills",
+      "url": "/electricity",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "96x96",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "TV Subscription",
+      "short_name": "TV",
+      "description": "Subscribe to cable TV",
+      "url": "/tv-subscription",
+      "icons": [
+        {
+          "src": "/logo.jpg",
+          "sizes": "96x96",
+          "type": "image/jpeg"
         }
       ]
     }
-  ]
+  ],
+  "related_applications": [],
+  "protocol_handlers": [
+    {
+      "protocol": "web+kirkidata",
+      "url": "/?action=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/upload",
+      "accept": {
+        "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp"]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }

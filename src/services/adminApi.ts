@@ -941,6 +941,59 @@ class AdminApiService {
       throw error
     }
   }
+
+  async getTransactionStats(startDate?: string, endDate?: string): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const params = new URLSearchParams()
+      if (startDate) params.append('startDate', startDate)
+      if (endDate) params.append('endDate', endDate)
+      
+      const queryString = params.toString()
+      const url = `/transactions/stats${queryString ? `?${queryString}` : ''}`
+      
+      const response = await this.request<any>(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getUserById(userId: string): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<any>(`/users/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
 }
 
 export const adminApiService = new AdminApiService(API_BASE_URL)

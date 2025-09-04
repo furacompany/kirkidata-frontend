@@ -1,53 +1,109 @@
+# Robots.txt for Kirkidata - VTU Services Platform
+# https://kirkidata.com/robots.txt
+
+# Default rules for all crawlers
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://www.kirkidata.com/sitemap.xml
+Sitemap: https://kirkidata.com/sitemap.xml
 
-# Crawl delay (optional)
+# Crawl delay to be respectful to server resources
 Crawl-delay: 1
 
-# Allow all major search engines
+# Specific rules for major search engines
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Slurp
 Allow: /
+Crawl-delay: 2
 
 User-agent: DuckDuckBot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Baiduspider
 Allow: /
+Crawl-delay: 2
 
 User-agent: YandexBot
 Allow: /
+Crawl-delay: 2
 
+# Social media crawlers
 User-agent: facebookexternalhit
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: LinkedInBot
 Allow: /
+Crawl-delay: 1
 
-# Block admin areas from public indexing
+User-agent: WhatsApp
+Allow: /
+Crawl-delay: 1
+
+User-agent: TelegramBot
+Allow: /
+Crawl-delay: 1
+
+# Block sensitive areas from public indexing
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /api/
 Disallow: /_next/
 Disallow: /static/
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /dist/
+Disallow: /build/
+Disallow: /.*
+Disallow: /*.json$
+Disallow: /*.js$
+Disallow: /*.css$
+Disallow: /*.map$
+Disallow: /*.txt$
+Disallow: /*.xml$
+Disallow: /*.ico$
+Disallow: /*.png$
+Disallow: /*.jpg$
+Disallow: /*.jpeg$
+Disallow: /*.gif$
+Disallow: /*.svg$
+Disallow: /*.webp$
 
-# Allow important pages
+# Allow important public pages
 Allow: /
 Allow: /login
 Allow: /register
 Allow: /forgot-password
+Allow: /reset-password
 Allow: /about
 Allow: /contact
 Allow: /privacy
 Allow: /terms
+Allow: /help
+Allow: /support
+Allow: /faq
+
+# Allow service pages
+Allow: /buy-airtime
+Allow: /buy-data
+Allow: /fund-wallet
+Allow: /transactions
+Allow: /profile
+Allow: /kyc
+Allow: /electricity
+Allow: /tv-subscription
+Allow: /exam-pins
+Allow: /receipt

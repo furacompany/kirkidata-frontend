@@ -1,13 +1,14 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  Users, Banknote, Activity,
+  Users, Activity,
   Smartphone, Wifi, CreditCard,
-  Clock, ArrowUpRight, ArrowDownRight, Shield,
-  Zap, PieChart, Globe, BarChart3
+  Clock, ArrowUpRight, Shield,
+  PieChart, Globe, BarChart3, Calendar, TrendingUp, DollarSign, Target
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
+import { Input } from '../../components/ui/Input'
 import { useAdminStore } from '../../store/adminStore'
 import { Link } from 'react-router-dom'
 
@@ -17,10 +18,12 @@ const AdminHome: React.FC = () => {
     users, 
     transactions, 
     otobillTransactionStats,
+    transactionStats,
     fetchUsers, 
     fetchTransactions, 
     fetchStats,
-    fetchOtoBillTransactionStats
+    fetchOtoBillTransactionStats,
+    fetchTransactionStats
   } = useAdminStore()
   
   // Improved loading state management
@@ -28,9 +31,14 @@ const AdminHome: React.FC = () => {
   const [isLoadingUsers, setIsLoadingUsers] = React.useState(true)
   const [isLoadingTransactions, setIsLoadingTransactions] = React.useState(true)
   const [isLoadingOtoBillStats, setIsLoadingOtoBillStats] = React.useState(true)
+  const [isLoadingTransactionStats, setIsLoadingTransactionStats] = React.useState(true)
+  
+  // Date filter states
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   
   // Combined loading state for the entire dashboard
-  const isDashboardLoading = isLoadingStats || isLoadingUsers || isLoadingTransactions || isLoadingOtoBillStats
+  const isDashboardLoading = isLoadingStats || isLoadingUsers || isLoadingTransactions || isLoadingOtoBillStats || isLoadingTransactionStats
 
   useEffect(() => {
     const loadData = async () => {
@@ -60,6 +68,20 @@ const AdminHome: React.FC = () => {
         }
       } else {
         setIsLoadingOtoBillStats(false)
+      }
+
+      // Fetch transaction statistics
+      if (typeof fetchTransactionStats === 'function') {
+        try {
+          setIsLoadingTransactionStats(true)
+          await fetchTransactionStats()
+        } catch (error) {
+          console.error('Failed to fetch transaction stats:', error)
+        } finally {
+          setIsLoadingTransactionStats(false)
+        }
+      } else {
+        setIsLoadingTransactionStats(false)
       }
 
       // Fetch users
@@ -92,7 +114,7 @@ const AdminHome: React.FC = () => {
     }
 
     loadData()
-  }, [fetchStats, fetchUsers, fetchTransactions, fetchOtoBillTransactionStats])
+  }, [fetchStats, fetchUsers, fetchTransactions, fetchOtoBillTransactionStats, fetchTransactionStats])
 
   // Only show data when not loading and data exists
   const recentTransactions = !isDashboardLoading && stats?.recentTransactions ? 
@@ -152,9 +174,29 @@ const AdminHome: React.FC = () => {
     return `${isCredit ? '+' : '-'}${formatAmount(transaction.amount)}`
   }
 
-  const getPercentageChange = (current: number, previous: number) => {
-    if (previous === 0) return current > 0 ? 100 : 0
-    return ((current - previous) / previous) * 100
+
+  const handleDateFilter = async () => {
+    try {
+      setIsLoadingTransactionStats(true)
+      await fetchTransactionStats(startDate || undefined, endDate || undefined)
+    } catch (error) {
+      console.error('Failed to fetch filtered transaction stats:', error)
+    } finally {
+      setIsLoadingTransactionStats(false)
+    }
+  }
+
+  const clearDateFilter = async () => {
+    setStartDate('')
+    setEndDate('')
+    try {
+      setIsLoadingTransactionStats(true)
+      await fetchTransactionStats()
+    } catch (error) {
+      console.error('Failed to fetch transaction stats:', error)
+    } finally {
+      setIsLoadingTransactionStats(false)
+    }
   }
 
 
@@ -184,16 +226,19 @@ const AdminHome: React.FC = () => {
             onClick={async () => {
               setIsLoadingStats(true)
               setIsLoadingOtoBillStats(true)
+              setIsLoadingTransactionStats(true)
               try {
                 await Promise.all([
                   fetchStats?.(),
-                  fetchOtoBillTransactionStats?.()
+                  fetchOtoBillTransactionStats?.(),
+                  fetchTransactionStats?.(startDate || undefined, endDate || undefined)
                 ])
               } catch (error) {
                 console.error('Failed to refresh stats:', error)
               } finally {
                 setIsLoadingStats(false)
                 setIsLoadingOtoBillStats(false)
+                setIsLoadingTransactionStats(false)
               }
             }}
             disabled={isDashboardLoading}
@@ -211,158 +256,183 @@ const AdminHome: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* KPI Cards */}
+      {/* Dynamic Transaction Statistics */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="space-y-6"
       >
-        {/* Total Users */}
-        <Card className="border-0 shadow-lg bg-blue-50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Total Users</CardTitle>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="h-4 w-4 text-blue-600" />
+        {/* Date Filter Controls */}
+        <Card className="border-0 shadow-lg bg-white">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  Transaction Statistics
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  {transactionStats?.period?.isOverall ? 'Overall statistics' : `Statistics from ${transactionStats?.period?.startDate ? new Date(transactionStats.period.startDate).toLocaleDateString() : 'N/A'} to ${transactionStats?.period?.endDate ? new Date(transactionStats.period.endDate).toLocaleDateString() : 'N/A'}`}
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    placeholder="Start Date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-40"
+                  />
+                  <Input
+                    type="date"
+                    placeholder="End Date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+                <Button
+                  onClick={handleDateFilter}
+                  disabled={isLoadingTransactionStats}
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  {isLoadingTransactionStats ? 'Loading...' : 'Filter'}
+                </Button>
+                <Button
+                  onClick={clearDateFilter}
+                  disabled={isLoadingTransactionStats}
+                  variant="outline"
+                  size="sm"
+                >
+                  Clear
+                </Button>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
-            {isDashboardLoading ? (
-              <div className="animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-20 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-32"></div>
-              </div>
-            ) : (stats?.totalUsers && stats.totalUsers > 0) ? (
-              <>
-                <div className="text-2xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</div>
-                <div className="flex items-center text-xs mt-2">
-                  {getPercentageChange(stats.totalUsers, stats.previousUsers || 0) > 0 ? (
-                    <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-                  ) : (
-                    <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-                  )}
-                  <span className={getPercentageChange(stats.totalUsers, stats.previousUsers || 0) > 0 ? 'text-green-600' : 'text-red-600'}>
-                    {Math.abs(getPercentageChange(stats.totalUsers, stats.previousUsers || 0)).toFixed(1)}% from last month
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <div className="text-sm text-gray-500">No data available</div>
-              </div>
-            )}
-          </CardContent>
         </Card>
 
-        {/* Total Revenue */}
-        <Card className="border-0 shadow-lg bg-green-50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Total Revenue</CardTitle>
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Banknote className="h-4 w-4 text-green-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isDashboardLoading ? (
-              <div className="animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-24 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-32"></div>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Total Users */}
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Total Users</CardTitle>
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Users className="h-4 w-4 text-blue-600" />
               </div>
-            ) : ((otobillTransactionStats?.totalAmount && otobillTransactionStats.totalAmount > 0) || (stats?.totalRevenue && stats.totalRevenue > 0)) ? (
-              <>
-                <div className="text-2xl font-bold text-gray-900">{formatAmount(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)}</div>
-                <div className="flex items-center text-xs mt-2">
-                  {getPercentageChange(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0, stats?.previousRevenue || 0) > 0 ? (
-                    <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-                  ) : (
-                    <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-                  )}
-                  <span className={getPercentageChange(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0, stats?.previousRevenue || 0) > 0 ? 'text-green-600' : 'text-red-600'}>
-                    {Math.abs(getPercentageChange(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0, stats?.previousRevenue || 0)).toFixed(1)}% from last month
-                  </span>
+            </CardHeader>
+            <CardContent>
+              {isLoadingTransactionStats ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-20 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
                 </div>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <div className="text-sm text-gray-500">No data available</div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : transactionStats?.overview?.totalUsers ? (
+                <>
+                  <div className="text-2xl font-bold text-gray-900">{transactionStats.overview.totalUsers.toLocaleString()}</div>
+                  <div className="text-xs text-blue-600 font-medium mt-1">
+                    Registered users
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <div className="text-sm text-gray-500">No data available</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Total Transactions */}
-        <Card className="border-0 shadow-lg bg-purple-50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Total Transactions</CardTitle>
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Activity className="h-4 w-4 text-purple-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isDashboardLoading ? (
-              <div className="animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-20 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-32"></div>
+          {/* Total Transactions */}
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Total Transactions</CardTitle>
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Activity className="h-4 w-4 text-purple-600" />
               </div>
-            ) : ((otobillTransactionStats?.totalTransactions && otobillTransactionStats.totalTransactions > 0) || (stats?.totalTransactions && stats.totalTransactions > 0)) ? (
-              <>
-                <div className="text-2xl font-bold text-gray-900">
-                  {(otobillTransactionStats?.totalTransactions || stats?.totalTransactions || 0).toLocaleString()}
+            </CardHeader>
+            <CardContent>
+              {isLoadingTransactionStats ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-20 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
                 </div>
-                <div className="flex items-center text-xs mt-2">
-                  {getPercentageChange(otobillTransactionStats?.totalTransactions || stats?.totalTransactions || 0, stats?.previousTransactions || 0) > 0 ? (
-                    <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-                  ) : (
-                    <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-                  )}
-                  <span className={getPercentageChange(otobillTransactionStats?.totalTransactions || stats?.totalTransactions || 0, stats?.previousTransactions || 0) > 0 ? 'text-green-600' : 'text-red-600'}>
-                    {Math.abs(getPercentageChange(otobillTransactionStats?.totalTransactions || stats?.totalTransactions || 0, stats?.previousTransactions || 0)).toFixed(1)}% from last month
-                  </span>
+              ) : transactionStats?.overview?.totalTransactions ? (
+                <>
+                  <div className="text-2xl font-bold text-gray-900">{transactionStats.overview.totalTransactions.toLocaleString()}</div>
+                  <div className="text-xs text-purple-600 font-medium mt-1">
+                    All transactions
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <div className="text-sm text-gray-500">No data available</div>
                 </div>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <div className="text-sm text-gray-500">No data available</div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Active Users */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Active Users</CardTitle>
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <Zap className="h-4 w-4 text-orange-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isDashboardLoading ? (
-              <div className="animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-32"></div>
+          {/* Total Wallet Funding */}
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Wallet Funding</CardTitle>
+              <div className="p-2 bg-green-100 rounded-lg">
+                <DollarSign className="h-4 w-4 text-green-600" />
               </div>
-            ) : (stats?.activeUsers && stats.activeUsers > 0) ? (
-              <>
-                <div className="text-2xl font-bold text-gray-900">{stats.activeUsers.toLocaleString()}</div>
-                <div className="flex items-center text-xs mt-2">
-                  {getPercentageChange(stats.activeUsers, stats.previousActiveUsers || 0) > 0 ? (
-                    <ArrowUpRight className="w-3 h-3 text-green-500 mr-1" />
-                  ) : (
-                    <ArrowDownRight className="w-3 h-3 text-red-500 mr-1" />
-                  )}
-                  <span className={getPercentageChange(stats.activeUsers, stats.previousActiveUsers || 0) > 0 ? 'text-green-600' : 'text-red-600'}>
-                    {Math.abs(getPercentageChange(stats.activeUsers, stats.previousActiveUsers || 0)).toFixed(1)}% from last month
-                  </span>
+            </CardHeader>
+            <CardContent>
+              {isLoadingTransactionStats ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
                 </div>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <div className="text-sm text-gray-500">No data available</div>
+              ) : transactionStats?.overview?.totalWalletFunding ? (
+                <>
+                  <div className="text-2xl font-bold text-gray-900">{formatAmount(transactionStats.overview.totalWalletFunding)}</div>
+                  <div className="text-xs text-green-600 font-medium mt-1">
+                    Total funding
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <div className="text-sm text-gray-500">No data available</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Total Profit */}
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700">Total Profit</CardTitle>
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Target className="h-4 w-4 text-orange-600" />
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent>
+              {isLoadingTransactionStats ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-20 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                </div>
+              ) : transactionStats?.overview?.totalProfit ? (
+                <>
+                  <div className="text-2xl font-bold text-gray-900">{formatAmount(transactionStats.overview.totalProfit)}</div>
+                  <div className="text-xs text-orange-600 font-medium mt-1">
+                    Platform profit
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <div className="text-sm text-gray-500">No data available</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </motion.div>
 
       {/* Charts and Analytics */}

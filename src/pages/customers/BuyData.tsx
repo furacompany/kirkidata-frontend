@@ -13,6 +13,7 @@ import { userApiService, DataPlan } from '../../services/userApi'
 import toast from 'react-hot-toast'
 import PinVerificationModal from '../../components/ui/PinVerificationModal'
 import PinResetModal from '../../components/ui/PinResetModal'
+import SEO from '../../components/SEO'
 
 interface NetworkOption {
   id: string
@@ -305,6 +306,15 @@ const BuyData: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* SEO Component */}
+      <SEO 
+        title="Buy Data Bundles Online | Kirkidata - All Nigerian Networks"
+        description="Buy data bundles instantly for MTN, Airtel, Glo, and 9mobile networks in Nigeria. Affordable data plans with instant activation and 24/7 support."
+        keywords="buy data online, MTN data, Airtel data, Glo data, 9mobile data, Nigeria data bundles, cheap data plans, instant data activation"
+        canonicalUrl="https://kirkidata.com/buy-data"
+        ogImage="https://kirkidata.com/logo.jpg"
+      />
+      
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

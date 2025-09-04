@@ -162,6 +162,54 @@ export interface AdminStats {
   recentUsers?: any[]
 }
 
+export interface TransactionStatsOverview {
+  totalUsers: number
+  totalTransactions: number
+  totalWalletFunding: number
+  totalProfit: number
+}
+
+export interface TransactionStatsService {
+  totalTransactions: number
+  totalAmount: number
+  totalProfit: number
+  averageProfit: number
+}
+
+export interface TransactionStatsBreakdown {
+  byStatus: Array<{
+    _id: string
+    count: number
+    totalAmount: number
+  }>
+  byType: Array<{
+    _id: string
+    count: number
+    totalAmount: number
+    totalProfit: number
+  }>
+}
+
+export interface TransactionStatsPeriod {
+  isOverall: boolean
+  startDate?: string
+  endDate?: string
+}
+
+export interface TransactionStats {
+  overview: TransactionStatsOverview
+  airtime: TransactionStatsService
+  data: TransactionStatsService
+  breakdown: TransactionStatsBreakdown
+  period: TransactionStatsPeriod
+}
+
+export interface TransactionStatsResponse {
+  success: boolean
+  message: string
+  data: TransactionStats
+}
+
 export interface AuthState {
   user: User | null
   isAuthenticated: boolean

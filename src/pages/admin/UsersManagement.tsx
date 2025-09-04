@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAdminStore } from '../../store/adminStore'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -27,6 +28,7 @@ interface UserData {
 }
 
 const UsersManagement: React.FC = () => {
+  const navigate = useNavigate()
   const { 
     getUserByPhone, 
     getUserByEmail, 
@@ -104,14 +106,7 @@ const UsersManagement: React.FC = () => {
 
   // Handle user edit from list
   const handleUserEditFromList = (user: any) => {
-    // setSelectedUserForEdit(user)
-    setUserData(user)
-    setError(null)
-    setSearchValue('')
-    setIsEditing(false)
-    setIsUpdatingWallet(false)
-    setEditForm({ firstName: '', lastName: '', state: '' })
-    setWalletForm({ amount: '', operation: 'add', description: '' })
+    navigate(`/admin/users/${user._id}/edit`)
   }
 
   // Handle pagination

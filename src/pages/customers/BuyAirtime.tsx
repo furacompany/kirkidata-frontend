@@ -13,6 +13,7 @@ import { userApiService, AirtimePurchaseRequest } from '../../services/userApi'
 import toast from 'react-hot-toast'
 import PinVerificationModal from '../../components/ui/PinVerificationModal'
 import PinResetModal from '../../components/ui/PinResetModal'
+import SEO from '../../components/SEO'
 
 interface NetworkOption {
   id: string
@@ -241,6 +242,15 @@ const BuyAirtime: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* SEO Component */}
+      <SEO 
+        title="Buy Airtime Online | Kirkidata - All Nigerian Networks"
+        description="Buy airtime instantly for MTN, Airtel, Glo, and 9mobile networks in Nigeria. Fast, secure, and reliable airtime top-up with Kirkidata."
+        keywords="buy airtime online, MTN airtime, Airtel airtime, Glo airtime, 9mobile airtime, Nigeria recharge, instant airtime top-up"
+        canonicalUrl="https://kirkidata.com/buy-airtime"
+        ogImage="https://kirkidata.com/logo.jpg"
+      />
+      
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
