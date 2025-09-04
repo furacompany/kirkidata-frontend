@@ -138,6 +138,10 @@ const BuyAirtime: React.FC = () => {
     return selectedNetwork && getFinalAmount() > 0 && phoneNumber.length === 11 && !phoneNumberError
   }
 
+  const hasInsufficientBalance = () => {
+    return walletBalance < getFinalAmount()
+  }
+
   const handlePurchase = () => {
     if (!canProceed()) return
     
@@ -396,12 +400,25 @@ const BuyAirtime: React.FC = () => {
               {/* Purchase Button */}
               <Button
                 onClick={() => setShowConfirmation(true)}
-                disabled={!canProceed()}
+                disabled={!canProceed() || hasInsufficientBalance()}
                 className="w-full"
                 size="lg"
               >
                 {isLoading ? 'Processing...' : `Buy Airtime - ${formatAmount(getFinalAmount())}`}
               </Button>
+
+              {/* Insufficient Balance Alert */}
+              {hasInsufficientBalance() && canProceed() && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="text-sm text-red-700 font-medium">Insufficient Balance</span>
+                  </div>
+                  <p className="text-xs text-red-600 mt-1">
+                    You need {formatAmount(getFinalAmount())} but only have {formatAmount(walletBalance)} in your wallet.
+                  </p>
+                </div>
+              )}
 
               {/* Payment Method */}
               <div className="space-y-2">
