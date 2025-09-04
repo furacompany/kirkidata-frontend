@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 import { 
   UserCheck, UserX, Trash2, Users, 
   AlertTriangle, CheckCircle, XCircle,
-  Eye, Edit
+  Edit
 } from 'lucide-react'
 
 interface UserData {
@@ -673,26 +673,7 @@ const UsersManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* User ID */}
-            <div className="pt-4 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">User ID</label>
-                  <p className="text-sm text-gray-600 font-mono">{userData._id}</p>
-                </div>
-                <Button
-                  onClick={() => {
-                    navigator.clipboard.writeText(userData._id)
-                    toast.success('User ID copied to clipboard!')
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                >
-                  Copy ID
-                </Button>
-              </div>
-            </div>
+            
 
             {/* Action Buttons */}
             <div className="pt-4 border-t border-gray-200">
@@ -1009,9 +990,6 @@ const UsersManagement: React.FC = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1034,15 +1012,6 @@ const UsersManagement: React.FC = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {usersList.map((user) => (
                       <tr key={user._id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          <button
-                            onClick={() => handleUserEditFromList(user)}
-                            className="flex items-center text-blue-600 hover:underline"
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            {user._id}
-                          </button>
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div>

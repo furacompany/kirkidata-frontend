@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  Wifi, Edit, Save, X, ChevronDown, Search,
+  Wifi, Edit, ChevronDown, Search,
   Clock, Download, Settings, Grid, List, RefreshCw,
   DollarSign, Activity
 } from 'lucide-react'
@@ -22,9 +22,7 @@ type ViewMode = 'card' | 'table'
 const DataPlans: React.FC = () => {
   // State for networks and data plans
   const [networks, setNetworks] = useState<OtoBillNetwork[]>([])
-  const [dataPlans, setDataPlans] = useState<OtoBillDataPlan[]>([])
   const [dataPlansWithPricing, setDataPlansWithPricing] = useState<OtoBillDataPlanWithPricing[]>([])
-  const [isLoading, setIsLoading] = useState(false)
   const [isLoadingNetworks, setIsLoadingNetworks] = useState(false)
   const [isLoadingPricing, setIsLoadingPricing] = useState(false)
   
@@ -40,13 +38,13 @@ const DataPlans: React.FC = () => {
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false)
   const [showPlanTypeDropdown, setShowPlanTypeDropdown] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
-  const [editingPlan, setEditingPlan] = useState<string | null>(null)
-  const [editPrice, setEditPrice] = useState<number>(0)
+  // Inline edit state removed; we use modal-based editing everywhere
   
   // Pricing edit modal state
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [selectedPlanForPricing, setSelectedPlanForPricing] = useState<OtoBillDataPlanWithPricing | null>(null)
   const [newAdminPrice, setNewAdminPrice] = useState<string>('')
+  const [newIsActive, setNewIsActive] = useState<boolean | null>(null)
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -64,22 +62,9 @@ const DataPlans: React.FC = () => {
     fetchPricingSummary()
   }, [])
 
-  // Fetch all data plans when networks are loaded and no filters are selected
-  useEffect(() => {
-    if (networks.length > 0 && !selectedNetwork && !selectedPlanType) {
-      fetchAllDataPlans()
-    }
-  }, [networks, selectedNetwork, selectedPlanType])
-
   // Fetch data plans when filters change
   useEffect(() => {
-    if (selectedNetwork && selectedPlanType) {
-      // Fetch specific network and plan type with pricing
-      fetchDataPlansWithPricing()
-    } else if (!selectedNetwork && !selectedPlanType) {
-      // Fetch all data plans when no filters are selected
-      fetchAllDataPlans()
-    }
+    fetchDataPlansWithPricing()
   }, [selectedNetwork, selectedPlanType, currentPage])
 
   const fetchNetworks = async () => {
@@ -113,71 +98,15 @@ const DataPlans: React.FC = () => {
     }
   }
 
-  const fetchAllDataPlans = async () => {
-    setIsLoading(true)
-    try {
-      const allPlans: OtoBillDataPlan[] = []
-      let totalPlansCount = 0
-
-      // Fetch data plans for each network and plan type combination
-      for (const network of networks) {
-        for (const planType of availablePlanTypes) {
-          try {
-            const response = await adminApiService.getOtoBillDataPlansByNetwork(
-              network.name,
-              planType,
-              1,
-              100 // Get more plans per request to reduce API calls
-            )
-            
-            if (response.success && response.data.plans.length > 0) {
-              allPlans.push(...response.data.plans)
-              totalPlansCount += response.data.total
-            }
-          } catch (error) {
-            console.warn(`Failed to fetch ${planType} plans for ${network.name}:`, error)
-            // Continue with other combinations even if one fails
-          }
-        }
-      }
-
-      // Sort plans by network, then by plan type, then by price
-      const sortedPlans = allPlans.sort((a, b) => {
-        // First sort by network
-        if (a.networkName !== b.networkName) {
-          return a.networkName.localeCompare(b.networkName)
-        }
-        // Then by plan type
-        if (a.planType !== b.planType) {
-          return a.planType.localeCompare(b.planType)
-        }
-        // Then by price (ascending)
-        return a.price - b.price
-      })
-
-      setDataPlans(sortedPlans)
-      setTotalPlans(totalPlansCount)
-      setTotalPages(1) // Since we're fetching all at once
-      setHasNext(false)
-      setHasPrev(false)
-    } catch (error: any) {
-      console.error('Error fetching all data plans:', error)
-      toast.error('Failed to fetch all data plans')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const fetchDataPlansWithPricing = async () => {
-    if (!selectedNetwork || !selectedPlanType) return
-    
     setIsLoadingPricing(true)
     try {
       const response = await adminApiService.getOtoBillDataPlansPricing(
-        selectedNetwork.name,
-        selectedPlanType,
+        selectedNetwork?.name,
+        selectedPlanType || undefined,
         currentPage,
-        20
+        20,
+        true // includeInactive = true
       )
       
       if (response.success) {
@@ -200,7 +129,6 @@ const DataPlans: React.FC = () => {
   const handleNetworkSelect = (network: OtoBillNetwork) => {
     setSelectedNetwork(network)
     setSelectedPlanType('')
-    setDataPlans([])
     setCurrentPage(1)
     setShowNetworkDropdown(false)
   }
@@ -211,44 +139,40 @@ const DataPlans: React.FC = () => {
     setShowPlanTypeDropdown(false)
   }
 
-  const handleEditStart = (planId: string, currentPrice: number) => {
-    setEditingPlan(planId)
-    setEditPrice(currentPrice)
-  }
 
-  const handleEditCancel = () => {
-    setEditingPlan(null)
-    setEditPrice(0)
-  }
-
-  const handleEditSave = async (planId: string) => {
-    if (editPrice <= 0) {
-      toast.error('Price must be greater than 0')
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      // TODO: Implement API call to update price
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setDataPlans(prev => prev.map(plan => 
-        plan.id === planId ? { ...plan, price: editPrice } : plan
-      ))
-      
-      setEditingPlan(null)
-      setEditPrice(0)
-      toast.success('Data plan price updated successfully!')
-    } catch (error) {
-      toast.error('Failed to update price. Please try again.')
-    } finally {
-      setIsLoading(false)
+  // Open pricing modal for plan (now all plans have pricing data)
+  const handleOpenPricingModalForPlan = async (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
+    // Since we now fetch all plans with pricing, we can open directly
+    if ('adminPrice' in plan) {
+      setSelectedPlanForPricing(plan as OtoBillDataPlanWithPricing)
+      setNewAdminPrice('')
+      setNewIsActive(plan.isActive)
+      setShowPricingModal(true)
+    } else {
+      // Fallback for any basic plans that might still exist
+      const fallback = {
+        planId: plan.planId,
+        name: plan.name,
+        networkName: plan.networkName,
+        planType: plan.planType,
+        validityDays: plan.validityDays,
+        originalPrice: 'price' in plan ? plan.price : 0,
+        adminPrice: 'price' in plan ? plan.price : 0,
+        profit: 0,
+        isActive: true,
+        lastSynced: new Date().toISOString(),
+      } as unknown as OtoBillDataPlanWithPricing
+      setSelectedPlanForPricing(fallback)
+      setNewAdminPrice('')
+      setNewIsActive(true)
+      setShowPricingModal(true)
     }
   }
 
   const handlePricingEditStart = (plan: OtoBillDataPlanWithPricing) => {
     setSelectedPlanForPricing(plan)
     setNewAdminPrice('') // Start with empty input for better UX
+    setNewIsActive(plan.isActive)
     setShowPricingModal(true)
   }
 
@@ -256,44 +180,48 @@ const DataPlans: React.FC = () => {
     setShowPricingModal(false)
     setSelectedPlanForPricing(null)
     setNewAdminPrice('')
+    setNewIsActive(null)
   }
 
   const handlePricingEditSave = async () => {
     if (!selectedPlanForPricing) return
     
-    const priceValue = Number(newAdminPrice)
+    // Determine final price: use input if provided; else keep current
+    const priceValue = newAdminPrice ? Number(newAdminPrice) : selectedPlanForPricing.adminPrice
     if (isNaN(priceValue) || priceValue <= 0) {
-      toast.error('Admin price must be greater than 0')
+      toast.error('Please enter a valid admin price or leave it unchanged.')
       return
     }
 
     setIsLoadingPricing(true)
     try {
-      const response = await adminApiService.updateOtoBillDataPlanPricing(selectedPlanForPricing.planId, priceValue)
-      
+      const response = await adminApiService.updateOtoBillDataPlanPricing(
+        selectedPlanForPricing.planId,
+        priceValue,
+        typeof newIsActive === 'boolean' ? newIsActive : undefined
+      )
+
       if (response.success) {
-        // Update the local state with the new pricing data
         setDataPlansWithPricing(prev => prev.map(plan => 
           plan.planId === selectedPlanForPricing.planId ? {
             ...plan,
             adminPrice: response.data.adminPrice,
-            profit: response.data.profit
+            profit: response.data.profit,
+            isActive: response.data.isActive
           } : plan
         ))
-        
-                 setShowPricingModal(false)
-         setSelectedPlanForPricing(null)
-         setNewAdminPrice('')
-         toast.success('Data plan pricing updated successfully!')
-        
-        // Refresh pricing summary to get updated counts
+        setShowPricingModal(false)
+        setSelectedPlanForPricing(null)
+        setNewAdminPrice('')
+        setNewIsActive(null)
+        toast.success('Data plan updated successfully!')
         fetchPricingSummary()
       } else {
-        toast.error(response.message || 'Failed to update pricing')
+        toast.error(response.message || 'Failed to update plan')
       }
     } catch (error: any) {
       console.error('Error updating pricing:', error)
-      toast.error(error.message || 'Failed to update pricing. Please try again.')
+      toast.error(error.message || 'Failed to update plan. Please try again.')
     } finally {
       setIsLoadingPricing(false)
     }
@@ -315,28 +243,18 @@ const DataPlans: React.FC = () => {
     setSelectedNetwork(null)
     setSelectedPlanType('')
     setSearchTerm('')
-    setDataPlans([])
     setCurrentPage(1)
-    // Fetch all data plans when filters are cleared
-    fetchAllDataPlans()
+    // The useEffect will automatically fetch all data plans when filters are cleared
   }
-
-  const filteredPlans = dataPlans.filter(plan => {
-    if (!searchTerm) return true
-    return plan.name.toLowerCase().includes(searchTerm.toLowerCase())
-  })
 
   const filteredPlansWithPricing = dataPlansWithPricing.filter(plan => {
     if (!searchTerm) return true
     return plan.name.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // Use appropriate data source based on context
+  // Use dataPlansWithPricing for all cases since we now fetch all plans with pricing
   const getDisplayPlans = () => {
-    if (selectedNetwork && selectedPlanType) {
-      return filteredPlansWithPricing
-    }
-    return filteredPlans
+    return filteredPlansWithPricing
   }
 
   // Helper function to get plan ID
@@ -382,11 +300,7 @@ const DataPlans: React.FC = () => {
   }
 
   const refreshData = () => {
-    if (selectedNetwork && selectedPlanType) {
-      fetchDataPlansWithPricing()
-    } else if (!selectedNetwork && !selectedPlanType) {
-      fetchAllDataPlans()
-    }
+    fetchDataPlansWithPricing()
   }
 
   const getNetworkLogo = (networkName: string) => {
@@ -413,11 +327,11 @@ const DataPlans: React.FC = () => {
           </div>
           <Button
             onClick={refreshData}
-            disabled={isLoading}
+            disabled={isLoadingPricing}
             variant="outline"
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoadingPricing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -603,7 +517,7 @@ const DataPlans: React.FC = () => {
       </Card>
 
       {/* View Mode Toggle */}
-      {(selectedNetwork && selectedPlanType) || (!selectedNetwork && !selectedPlanType && dataPlans.length > 0) ? (
+      {dataPlansWithPricing.length > 0 ? (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">View Mode:</span>
@@ -635,6 +549,8 @@ const DataPlans: React.FC = () => {
           <div className="text-sm text-gray-500">
             {selectedNetwork && selectedPlanType ? (
               `Page ${currentPage} of ${totalPages} • ${totalPlans} total plans`
+            ) : selectedNetwork ? (
+              `${totalPlans} total plans for ${selectedNetwork.name}`
             ) : (
               `${totalPlans} total plans across all networks`
             )}
@@ -643,20 +559,34 @@ const DataPlans: React.FC = () => {
       ) : null}
 
       {/* Data Plans Display */}
-      {selectedNetwork && selectedPlanType ? (
+      {dataPlansWithPricing.length > 0 ? (
         <div className="space-y-6">
           {/* Network Header */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <span className="text-2xl">{getNetworkLogo(selectedNetwork.name)}</span>
-                <span>{selectedNetwork.name} {selectedPlanType} Data Plans</span>
+                {selectedNetwork && (
+                  <span className="text-2xl">{getNetworkLogo(selectedNetwork.name)}</span>
+                )}
+                <span>
+                  {selectedNetwork && selectedPlanType 
+                    ? `${selectedNetwork.name} ${selectedPlanType} Data Plans`
+                    : selectedNetwork 
+                    ? `${selectedNetwork.name} Data Plans`
+                    : 'All Data Plans'
+                  }
+                </span>
                 <span className="text-base font-normal text-gray-500">
                   ({totalPlans} plans)
                 </span>
               </CardTitle>
               <CardDescription>
-                Manage {selectedNetwork.name} {selectedPlanType} data plan pricing and availability
+                {selectedNetwork && selectedPlanType 
+                  ? `Manage ${selectedNetwork.name} ${selectedPlanType} data plan pricing and availability`
+                  : selectedNetwork 
+                  ? `Manage ${selectedNetwork.name} data plan pricing and availability`
+                  : 'Manage data plan pricing and availability across all networks'
+                }
               </CardDescription>
             </CardHeader>
           </Card>
@@ -851,7 +781,7 @@ const DataPlans: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={!hasPrev || isLoading}
+                          disabled={!hasPrev || isLoadingPricing}
                         >
                           Previous
                         </Button>
@@ -859,7 +789,7 @@ const DataPlans: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={!hasNext || isLoading}
+                          disabled={!hasNext || isLoadingPricing}
                         >
                           Next
                         </Button>
@@ -891,7 +821,7 @@ const DataPlans: React.FC = () => {
           </Card>
 
           {/* Loading State */}
-          {isLoading && (
+          {isLoadingPricing && (
             <Card>
               <CardContent className="text-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
@@ -901,7 +831,7 @@ const DataPlans: React.FC = () => {
           )}
 
           {/* All Data Plans Content */}
-          {!isLoading && getDisplayPlans().length > 0 && (
+          {!isLoadingPricing && getDisplayPlans().length > 0 && (
             <>
               {/* Card View */}
               {viewMode === 'card' && (
@@ -977,50 +907,23 @@ const DataPlans: React.FC = () => {
                                     </div>
                                     
                                     <div className="flex items-center gap-2 ml-3">
-                                      {editingPlan === getPlanId(plan) ? (
-                                        <div className="flex items-center gap-2">
-                                          <Input
-                                            type="number"
-                                            value={editPrice}
-                                            onChange={(e) => setEditPrice(Number(e.target.value))}
-                                            className="w-20 h-8 text-base"
-                                            min="1"
-                                          />
-                                          <button
-                                            onClick={() => handleEditSave(getPlanId(plan))}
-                                            disabled={isLoading}
-                                            className="p-1 text-green-600 hover:text-green-700 transition-colors"
-                                          >
-                                            <Save className="w-4 h-4" />
-                                          </button>
-                                          <button
-                                            onClick={handleEditCancel}
-                                            disabled={isLoading}
-                                            className="p-1 text-gray-500 hover:text-gray-600 transition-colors"
-                                          >
-                                            <X className="w-4 h-4" />
-                                          </button>
+                                      <div className="text-right">
+                                        <div className="font-bold text-primary text-base">
+                                          {getFormattedPrice(plan)}
                                         </div>
-                                      ) : (
-                                        <div className="flex items-center gap-2">
-                                          <div className="text-right">
-                                            <div className="font-bold text-primary text-base">
-                                              {getFormattedPrice(plan)}
-                                            </div>
-                                            {'profit' in plan && getPlanProfit(plan) > 0 && (
-                                              <div className="text-xs text-green-600">
-                                                +{getFormattedProfit(plan)}
-                                              </div>
-                                            )}
+                                        {'profit' in plan && getPlanProfit(plan) > 0 && (
+                                          <div className="text-xs text-green-600">
+                                            +{getFormattedProfit(plan)}
                                           </div>
-                                          <button
-                                            onClick={() => handleEditStart(getPlanId(plan), 'price' in plan ? plan.price : plan.adminPrice)}
-                                            className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
-                                          >
-                                            <Edit className="w-4 h-4" />
-                                          </button>
-                                        </div>
-                                      )}
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={() => handleOpenPricingModalForPlan(plan)}
+                                        className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
+                                        title="Edit Pricing"
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </button>
                                     </div>
                                   </div>
                                 </motion.div>
@@ -1112,7 +1015,7 @@ const DataPlans: React.FC = () => {
                               )}
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button
-                                  onClick={() => handleEditStart(getPlanId(plan), 'price' in plan ? plan.price : plan.adminPrice)}
+                                  onClick={() => handleOpenPricingModalForPlan(plan)}
                                   className="text-blue-600 hover:text-blue-700"
                                   title="Edit Price"
                                 >
@@ -1131,7 +1034,7 @@ const DataPlans: React.FC = () => {
           )}
 
           {/* No Data State */}
-          {!isLoading && getDisplayPlans().length === 0 && (
+          {!isLoadingPricing && getDisplayPlans().length === 0 && (
             <Card>
               <CardContent className="text-center py-12">
                 <Wifi className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -1147,7 +1050,7 @@ const DataPlans: React.FC = () => {
       )}
 
       {/* No Results State */}
-      {selectedNetwork && selectedPlanType && !isLoading && filteredPlans.length === 0 && searchTerm && (
+      {!isLoadingPricing && filteredPlansWithPricing.length === 0 && searchTerm && (
         <Card>
           <CardContent className="text-center py-12">
             <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -1230,6 +1133,28 @@ const DataPlans: React.FC = () => {
                    />
                  </div>
 
+                 {/* Active Toggle */}
+                 <div className="space-y-2">
+                   <label className="block text-sm font-medium text-gray-700">Active Status</label>
+                   <div className="flex items-center gap-3">
+                     <button
+                       type="button"
+                       onClick={() => setNewIsActive(true)}
+                       className={`px-3 py-1 rounded-md text-sm border ${newIsActive === true ? 'bg-green-600 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                     >
+                       Active
+                     </button>
+                     <button
+                       type="button"
+                       onClick={() => setNewIsActive(false)}
+                       className={`px-3 py-1 rounded-md text-sm border ${newIsActive === false ? 'bg-red-600 text-white border-red-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                     >
+                       Inactive
+                     </button>
+                   </div>
+                   <p className="text-xs text-gray-500">You can toggle status without changing the price.</p>
+                 </div>
+
                                  {/* Preview of New Profit */}
                  {newAdminPrice && Number(newAdminPrice) > 0 && (
                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -1272,7 +1197,7 @@ const DataPlans: React.FC = () => {
                 </Button>
                                  <Button
                    onClick={handlePricingEditSave}
-                   disabled={isLoadingPricing || !newAdminPrice || Number(newAdminPrice) <= 0}
+                   disabled={isLoadingPricing}
                    className="bg-primary hover:bg-primary/90"
                  >
                    {isLoadingPricing ? 'Updating...' : 'Update Pricing'}

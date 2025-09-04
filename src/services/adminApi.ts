@@ -723,10 +723,11 @@ class AdminApiService {
   }
 
   async getOtoBillDataPlansPricing(
-    networkName: string,
-    planType: string,
+    networkName?: string,
+    planType?: string,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
+    includeInactive: boolean = true
   ): Promise<OtoBillDataPlansPricingResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
     
@@ -736,11 +737,13 @@ class AdminApiService {
     
     try {
       const queryParams = new URLSearchParams({
-        networkName,
-        planType,
+        includeInactive: includeInactive.toString(),
         page: page.toString(),
         limit: limit.toString()
       })
+      
+      if (networkName) queryParams.append('networkName', networkName)
+      if (planType) queryParams.append('planType', planType)
       
       const response = await this.request<OtoBillDataPlansPricingResponse>(`/otobill/data-plans/pricing?${queryParams}`, {
         method: 'GET',
@@ -759,7 +762,8 @@ class AdminApiService {
 
   async updateOtoBillDataPlanPricing(
     planId: string,
-    adminPrice: number
+    adminPrice: number,
+    isActive?: boolean
   ): Promise<OtoBillPricingUpdateResponse> {
     const accessToken = localStorage.getItem('adminAccessToken')
     
@@ -768,13 +772,18 @@ class AdminApiService {
     }
     
     try {
+      const body: { adminPrice: number; isActive?: boolean } = { adminPrice }
+      if (isActive !== undefined) {
+        body.isActive = isActive
+      }
+      
       const response = await this.request<OtoBillPricingUpdateResponse>(`/otobill/data-plans/${planId}/pricing`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ adminPrice }),
+        body: JSON.stringify(body),
       })
       return response
     } catch (error: any) {

@@ -287,6 +287,7 @@ export interface OtoBillPricingUpdateResponse {
     originalPrice: number
     adminPrice: number
     profit: number
+    isActive: boolean
   }
 }
 

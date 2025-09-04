@@ -2,9 +2,9 @@ import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Users, Banknote, Activity,
-  Smartphone, Wifi, CreditCard, CheckCircle,
+  Smartphone, Wifi, CreditCard,
   Clock, ArrowUpRight, ArrowDownRight, Shield,
-  Zap, PieChart, Globe, BarChart3, Wallet, User
+  Zap, PieChart, Globe, BarChart3
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -830,107 +830,7 @@ const AdminHome: React.FC = () => {
         </Card>
       </motion.div>
 
-      {/* System Status Alert */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-      >
-        <Card className="border-0 bg-green-50 border border-green-200">
-          <CardContent className="py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-success rounded-lg">
-                  <CheckCircle className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">All Systems Operational</h3>
-                  <p className="text-sm text-gray-600">Platform is running smoothly with 99.9% uptime</p>
-                </div>
-              </div>
-
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* OtoBill Quick Access */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-      >
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-primary" />
-              OtoBill Management
-            </CardTitle>
-            <CardDescription>
-              Manage your OtoBill API profile, wallet, transactions, and analytics
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link to="/admin/otobill-wallet">
-                <div className="p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-md">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <Wallet className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">OtoBill Wallet</h3>
-                      <p className="text-sm text-gray-600">Monitor wallet balance</p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-              
-              <Link to="/admin/otobill-transactions">
-                <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <Activity className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">OtoBill Transactions</h3>
-                      <p className="text-sm text-gray-600">Manage all transactions</p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-              
-              <Link to="/admin/otobill-stats">
-                <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200 hover:border-purple-300 transition-all duration-200 hover:shadow-md">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-purple-100 rounded-lg">
-                      <BarChart3 className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">OtoBill Analytics</h3>
-                      <p className="text-sm text-gray-600">View statistics & insights</p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-              
-              <Link to="/admin/otobill-profile">
-                <div className="p-6 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200 hover:border-orange-300 transition-all duration-200 hover:shadow-md">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-orange-100 rounded-lg">
-                      <User className="w-6 h-6 text-orange-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">OtoBill Profile</h3>
-                      <p className="text-sm text-gray-600">Manage API profile</p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      
     </div>
   )
 }
