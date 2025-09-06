@@ -169,6 +169,20 @@ export interface ChangePasswordResponse {
   timestamp?: string
 }
 
+export interface ForgotPinRequest {
+  currentPassword: string
+  newPin: string
+}
+
+export interface ForgotPinResponse {
+  success: boolean
+  message: string
+  data?: {
+    message: string
+  }
+  timestamp?: string
+}
+
 export interface UpdateUserProfileRequest {
   firstName: string
   lastName: string
@@ -607,6 +621,31 @@ class UserApiService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ currentPassword, newPassword }),
+    })
+  }
+
+  async forgotPin(currentPassword: string, newPin: string): Promise<ForgotPinResponse> {
+    const accessToken = localStorage.getItem('accessToken')
+    
+    if (!currentPassword || !newPin) {
+      throw new Error('Current password and new PIN are required')
+    }
+    
+    if (newPin.length !== 4) {
+      throw new Error('PIN must be exactly 4 digits')
+    }
+    
+    if (!/^\d{4}$/.test(newPin)) {
+      throw new Error('PIN must contain only numbers')
+    }
+    
+    return this.request<ForgotPinResponse>('/auth/pin/forgot', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ currentPassword, newPin }),
     })
   }
 
