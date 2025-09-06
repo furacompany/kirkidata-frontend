@@ -1,93 +1,63 @@
-# Robots.txt for Kirkidata - VTU Services Platform
+# Kirkidata Robots.txt
 # https://kirkidata.com/robots.txt
 
-# Default rules for all crawlers
+# Allow all bots to crawl the site
 User-agent: *
 Allow: /
 
 # Sitemap location
 Sitemap: https://kirkidata.com/sitemap.xml
 
-# Crawl delay to be respectful to server resources
+# Crawl delay to reduce server strain
 Crawl-delay: 1
 
-# Specific rules for major search engines
+# Allow Googlebot full access
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 1
 
+# Allow other major search engines
 User-agent: Bingbot
 Allow: /
-Crawl-delay: 1
-
-User-agent: Slurp
-Allow: /
-Crawl-delay: 2
 
 User-agent: DuckDuckBot
 Allow: /
-Crawl-delay: 1
 
 User-agent: Baiduspider
 Allow: /
-Crawl-delay: 2
 
 User-agent: YandexBot
 Allow: /
-Crawl-delay: 2
 
-# Social media crawlers
+# Social media bots
 User-agent: facebookexternalhit
 Allow: /
-Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
-Crawl-delay: 1
 
 User-agent: LinkedInBot
 Allow: /
-Crawl-delay: 1
 
 User-agent: WhatsApp
 Allow: /
-Crawl-delay: 1
 
 User-agent: TelegramBot
 Allow: /
-Crawl-delay: 1
 
-# Block sensitive areas from public indexing
+# Block sensitive backend areas (not needed by the public)
 Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /api/
-Disallow: /_next/
-Disallow: /static/
-Disallow: /src/
-Disallow: /node_modules/
-Disallow: /dist/
-Disallow: /build/
-Disallow: /.*
-Disallow: /*.json$
-Disallow: /*.js$
-Disallow: /*.css$
-Disallow: /*.map$
-Disallow: /*.txt$
-Disallow: /*.xml$
-Disallow: /*.ico$
-Disallow: /*.png$
-Disallow: /*.jpg$
-Disallow: /*.jpeg$
-Disallow: /*.gif$
-Disallow: /*.svg$
-Disallow: /*.webp$
+Disallow: /server/
 
-# Allow important public pages
-Allow: /
+# Important note:
+# DO NOT block /_next/, /static/, or .js/.css files in a React app.
+# Google needs these files to render the pages correctly.
+
+# Public pages to prioritize (optional)
 Allow: /login
 Allow: /register
 Allow: /forgot-password
-Allow: /reset-password
 Allow: /about
 Allow: /contact
 Allow: /privacy
@@ -95,14 +65,10 @@ Allow: /terms
 Allow: /help
 Allow: /support
 Allow: /faq
-
-# Allow service pages
 Allow: /buy-airtime
 Allow: /buy-data
 Allow: /fund-wallet
 Allow: /transactions
-Allow: /profile
-Allow: /kyc
 Allow: /electricity
 Allow: /tv-subscription
 Allow: /exam-pins
