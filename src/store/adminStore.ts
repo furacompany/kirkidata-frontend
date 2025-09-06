@@ -60,7 +60,7 @@ interface AdminAuthStore extends AdminAuthState {
   getUserByEmail: (email: string) => Promise<any>
   getUserById: (userId: string) => Promise<any>
   updateUserProfile: (userId: string, firstName: string, lastName: string, state: string) => Promise<any>
-  updateUserWallet: (userId: string, amount: number, operation: 'add' | 'subtract', description: string) => Promise<any>
+  updateUserWallet: (userId: string, amount: number, description: string) => Promise<any>
   searchUsers: (filters: any) => Promise<any>
   getUserStats: (filters: any) => Promise<any>
   bulkUserOperation: (userIds: string[], operation: 'activate' | 'deactivate' | 'delete', additionalData?: any) => Promise<any>
@@ -154,9 +154,9 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   },
 
   // Update User Wallet by Admin
-  updateUserWallet: async (userId: string, amount: number, operation: 'add' | 'subtract', description: string) => {
+  updateUserWallet: async (userId: string, amount: number, description: string) => {
     try {
-      const response = await adminApiService.updateUserWallet(userId, { amount, operation, description })
+      const response = await adminApiService.updateUserWallet(userId, { amount, description })
       toast.success('User wallet updated successfully!')
       return response
     } catch (error: any) {

@@ -381,13 +381,16 @@ class AdminApiService {
     }
     
     try {
-      const response = await this.request<any>(`/users/${userId}/wallet`, {
+      const response = await this.request<any>(`/users/${userId}/fund`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(walletData),
+        body: JSON.stringify({
+          amount: walletData.amount,
+          description: walletData.description
+        }),
       })
       return response
     } catch (error: any) {

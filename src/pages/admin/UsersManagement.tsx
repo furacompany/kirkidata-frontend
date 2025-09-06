@@ -54,7 +54,6 @@ const UsersManagement: React.FC = () => {
   })
   const [walletForm, setWalletForm] = useState({
     amount: '',
-    operation: 'add' as 'add' | 'subtract',
     description: ''
   })
 
@@ -143,7 +142,7 @@ const UsersManagement: React.FC = () => {
         setIsEditing(false)
         setIsUpdatingWallet(false)
         setEditForm({ firstName: '', lastName: '', state: '' })
-        setWalletForm({ amount: '', operation: 'add', description: '' })
+        setWalletForm({ amount: '', description: '' })
         toast.success('User found successfully!')
       } else {
         setError(response.message || 'User not found')
@@ -170,7 +169,7 @@ const UsersManagement: React.FC = () => {
     setIsEditing(false)
     setIsUpdatingWallet(false)
     setEditForm({ firstName: '', lastName: '', state: '' })
-    setWalletForm({ amount: '', operation: 'add', description: '' })
+    setWalletForm({ amount: '', description: '' })
     setBulkOperationResult(null)
     // setSelectedUserForEdit(null) // commented out as not currently used
   }
@@ -234,25 +233,28 @@ const UsersManagement: React.FC = () => {
       const response = await updateUserWallet(
         userData._id,
         amount,
-        walletForm.operation,
         walletForm.description
       )
       
       if (response.success && response.data) {
         // Update the user data with new wallet balance
         setUserData(prev => prev ? { ...prev, wallet: response.data.newBalance } : null)
-        setWalletForm({ amount: '', operation: 'add', description: '' })
-        setIsUpdatingWallet(false)
+        setWalletForm({ amount: '', description: '' })
+        toast.success('Wallet updated successfully!')
+      } else {
+        toast.error(response.message || 'Failed to update wallet')
       }
     } catch (error: any) {
       console.error('Wallet update error:', error)
+      toast.error('Failed to update wallet')
+    } finally {
       setIsUpdatingWallet(false)
     }
   }
 
   const handleWalletCancel = () => {
     setIsUpdatingWallet(false)
-    setWalletForm({ amount: '', operation: 'add', description: '' })
+    setWalletForm({ amount: '', description: '' })
   }
 
   // User Action Handlers
@@ -795,25 +797,14 @@ const UsersManagement: React.FC = () => {
               <p className="text-sm text-green-700">Current balance: ₦{userData.wallet.toLocaleString()}</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Operation</label>
-                <select
-                  value={walletForm.operation}
-                  onChange={(e) => setWalletForm(prev => ({ ...prev, operation: e.target.value as 'add' | 'subtract' }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="add">Add Credit</option>
-                  <option value="subtract">Subtract Credit</option>
-                </select>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Amount (₦)</label>
                 <Input
                   type="number"
                   value={walletForm.amount}
                   onChange={(e) => setWalletForm(prev => ({ ...prev, amount: e.target.value }))}
-                  placeholder="Enter amount"
+                  placeholder="Enter amount to add"
                   min="0"
                   step="0.01"
                 />
@@ -833,18 +824,10 @@ const UsersManagement: React.FC = () => {
             {walletForm.amount && !isNaN(parseFloat(walletForm.amount)) && (
               <div className="p-3 bg-gray-100 rounded-md">
                 <p className="text-sm text-gray-700">
-                  <span className="font-medium">Balance Preview:</span>{' '}
-                  <span className={`font-mono ${walletForm.operation === 'subtract' && parseFloat(walletForm.amount) > userData.wallet ? 'text-red-600' : 'text-green-600'}`}>
-                    ₦{walletForm.operation === 'add' 
-                      ? (userData.wallet + parseFloat(walletForm.amount)).toLocaleString()
-                      : (userData.wallet - parseFloat(walletForm.amount)).toLocaleString()
-                    }
+                  <span className="font-medium">New Balance Preview:</span>{' '}
+                  <span className="font-mono text-green-600">
+                    ₦{(userData.wallet + parseFloat(walletForm.amount)).toLocaleString()}
                   </span>
-                  {walletForm.operation === 'subtract' && parseFloat(walletForm.amount) > userData.wallet && (
-                    <span className="text-red-600 text-xs block mt-1">
-                      ⚠️ This will result in a negative balance
-                    </span>
-                  )}
                 </p>
               </div>
             )}
@@ -866,17 +849,6 @@ const UsersManagement: React.FC = () => {
               </Button>
             </div>
 
-            {/* Warning for negative balance */}
-            {walletForm.amount && !isNaN(parseFloat(walletForm.amount)) && 
-             walletForm.operation === 'subtract' && 
-             parseFloat(walletForm.amount) > userData.wallet && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-700">
-                  ⚠️ <strong>Warning:</strong> This operation will result in a negative wallet balance. 
-                  Please ensure this is intentional.
-                </p>
-              </div>
-            )}
           </div>
         </Card>
       )}
