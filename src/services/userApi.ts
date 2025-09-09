@@ -531,40 +531,17 @@ class UserApiService {
   async validatePin(pin: string): Promise<ValidatePinResponse> {
     const accessToken = localStorage.getItem('accessToken')
     
-    const tempPin = '9999'
-    
     try {
-      const response = await this.request<ChangePinResponse>('/auth/pin/change', {
+      const response = await this.request<ValidatePinResponse>('/auth/pin/validate', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ currentPin: pin, newPin: tempPin }),
+        body: JSON.stringify({ pin }),
       })
       
-      if (response.success) {
-        await this.request<ChangePinResponse>('/auth/pin/change', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ currentPin: tempPin, newPin: pin }),
-        })
-        
-        return {
-          success: true,
-          message: 'PIN validated successfully',
-          data: { isValid: true }
-        }
-      } else {
-        return {
-          success: false,
-          message: response.message || 'Invalid PIN',
-          data: { isValid: false }
-        }
-      }
+      return response
     } catch (error: any) {
       return {
         success: false,
