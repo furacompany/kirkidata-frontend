@@ -2,17 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   User, Wallet, Shield, Mail, Phone, CheckCircle, XCircle,
-  Clock, Key, Globe, Calendar, LogIn
+  Clock, Key, Globe, Calendar
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
-import { Button } from '../../components/ui/Button'
 import { useAdminStore } from '../../store/adminStore'
-import { useNavigate } from 'react-router-dom'
 
 
 
 const OtobillProfile: React.FC = () => {
-  const navigate = useNavigate()
   const { 
     otobillProfile, 
     otobillWalletBalance, 
@@ -22,7 +19,6 @@ const OtobillProfile: React.FC = () => {
   } = useAdminStore()
   
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,7 +27,7 @@ const OtobillProfile: React.FC = () => {
         const isAuthValid = await checkAuthStatus()
         
         if (!isAuthValid) {
-          setError("Authentication failed. Please login again.")
+          // Silent redirect - no error message
           setLoading(false)
           return
         }
@@ -43,14 +39,8 @@ const OtobillProfile: React.FC = () => {
         ])
         
       } catch (err: any) {
-        let errorMessage = err.message || "Failed to fetch OtoBill data"
-        
-        // Handle specific authentication errors
-        if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
-          errorMessage = "Your session has expired. Please login again."
-        }
-        
-        setError(errorMessage)
+        // Silent fail - no error message
+        console.error('Failed to fetch OtoBill data:', err)
       } finally {
         setLoading(false)
       }
@@ -94,53 +84,7 @@ const OtobillProfile: React.FC = () => {
     )
   }
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">OtoBill Profile</h1>
-              <p className="text-gray-600 mt-2">
-                Error loading profile information
-              </p>
-            </div>
-          </div>
-        </motion.div>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <XCircle className="w-8 h-8 text-red-500" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load profile</h3>
-              <p className="text-gray-500 mb-4">{error}</p>
-              <div className="flex gap-3">
-                <Button 
-                  onClick={() => window.location.reload()}
-                  variant="outline"
-                >
-                  Try Again
-                </Button>
-                <Button 
-                  onClick={() => navigate('/admin/login')}
-                  className="flex items-center gap-2"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Login Again
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // No error display - silent fail
 
   return (
     <div className="space-y-6">

@@ -78,7 +78,7 @@ const DataPlans: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error fetching networks:', error)
-      toast.error(error.message || 'Failed to fetch networks')
+      // Silent fail - no error message
     } finally {
       setIsLoadingNetworks(false)
     }
@@ -116,11 +116,11 @@ const DataPlans: React.FC = () => {
         setHasNext(response.data.pagination.hasNext)
         setHasPrev(response.data.pagination.hasPrev)
       } else {
-        toast.error(response.message || 'Failed to fetch data plans with pricing')
+        // Silent fail - no error message
       }
     } catch (error: any) {
       console.error('Error fetching data plans with pricing:', error)
-      toast.error(error.message || 'Failed to fetch data plans with pricing')
+      // Silent fail - no error message
     } finally {
       setIsLoadingPricing(false)
     }

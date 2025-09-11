@@ -4,7 +4,7 @@ import {
   Users, Activity,
   Smartphone, Wifi, CreditCard,
   Clock, ArrowUpRight, Shield,
-  PieChart, Globe, BarChart3, Calendar, TrendingUp, DollarSign, Target
+  BarChart3, Calendar, TrendingUp, DollarSign, Target
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -17,7 +17,6 @@ const AdminHome: React.FC = () => {
     stats, 
     users, 
     transactions, 
-    otobillTransactionStats,
     transactionStats,
     fetchUsers, 
     fetchTransactions, 
@@ -42,6 +41,18 @@ const AdminHome: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      // Check if admin token exists before making any API calls
+      const adminAccessToken = localStorage.getItem('adminAccessToken')
+      if (!adminAccessToken) {
+        // If no token, don't make any API calls
+        setIsLoadingStats(false)
+        setIsLoadingOtoBillStats(false)
+        setIsLoadingTransactionStats(false)
+        setIsLoadingUsers(false)
+        setIsLoadingTransactions(false)
+        return
+      }
+
       // Fetch stats
       if (typeof fetchStats === 'function') {
         try {
@@ -435,270 +446,6 @@ const AdminHome: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Charts and Analytics */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-      >
-        {/* Transaction Types Chart */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold text-gray-900">OtoBill Service Performance</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Revenue breakdown by service type from OtoBill transactions
-                </CardDescription>
-              </div>
-              <div className="p-3 bg-primary/10 rounded-lg">
-                <PieChart className="w-6 h-6 text-primary" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isDashboardLoading ? (
-              // Loading skeleton for service performance cards
-              <>
-                <div className="animate-pulse">
-                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-green-100 rounded-lg">
-                        <div className="w-5 h-5 bg-gray-300 rounded"></div>
-                      </div>
-                      <div>
-                        <div className="h-4 bg-gray-300 rounded w-32 mb-2"></div>
-                        <div className="h-3 bg-gray-300 rounded w-24"></div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
-                      <div className="h-3 bg-gray-300 rounded w-16"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="animate-pulse">
-                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-blue-100 rounded-lg">
-                        <div className="w-5 h-5 bg-gray-300 rounded"></div>
-                      </div>
-                      <div>
-                        <div className="h-4 bg-gray-300 rounded w-28 mb-2"></div>
-                        <div className="h-3 bg-gray-300 rounded w-24"></div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
-                      <div className="h-3 bg-gray-300 rounded w-16"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="animate-pulse">
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-xl border border-purple-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-purple-100 rounded-lg">
-                        <div className="w-5 h-5 bg-gray-300 rounded"></div>
-                      </div>
-                      <div>
-                        <div className="h-4 bg-gray-300 rounded w-24 mb-2"></div>
-                        <div className="h-3 bg-gray-300 rounded w-20"></div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="h-6 bg-gray-300 rounded w-20 mb-2"></div>
-                      <div className="h-3 bg-gray-300 rounded w-16"></div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <Smartphone className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Airtime Recharge</div>
-                      <div className="text-sm text-gray-600">
-                        {(otobillTransactionStats?.airtime.count || stats?.airtimeTransactions || 0).toLocaleString()} transactions
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900">
-                      {formatAmount(otobillTransactionStats?.airtime.amount || stats?.airtimeRevenue || 0)}
-                    </div>
-                    <div className="text-xs text-green-600 font-medium">
-                      {(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0) > 0 ? 
-                        `${Math.round(((otobillTransactionStats?.airtime.amount || stats?.airtimeRevenue || 0) / (otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)) * 100)}% of revenue` : 
-                        '0% of revenue'
-                      }
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <Wifi className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Data Bundles</div>
-                      <div className="text-sm text-gray-600">
-                        {(otobillTransactionStats?.data.count || stats?.dataTransactions || 0).toLocaleString()} transactions
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900">
-                      {formatAmount(otobillTransactionStats?.data.amount || stats?.dataRevenue || 0)}
-                    </div>
-                    <div className="text-xs text-blue-600 font-medium">
-                      {(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0) > 0 ? 
-                        `${Math.round(((otobillTransactionStats?.data.amount || stats?.dataRevenue || 0) / (otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)) * 100)}% of revenue` : 
-                        '0% of revenue'
-                      }
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-xl border border-purple-200">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-purple-100 rounded-lg">
-                      <CreditCard className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Total Profit</div>
-                      <div className="text-sm text-gray-600">
-                        {otobillTransactionStats?.totalTransactions ? 
-                          `${((otobillTransactionStats.totalProfit / otobillTransactionStats.totalAmount) * 100).toFixed(1)}% margin` : 
-                          'Profit margin'
-                        }
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900">
-                      {formatAmount(otobillTransactionStats?.totalProfit || stats?.walletRevenue || 0)}
-                    </div>
-                    <div className="text-xs text-purple-600 font-medium">
-                      {(otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0) > 0 ? 
-                        `${Math.round(((otobillTransactionStats?.totalProfit || stats?.walletRevenue || 0) / (otobillTransactionStats?.totalAmount || stats?.totalRevenue || 0)) * 100)}% of revenue` : 
-                        '0% of revenue'
-                      }
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Network Performance */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold text-gray-900">Network Status</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Transaction success rates by provider
-                </CardDescription>
-              </div>
-              <div className="p-3 bg-accent/10 rounded-lg">
-                <Globe className="w-6 h-6 text-accent" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isDashboardLoading ? (
-              // Loading skeleton for network status
-              <>
-                <div className="animate-pulse">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gray-100 rounded-lg">
-                        <div className="w-4 h-4 bg-gray-300 rounded"></div>
-                      </div>
-                      <div>
-                        <div className="h-4 bg-gray-300 rounded w-20 mb-2"></div>
-                        <div className="h-3 bg-gray-300 rounded w-24"></div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="h-6 bg-gray-300 rounded w-16 mb-2"></div>
-                      <div className="h-3 bg-gray-300 rounded w-20"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="animate-pulse">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-gray-100 rounded-lg">
-                        <div className="w-4 h-4 bg-gray-300 rounded"></div>
-                      </div>
-                      <div>
-                        <div className="h-4 bg-gray-300 rounded w-24 mb-2"></div>
-                        <div className="h-3 bg-gray-300 rounded w-24"></div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="h-6 bg-gray-300 rounded w-16 mb-2"></div>
-                      <div className="h-3 bg-gray-300 rounded w-20"></div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (stats?.networkStats && Object.keys(stats.networkStats).length > 0) ? (
-              Object.entries(stats.networkStats).map(([network, networkStats]) => {
-                const successRate = networkStats && networkStats.total > 0 ? (networkStats.successful / networkStats.total) * 100 : 0
-                const getNetworkColor = (network: string) => {
-                  switch (network) {
-                    case 'MTN': return 'yellow'
-                    case 'Airtel': return 'red'
-                    case 'Glo': return 'green'
-                    case '9mobile': return 'blue'
-                    default: return 'gray'
-                  }
-                }
-                const color = getNetworkColor(network)
-                
-                return (
-                  <div key={network} className={`flex items-center justify-between p-4 bg-${color}-50 rounded-xl border border-${color}-200`}>
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 bg-${color}-100 rounded-lg`}>
-                        <div className={`w-4 h-4 bg-${color}-600 rounded`}></div>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">{network}</div>
-                        <div className="text-sm text-gray-600">
-                          {networkStats?.successful || 0}/{networkStats?.total || 0} successful
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-gray-900">{successRate.toFixed(1)}%</div>
-                      <div className={`text-xs font-medium ${successRate >= 90 ? 'text-green-600' : successRate >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
-                        {successRate >= 90 ? 'Excellent' : successRate >= 75 ? 'Good' : 'Needs Attention'}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Globe className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No network data available</h3>
-                <p className="text-gray-500">Network statistics will appear here once transactions are processed.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
 
       {/* Recent Activity */}
       <motion.div

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
@@ -15,17 +15,30 @@ import {
   Wifi,
   Activity,
   BarChart3,
-  RefreshCw
+  RefreshCw,
+  ChevronDown
 } from 'lucide-react'
 import { useAdminStore } from '../../store/adminStore'
 import { Button } from '../ui/Button'
+import AdminAuthGuard from '../AdminAuthGuard'
 
 const AdminLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const { admin, logout } = useAdminStore()
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Immediate check for admin token
+  const adminAccessToken = localStorage.getItem('adminAccessToken')
+  if (!adminAccessToken) {
+    // Clear auth state and redirect immediately
+    logout()
+    navigate('/admin/login', { replace: true })
+    return null
+  }
 
 
 
@@ -47,6 +60,7 @@ const AdminLayout: React.FC = () => {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true)
+      setProfileDropdownOpen(false) // Close dropdown
       await logout()
       navigate('/admin/login')
     } catch (error) {
@@ -57,10 +71,25 @@ const AdminLayout: React.FC = () => {
     }
   }
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   const isActive = (href: string) => location.pathname === href
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AdminAuthGuard>
+      <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
@@ -220,8 +249,11 @@ const AdminLayout: React.FC = () => {
               </Button>
 
               {/* Admin profile dropdown */}
-              <div className="relative">
-                <div className="flex items-center gap-x-3 px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center gap-x-3 px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                     <span className="text-sm font-bold text-white">
                       {admin ? `${admin.firstName} ${admin.lastName}`.charAt(0).toUpperCase() : 'A'}
@@ -231,7 +263,26 @@ const AdminLayout: React.FC = () => {
                     <p className="text-sm font-medium text-gray-900">{admin ? `${admin.firstName} ${admin.lastName}` : 'Admin'}</p>
                     <p className="text-xs text-gray-500">System Admin</p>
                   </div>
-                </div>
+                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown menu */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{admin ? `${admin.firstName} ${admin.lastName}` : 'Admin'}</p>
+                      <p className="text-xs text-gray-500">{admin?.email || 'admin@example.com'}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="w-full flex items-center gap-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {isLoggingOut ? 'Signing out...' : 'Sign out'}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -251,6 +302,7 @@ const AdminLayout: React.FC = () => {
         </main>
       </div>
     </div>
+    </AdminAuthGuard>
   )
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
@@ -15,7 +15,8 @@ import {
   Bell,
   Zap,
   Tv,
-  BookOpen
+  BookOpen,
+  ChevronDown
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { Button } from '../ui/Button'
@@ -27,9 +28,11 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -47,6 +50,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true)
+      setProfileDropdownOpen(false) // Close dropdown
       await logout()
       navigate('/login')
     } catch (error) {
@@ -56,6 +60,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       setIsLoggingOut(false)
     }
   }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const isActive = (href: string) => location.pathname === href
 
@@ -220,8 +238,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               </Button>
 
               {/* User profile dropdown */}
-              <div className="relative">
-                <div className="flex items-center gap-x-2 sm:gap-x-3 px-2 sm:px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center gap-x-2 sm:gap-x-3 px-2 sm:px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                     <span className="text-sm font-bold text-white">
                       {user?.name?.charAt(0).toUpperCase()}
@@ -231,7 +252,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                     <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-500">Customer</p>
                   </div>
-                </div>
+                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown menu */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                      <p className="text-xs text-gray-500">{user?.email || 'customer@example.com'}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="w-full flex items-center gap-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {isLoggingOut ? 'Signing out...' : 'Sign out'}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -148,15 +148,8 @@ const UsersManagement: React.FC = () => {
         setError(response.message || 'User not found')
       }
     } catch (error: any) {
-      if (error.message?.includes('401')) {
-        setError('Unauthorized access. Please log in as admin.')
-      } else if (error.message?.includes('404')) {
-        setError('User not found')
-      } else if (error.message?.includes('Admin access token required')) {
-        setError('Admin access token required. Please log in as admin.')
-      } else {
-        setError(error.message || 'An error occurred while searching')
-      }
+      // Silent fail - no error message
+      console.error('Search error:', error)
     } finally {
       setIsLoading(false)
     }
@@ -517,15 +510,7 @@ const UsersManagement: React.FC = () => {
         </div>
       </Card>
 
-      {/* Error Display */}
-      {error && (
-        <Card className="p-4 border-red-200 bg-red-50">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            <p className="text-red-700">{error}</p>
-          </div>
-        </Card>
-      )}
+      {/* No error display - silent fail */}
 
       {/* Bulk Operation Result Display */}
       {bulkOperationResult && (

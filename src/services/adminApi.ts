@@ -194,10 +194,16 @@ class AdminApiService {
           if (refreshError.message?.includes('401') || refreshError.message?.includes('Unauthorized')) {
             console.warn('Admin token refresh failed with 401, clearing tokens')
             clearAdminAuth()
+            // Force redirect to login
+            window.location.href = '/admin/login'
+            throw new Error('Authentication required')
           }
         }
         
-        throw new Error(data?.message || 'Authentication required')
+        // Clear tokens and redirect on 401
+        clearAdminAuth()
+        window.location.href = '/admin/login'
+        throw new Error('Authentication required')
       } else if (response.status === 400) {
         throw new Error(data?.message || 'Invalid request data')
       } else if (response.status === 404) {

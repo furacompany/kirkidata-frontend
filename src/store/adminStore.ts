@@ -379,12 +379,13 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
     const refreshToken = localStorage.getItem('adminRefreshToken')
 
     if (!accessToken || !refreshToken) {
+      // Clear auth state and redirect to login
+      clearAdminAuth()
       set({ admin: null, isAuthenticated: false })
       return false
     }
 
     // If tokens exist, admin is considered authenticated
-    // No auto-logout - admin stays logged in until they explicitly logout
     const adminData = localStorage.getItem('adminData')
     if (adminData) {
       try {
@@ -705,7 +706,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       }
     } catch (error: any) {
       console.error('Failed to fetch OtoBill profile:', error)
-      toast.error('Failed to fetch OtoBill profile')
+      // Silent fail - no error message
       throw error
     }
   },
@@ -720,7 +721,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       }
     } catch (error: any) {
       console.error('Failed to fetch OtoBill wallet balance:', error)
-      toast.error('Failed to fetch OtoBill wallet balance')
+      // Silent fail - no error message
       throw error
     }
   },
@@ -745,7 +746,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       }
     } catch (error: any) {
       console.error('Failed to fetch OtoBill transactions:', error);
-      toast.error('Failed to fetch OtoBill transactions');
+      // Silent fail - no error message
       throw error;
     }
   },
@@ -760,7 +761,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       }
     } catch (error: any) {
       console.error('Failed to fetch OtoBill transaction:', error);
-      toast.error('Failed to fetch OtoBill transaction');
+      // Silent fail - no error message
       throw error;
     }
   },
@@ -775,7 +776,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       }
     } catch (error: any) {
       console.error('Failed to fetch OtoBill transaction stats:', error);
-      toast.error('Failed to fetch OtoBill transaction stats');
+      // Silent fail - no error message
       throw error;
     }
   },
@@ -790,7 +791,7 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       }
     } catch (error: any) {
       console.error('Failed to fetch transaction stats:', error);
-      toast.error('Failed to fetch transaction stats');
+      // Silent fail - no error message
       throw error;
     }
   },

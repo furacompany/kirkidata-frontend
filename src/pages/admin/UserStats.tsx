@@ -68,7 +68,7 @@ const UserStats: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Stats fetch error:', error)
-      setError(error.message || 'An error occurred while fetching statistics')
+      // Silent fail - no error message
     } finally {
       setIsLoading(false)
     }
@@ -149,15 +149,7 @@ const UserStats: React.FC = () => {
         </div>
       </Card>
 
-      {/* Error Display */}
-      {error && (
-        <Card className="p-4 border-red-200 bg-red-50">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            <p className="text-red-700">{error}</p>
-          </div>
-        </Card>
-      )}
+      {/* No error display - silent fail */}
 
       {/* Statistics Display */}
       {stats && (
