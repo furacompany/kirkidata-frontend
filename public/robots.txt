@@ -1,12 +1,12 @@
 # Kirkidata Robots.txt
-# https://kirkidata.com/robots.txt
+# https://kirkidata.ng/robots.txt
 
 # Allow all bots to crawl the site
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://kirkidata.com/sitemap.xml
+Sitemap: https://kirkidata.ng/sitemap.xml
 
 # Crawl delay to reduce server strain
 Crawl-delay: 1

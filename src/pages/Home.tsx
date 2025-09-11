@@ -149,9 +149,9 @@ const Home: React.FC = () => {
       <SEO 
         title="Kirkidata | Buy Airtime & Data Instantly in Nigeria"
         description="Kirkidata is your trusted platform for buying airtime and data bundles instantly and securely across all Nigerian networks. Simple, fast, and reliable."
-        keywords="Kirkidata, Kirki, Data, Airtime recharge, Buy data online, MTN data, Airtel data, Glo data, 9mobile data, Airtime purchase, Nigeria, Affordable data plans"
-        canonicalUrl="https://www.kirkidata.com/"
-        ogImage="https://www.kirkidata.com/logo.png"
+        keywords="Kirkidata, Kirki, Data, Airtime recharge, Buy data online, MTN data, Airtel data, Glo data, 9mobile data, Airtime purchase, Nigeria, Affordable data plans, recharge platform, VTU services"
+        canonicalUrl="https://kirkidata.ng/"
+        ogImage="https://kirkidata.ng/logo.png"
       />
       
       {/* Navigation */}

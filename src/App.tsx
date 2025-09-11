@@ -50,6 +50,7 @@ import AdminLayout from './components/layout/AdminLayout'
 
 // Components
 import NotFound from './pages/notfound'
+import FAQ from './pages/FAQ'
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ 
@@ -116,6 +117,7 @@ const App: React.FC = () => {
           <Route path="/login" element={<CustomerLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/faq" element={<FAQ />} />
 
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

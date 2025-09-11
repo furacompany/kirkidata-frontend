@@ -28,9 +28,9 @@ interface SEOProps {
 const SEO: React.FC<SEOProps> = ({
   title = "Kirkidata | Buy Cheap Data, Airtime, TV Subscription & Electricity Bill Payment",
   description = "Kirkidata offers affordable and instant data bundles, airtime top-ups, cable TV subscriptions, and electricity bill payments in Nigeria. Fast, reliable, and secure VTU services.",
-  keywords = "kirkidata, cheap data, data bundles, airtime top-up, TV subscription, DSTV, GOTV, Startimes, electricity bill payment, VTU Nigeria",
-  canonicalUrl = "https://kirkidata.com/",
-  ogImage = "https://kirkidata.com/logo.png",
+  keywords = "kirkidata, kirki data, cheap data, data bundles, airtime top-up, TV subscription, DSTV, GOTV, Startimes, electricity bill payment, VTU Nigeria, recharge platform, MTN data, Airtel data, Glo data, 9mobile data, buy airtime online, data plans Nigeria",
+  canonicalUrl = "https://kirkidata.ng/",
+  ogImage = "https://kirkidata.ng/logo.png",
   ogType = "website",
   twitterCard = "summary_large_image",
   structuredData,
@@ -45,19 +45,41 @@ const SEO: React.FC<SEOProps> = ({
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Kirkidata",
-    "url": "https://kirkidata.com",
-    "logo": "https://kirkidata.com/logo.png",
+    "alternateName": "Kirki Data",
+    "url": "https://kirkidata.ng",
+    "logo": "https://kirkidata.ng/logo.png",
+    "description": "Nigeria's leading recharge platform for data bundles, airtime top-ups, TV subscriptions, and electricity bill payments. Fast, secure, and reliable VTU services.",
+    "foundingDate": "2024",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "NG",
+      "addressRegion": "Kano"
+    },
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+234-703-555-4333",
+      "telephone": "+234-706-712-9511",
       "contactType": "customer service",
       "areaServed": "NG",
       "availableLanguage": "English"
     },
     "sameAs": [
       "https://www.facebook.com/kirkidata",
-      "https://www.twitter.com/kirkidata"
-    ]
+      "https://www.twitter.com/kirkidata",
+      "https://www.instagram.com/kirkidata"
+    ],
+    "offers": {
+      "@type": "Offer",
+      "itemOffered": {
+        "@type": "Service",
+        "name": "Data and Airtime Recharge Services",
+        "description": "Instant data bundles, airtime top-ups, TV subscriptions, and electricity bill payments for all Nigerian networks"
+      }
+    },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://kirkidata.ng/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
   }
 
   // FAQ structured data
