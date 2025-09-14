@@ -163,7 +163,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
              // Also fetch the latest wallet balance from the dedicated endpoint
        setTimeout(async () => {
          try {
-           await useUserStore.getState().fetchWalletBalance()
+           await useUserStore.getState().fetchWalletBalance(false)
          } catch (error) {
            // Silent fail - wallet balance fetch error
          }
@@ -418,7 +418,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
         
         // Also fetch the latest wallet balance from the dedicated endpoint
         try {
-          await useUserStore.getState().fetchWalletBalance()
+          await useUserStore.getState().fetchWalletBalance(false)
         } catch (error) {
           // Silent fail - wallet balance fetch error
         }
@@ -496,7 +496,7 @@ export const useAuthStore = create<AuthStore>((set, get) => {
         
                  // Also fetch the latest wallet balance from the dedicated endpoint
          try {
-           await useUserStore.getState().fetchWalletBalance()
+           await useUserStore.getState().fetchWalletBalance(false)
          } catch (error) {
            // Silent fail - wallet balance fetch error
          }

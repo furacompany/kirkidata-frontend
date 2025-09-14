@@ -13,14 +13,12 @@ import toast from 'react-hot-toast'
 import SEO from '../../components/SEO'
 
 import VirtualAccountsCard from '../../features/virtual-accounts/VirtualAccountsCard'
-import NinePSBCard from '../../features/virtual-accounts/NinePSBCard'
 
 const DashboardHome: React.FC = () => {
   const { walletBalance, transactions, fetchTransactions, fetchWalletBalance } = useUserStore()
   const { user } = useAuthStore()
   const [showBalance, setShowBalance] = React.useState(true)
   const [refreshingBalance, setRefreshingBalance] = React.useState(false)
-  const [activeVirtualAccount, setActiveVirtualAccount] = React.useState<'9PSB' | 'PALMPAY'>('9PSB')
 
   useEffect(() => {
     fetchTransactions()
@@ -180,11 +178,6 @@ const DashboardHome: React.FC = () => {
                              </CardContent>
              </Card>
 
-                          {/* 9PSB Virtual Account Card */}
-                          <div className="hidden sm:block h-full">
-                            <NinePSBCard />
-                          </div>
-
                           {/* PalmPay Virtual Account Card */}
                           <div className="hidden sm:block h-full">
                             <VirtualAccountsCard />
@@ -193,37 +186,9 @@ const DashboardHome: React.FC = () => {
 
                           {/* Mobile Layout - Separate from desktop grid */}
           <div className="sm:hidden">
-                                           {/* Mobile Virtual Account Toggle Buttons - Close to wallet balance */}
-             <div className="flex gap-1 -mt-8">
-             <button
-               onClick={() => setActiveVirtualAccount('9PSB')}
-               className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                 activeVirtualAccount === '9PSB'
-                   ? 'bg-primary text-white shadow-md'
-                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-               }`}
-             >
-               9PSB Account
-             </button>
-             <button
-               onClick={() => setActiveVirtualAccount('PALMPAY')}
-               className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                 activeVirtualAccount === 'PALMPAY'
-                   ? 'bg-primary text-white shadow-md'
-                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-               }`}
-             >
-               Palmpay Account
-             </button>
-           </div>
-
-           {/* Mobile Virtual Account Cards - Close to buttons */}
+           {/* Mobile Virtual Account Cards */}
            <div className="mt-2">
-            {activeVirtualAccount === '9PSB' ? (
-              <NinePSBCard />
-            ) : (
-              <VirtualAccountsCard />
-            )}
+            <VirtualAccountsCard />
           </div>
         </div>
 

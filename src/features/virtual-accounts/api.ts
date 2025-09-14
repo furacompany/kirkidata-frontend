@@ -1,16 +1,7 @@
 import { http } from "../../lib/http";
 import { VirtualAccountTransactionsResponse } from "../../types";
 
-export type BankId = "PALMPAY" | "9PSB";
-
-export type AvailableBanksResponse = {
-  success: boolean;
-  message: string;
-  data: {
-    available: { bankId: BankId; bankName: string }[];
-    existing: { bankId: BankId; bankName: string; accountNumber: string }[];
-  };
-};
+export type BankId = "PALMPAY";
 
 export type VirtualAccount = {
   _id: string;
@@ -27,19 +18,14 @@ export type VirtualAccount = {
   __v: number;
 };
 
-export async function getAvailableBanks() {
-  const { data } = await http.get<AvailableBanksResponse>("virtual-accounts/available-banks");
-  return data;
-}
-
-export async function createVirtualAccount(bank: BankId) {
-  const { data } = await http.post("virtual-accounts", { bank });
+export async function createVirtualAccount() {
+  const { data } = await http.post("virtual-accounts/");
   return data;
 }
 
 export async function getUserVirtualAccounts() {
   const { data } = await http.get<{ success: boolean; message: string; data: VirtualAccount[] }>(
-    "virtual-accounts"
+    "virtual-accounts/"
   );
   return data;
 }

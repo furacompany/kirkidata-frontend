@@ -9,7 +9,7 @@ interface UserStore extends UserState {
   addTransaction: (transactionData: Partial<Transaction>) => void
   fetchTransactions: () => Promise<void>
   syncWalletBalance: (balance: number) => void
-  fetchWalletBalance: () => Promise<void>
+  fetchWalletBalance: (showError?: boolean) => Promise<void>
 }
 
 export const useUserStore = create<UserStore>((set) => ({
@@ -66,7 +66,7 @@ export const useUserStore = create<UserStore>((set) => ({
     set({ walletBalance: balance })
   },
 
-  fetchWalletBalance: async () => {
+  fetchWalletBalance: async (showError = true) => {
     try {
       const response = await userApiService.getWalletBalance()
       if (response.success && response.data) {
@@ -74,8 +74,21 @@ export const useUserStore = create<UserStore>((set) => ({
       } else {
         throw new Error(response.message || 'Failed to fetch wallet balance')
       }
-    } catch (error) {
-      toast.error('Failed to fetch wallet balance')
+    } catch (error: any) {
+      // Only show error toast if showError is true
+      if (showError) {
+        // Check if it's a network connectivity issue
+        if (error?.message?.includes('Network') || 
+            error?.message?.includes('timeout') || 
+            error?.message?.includes('connection') ||
+            error?.code === 'NETWORK_ERROR' ||
+            error?.code === 'ERR_NETWORK') {
+          toast.error('Please check your internet connection')
+        } else {
+          // For other errors, show a generic message
+          toast.error('Unable to load wallet balance. Please try again.')
+        }
+      }
     }
   },
 })) 
