@@ -1003,6 +1003,55 @@ class AdminApiService {
       throw error
     }
   }
+
+  async getUserTransactions(
+    userId: string,
+    page: number = 1,
+    limit: number = 50,
+    filters?: {
+      type?: 'airtime' | 'data' | 'funding'
+      status?: 'pending' | 'completed' | 'failed' | 'cancelled'
+      networkName?: string
+      startDate?: string
+      endDate?: string
+      minAmount?: number
+      maxAmount?: number
+    }
+  ): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      })
+      
+      if (filters?.type) queryParams.append('type', filters.type)
+      if (filters?.status) queryParams.append('status', filters.status)
+      if (filters?.networkName) queryParams.append('networkName', filters.networkName)
+      if (filters?.startDate) queryParams.append('startDate', filters.startDate)
+      if (filters?.endDate) queryParams.append('endDate', filters.endDate)
+      if (filters?.minAmount) queryParams.append('minAmount', filters.minAmount.toString())
+      if (filters?.maxAmount) queryParams.append('maxAmount', filters.maxAmount.toString())
+      
+      const response = await this.request<any>(`/transactions/user/${userId}?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
 }
 
 export const adminApiService = new AdminApiService(API_BASE_URL)

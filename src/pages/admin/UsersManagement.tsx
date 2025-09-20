@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import { 
   UserCheck, UserX, Trash2, Users, 
   AlertTriangle, CheckCircle, XCircle,
-  Edit
+  Edit, Eye
 } from 'lucide-react'
 
 interface UserData {
@@ -81,6 +81,7 @@ const UsersManagement: React.FC = () => {
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
   // const [selectedUserForEdit, setSelectedUserForEdit] = useState<any>(null)
 
+
   // Load all users with pagination
   const loadUsers = async (page: number = 1) => {
     setIsLoadingUsers(true)
@@ -107,6 +108,12 @@ const UsersManagement: React.FC = () => {
   const handleUserEditFromList = (user: any) => {
     navigate(`/admin/users/${user._id}/edit`)
   }
+
+  // Handle view user transactions
+  const handleViewTransactions = (user: any) => {
+    navigate(`/admin/users/${user._id}/transactions`)
+  }
+
 
   // Handle pagination
   const handlePageChange = (newPage: number) => {
@@ -881,6 +888,7 @@ const UsersManagement: React.FC = () => {
         </div>
       )}
 
+
       {/* Instructions */}
       {!userData && !error && (
         <Card className="p-6 bg-blue-50 border-blue-200">
@@ -986,14 +994,26 @@ const UsersManagement: React.FC = () => {
                           ₦{user.wallet.toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <Button
-                            onClick={() => handleUserEditFromList(user)}
-                            variant="outline"
-                            size="sm"
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={() => handleUserEditFromList(user)}
+                              variant="outline"
+                              size="sm"
+                              className="text-blue-600 hover:text-blue-900"
+                              title="Edit User"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleViewTransactions(user)}
+                              variant="outline"
+                              size="sm"
+                              className="text-green-600 hover:text-green-900"
+                              title="View Transactions"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}

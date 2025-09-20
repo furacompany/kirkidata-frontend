@@ -33,6 +33,7 @@ import ExamPins from './pages/customers/ExamPins'
 import AdminHome from './pages/admin/AdminHome'
 import UsersManagement from './pages/admin/UsersManagement'
 import EditUser from './pages/admin/EditUser'
+import UserTransactions from './pages/admin/UserTransactions'
 import DataPlans from './pages/admin/DataPlans'
 import SyncOtoBill from './pages/admin/SyncOtoBill'
 import TransactionsPanel from './pages/admin/TransactionsPanel'
@@ -244,6 +245,7 @@ const App: React.FC = () => {
              <Route index element={<AdminHome />} />
              <Route path="users" element={<UsersManagement />} />
              <Route path="users/:userId/edit" element={<EditUser />} />
+             <Route path="users/:userId/transactions" element={<UserTransactions />} />
              <Route path="data-plans" element={<DataPlans />} />
              <Route path="sync-otobill" element={<SyncOtoBill />} />
              <Route path="transactions" element={<TransactionsPanel />} />

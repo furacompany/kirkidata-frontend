@@ -59,6 +59,7 @@ interface AdminAuthStore extends AdminAuthState {
   getUserByPhone: (phone: string) => Promise<any>
   getUserByEmail: (email: string) => Promise<any>
   getUserById: (userId: string) => Promise<any>
+  getUserTransactions: (userId: string, page?: number, limit?: number, filters?: any) => Promise<any>
   updateUserProfile: (userId: string, firstName: string, lastName: string, state: string) => Promise<any>
   updateUserWallet: (userId: string, amount: number, description: string) => Promise<any>
   searchUsers: (filters: any) => Promise<any>
@@ -802,6 +803,16 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       return response;
     } catch (error: any) {
       console.error('Failed to fetch user by ID:', error);
+      throw error;
+    }
+  },
+
+  getUserTransactions: async (userId: string, page?: number, limit?: number, filters?: any) => {
+    try {
+      const response = await adminApiService.getUserTransactions(userId, page, limit, filters);
+      return response;
+    } catch (error: any) {
+      console.error('Failed to fetch user transactions:', error);
       throw error;
     }
   },

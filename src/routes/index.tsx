@@ -124,7 +124,6 @@ const AppRoutes = () => (
         <Route path="otobill-stats" element={<OtoBillStats />} />
         <Route path="test-route" element={<div>Test route working!</div>} />
         <Route path="profile" element={<AdminProfile />} />
-
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
