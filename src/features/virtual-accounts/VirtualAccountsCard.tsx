@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { Copy, CheckCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
 import toast from "react-hot-toast";
 import {
   getUserVirtualAccounts,
-  createVirtualAccount,
   type VirtualAccount,
 } from "./api";
 
@@ -13,7 +11,6 @@ export default function VirtualAccountsCard() {
 
   const [userAccounts, setUserAccounts] = useState<VirtualAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const [copied, setCopied] = useState<string | null>(null);
@@ -111,48 +108,6 @@ export default function VirtualAccountsCard() {
     }
   };
 
-  const handleCreatePALMPAYAccount = async () => {
-    try {
-      setCreating(true);
-      setError(null);
-      
-      const response = await createVirtualAccount();
-      
-      if (response.success) {
-        toast.success("PALMPAY virtual account created successfully");
-        // Refetch data to show the new account
-        await fetchData();
-      } else {
-        throw new Error(response.message || "Failed to create PALMPAY virtual account");
-      }
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || "Failed to create PALMPAY virtual account";
-      
-      // Handle 401 errors silently - don't show error to user
-      if (err?.response?.status === 401) {
-        // Don't show toast or set error for 401
-        return;
-      }
-      
-      // Handle 409 - Account already exists
-      if (err?.response?.status === 409) {
-        toast.success("Virtual account already exists. Fetching your account...");
-        // Refetch data to show the existing account
-        await fetchData();
-        return;
-      }
-      
-      if (message.includes("duplicate reference")) {
-        toast.error("Creation failed due to duplicate reference. Please try again.");
-      } else {
-        toast.error(message);
-      }
-      
-      setError(message);
-    } finally {
-      setCreating(false);
-    }
-  };
 
   const copyToClipboard = async (text: string, key: string) => {
     try {
@@ -176,7 +131,6 @@ export default function VirtualAccountsCard() {
   };
 
   const currentAccount = getCurrentBankAccount();
-  const isBankAvailable = true; // PALMPAY is always available
 
   if (loading) {
     return (
@@ -257,33 +211,16 @@ export default function VirtualAccountsCard() {
             </div>
           </div>
         ) : (
-          /* No Account State */
+          /* No Account State - Account should be automatically generated during registration */
           <div className="text-center py-6">
-            <h3 className="text-base font-medium text-gray-900 mb-2">No PALMPAY Account</h3>
+            <h3 className="text-base font-medium text-gray-900 mb-2">Loading Virtual Account</h3>
             <p className="text-sm text-gray-500 mb-3">
-              Generate a PALMPAY virtual account to get started.
+              Your virtual account is being set up. Please refresh the page if it doesn't appear shortly.
             </p>
-            
-            {isBankAvailable ? (
-              <Button
-                onClick={handleCreatePALMPAYAccount}
-                disabled={creating}
-                className="bg-primary hover:bg-primary/90 text-white text-sm px-4 py-2"
-              >
-                {creating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Generating...
-                  </>
-                ) : (
-                  "Generate PALMPAY Account"
-                )}
-              </Button>
-            ) : (
-              <div className="text-sm text-gray-500">
-                PALMPAY is not available at the moment.
-              </div>
-            )}
+            <div className="flex items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin text-primary mr-2" />
+              <span className="text-sm text-gray-500">Setting up your account...</span>
+            </div>
           </div>
         )}
 

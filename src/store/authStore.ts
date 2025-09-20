@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { User, AuthState } from '../types'
 import { userApiService, RegisterRequest } from '../services/userApi'
+import { createVirtualAccount } from '../features/virtual-accounts/api'
 import toast from 'react-hot-toast'
 import { useUserStore } from './userStore'
 
@@ -299,6 +300,26 @@ export const useAuthStore = create<AuthStore>((set, get) => {
         
         // Start periodic token refresh
         startTokenRefresh()
+
+        // Automatically create virtual account after successful registration
+        try {
+          await createVirtualAccount()
+          // Virtual account creation is successful - no need to show toast as it's automatic
+        } catch (virtualAccountError: any) {
+          // Handle virtual account creation errors silently
+          // Don't fail the registration if virtual account creation fails
+          console.warn('Virtual account creation failed during registration:', virtualAccountError?.message || 'Unknown error')
+          
+          // If it's a 409 error (account already exists), that's actually fine
+          if (virtualAccountError?.response?.status === 409) {
+            // Account already exists - this is not an error
+            console.log('Virtual account already exists for user')
+          } else {
+            // For other errors, we'll let the user know they can generate it manually later
+            // but don't fail the registration
+            console.warn('Virtual account will need to be created manually later')
+          }
+        }
       } else {
         throw new Error(response.message || 'Registration failed')
       }
