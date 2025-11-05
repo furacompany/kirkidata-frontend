@@ -4,40 +4,42 @@ import {
   Users, Activity,
   Smartphone, Wifi, CreditCard,
   Clock, ArrowUpRight, Shield,
-  BarChart3, Calendar, TrendingUp, DollarSign, Target
+  BarChart3, Calendar, TrendingUp, DollarSign, Target, Wallet, Network
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useAdminStore } from '../../store/adminStore'
 import { Link } from 'react-router-dom'
+import { adminApiService } from '../../services/adminApi'
 
 const AdminHome: React.FC = () => {
   const { 
     stats, 
     users, 
-    transactions, 
     transactionStats,
     fetchUsers, 
-    fetchTransactions, 
     fetchStats,
-    fetchOtoBillTransactionStats,
     fetchTransactionStats
   } = useAdminStore()
   
   // Improved loading state management
   const [isLoadingStats, setIsLoadingStats] = React.useState(true)
   const [isLoadingUsers, setIsLoadingUsers] = React.useState(true)
-  const [isLoadingTransactions, setIsLoadingTransactions] = React.useState(true)
-  const [isLoadingOtoBillStats, setIsLoadingOtoBillStats] = React.useState(true)
   const [isLoadingTransactionStats, setIsLoadingTransactionStats] = React.useState(true)
+  const [isLoadingAychindodataUser, setIsLoadingAychindodataUser] = React.useState(true)
+  const [isLoadingAychindodataNetworks, setIsLoadingAychindodataNetworks] = React.useState(true)
   
   // Date filter states
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   
+  // Aychindodata data states
+  const [aychindodataUser, setAychindodataUser] = useState<any>(null)
+  const [aychindodataNetworks, setAychindodataNetworks] = useState<any[]>([])
+  
   // Combined loading state for the entire dashboard
-  const isDashboardLoading = isLoadingStats || isLoadingUsers || isLoadingTransactions || isLoadingOtoBillStats || isLoadingTransactionStats
+  const isDashboardLoading = isLoadingStats || isLoadingUsers || isLoadingTransactionStats
 
   useEffect(() => {
     const loadData = async () => {
@@ -46,10 +48,8 @@ const AdminHome: React.FC = () => {
       if (!adminAccessToken) {
         // If no token, don't make any API calls
         setIsLoadingStats(false)
-        setIsLoadingOtoBillStats(false)
         setIsLoadingTransactionStats(false)
         setIsLoadingUsers(false)
-        setIsLoadingTransactions(false)
         return
       }
 
@@ -65,20 +65,6 @@ const AdminHome: React.FC = () => {
         }
       } else {
         setIsLoadingStats(false)
-      }
-
-      // Fetch OtoBill transaction stats for revenue calculation
-      if (typeof fetchOtoBillTransactionStats === 'function') {
-        try {
-          setIsLoadingOtoBillStats(true)
-          await fetchOtoBillTransactionStats()
-        } catch (error) {
-          console.error('Failed to fetch OtoBill transaction stats:', error)
-        } finally {
-          setIsLoadingOtoBillStats(false)
-        }
-      } else {
-        setIsLoadingOtoBillStats(false)
       }
 
       // Fetch transaction statistics
@@ -109,28 +95,39 @@ const AdminHome: React.FC = () => {
         setIsLoadingUsers(false)
       }
 
-      // Fetch transactions
-      if (typeof fetchTransactions === 'function') {
-        try {
-          setIsLoadingTransactions(true)
-          await fetchTransactions()
-        } catch (error) {
-          console.error('Failed to fetch transactions:', error)
-        } finally {
-          setIsLoadingTransactions(false)
+      // Fetch Aychindodata user info and balance
+      try {
+        setIsLoadingAychindodataUser(true)
+        const userResponse = await adminApiService.getAychindodataUser()
+        if (userResponse?.success && userResponse?.data) {
+          setAychindodataUser(userResponse.data)
         }
-      } else {
-        setIsLoadingTransactions(false)
+      } catch (error) {
+        console.error('Failed to fetch Aychindodata user:', error)
+      } finally {
+        setIsLoadingAychindodataUser(false)
+      }
+
+      // Fetch Aychindodata networks
+      try {
+        setIsLoadingAychindodataNetworks(true)
+        const networksResponse = await adminApiService.getAychindodataNetworks()
+        if (networksResponse?.success && networksResponse?.data) {
+          setAychindodataNetworks(Array.isArray(networksResponse.data) ? networksResponse.data : [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch Aychindodata networks:', error)
+      } finally {
+        setIsLoadingAychindodataNetworks(false)
       }
     }
 
     loadData()
-  }, [fetchStats, fetchUsers, fetchTransactions, fetchOtoBillTransactionStats, fetchTransactionStats])
+  }, [fetchStats, fetchUsers, fetchTransactionStats])
 
   // Only show data when not loading and data exists
   const recentTransactions = !isDashboardLoading && stats?.recentTransactions ? 
-    stats.recentTransactions : 
-    (!isDashboardLoading && Array.isArray(transactions) ? transactions.slice(0, 4) : [])
+    stats.recentTransactions : []
     
   const recentUsers = !isDashboardLoading && stats?.recentUsers ? 
     stats.recentUsers : 
@@ -236,26 +233,41 @@ const AdminHome: React.FC = () => {
             size="sm"
             onClick={async () => {
               setIsLoadingStats(true)
-              setIsLoadingOtoBillStats(true)
               setIsLoadingTransactionStats(true)
+              setIsLoadingAychindodataUser(true)
+              setIsLoadingAychindodataNetworks(true)
               try {
                 await Promise.all([
                   fetchStats?.(),
-                  fetchOtoBillTransactionStats?.(),
-                  fetchTransactionStats?.(startDate || undefined, endDate || undefined)
+                  fetchTransactionStats?.(startDate || undefined, endDate || undefined),
+                  adminApiService.getAychindodataUser().then((response) => {
+                    if (response?.success && response?.data) {
+                      setAychindodataUser(response.data)
+                    }
+                  }).catch((error) => {
+                    console.error('Failed to refresh Aychindodata user:', error)
+                  }),
+                  adminApiService.getAychindodataNetworks().then((response) => {
+                    if (response?.success && response?.data) {
+                      setAychindodataNetworks(Array.isArray(response.data) ? response.data : [])
+                    }
+                  }).catch((error) => {
+                    console.error('Failed to refresh Aychindodata networks:', error)
+                  })
                 ])
               } catch (error) {
                 console.error('Failed to refresh stats:', error)
               } finally {
                 setIsLoadingStats(false)
-                setIsLoadingOtoBillStats(false)
                 setIsLoadingTransactionStats(false)
+                setIsLoadingAychindodataUser(false)
+                setIsLoadingAychindodataNetworks(false)
               }
             }}
-            disabled={isDashboardLoading}
+            disabled={isDashboardLoading || isLoadingAychindodataUser || isLoadingAychindodataNetworks}
           >
             <Activity className="w-4 h-4 mr-2" />
-            {isDashboardLoading ? 'Refreshing...' : 'Refresh Stats'}
+            {isDashboardLoading || isLoadingAychindodataUser || isLoadingAychindodataNetworks ? 'Refreshing...' : 'Refresh Stats'}
           </Button>
           <Link to="/admin/users">
             <Button variant="outline" size="sm">
@@ -446,6 +458,120 @@ const AdminHome: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* Aychindodata Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        {/* Account Details Balance Card */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-indigo-50 to-indigo-100/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-lg font-bold text-gray-900">Account Details</CardTitle>
+              <CardDescription className="text-gray-600">Aychindodata user info and wallet balance</CardDescription>
+            </div>
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <Wallet className="h-5 w-5 text-indigo-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingAychindodataUser ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-6 bg-gray-200 rounded w-32 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-40"></div>
+              </div>
+            ) : aychindodataUser ? (
+              <div className="space-y-4">
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Username</div>
+                  <div className="text-lg font-semibold text-gray-900">{aychindodataUser.username || 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Balance</div>
+                  <div className="text-2xl font-bold text-indigo-600">
+                    ₦{parseFloat(aychindodataUser.balance || '0').toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+                {aychindodataUser.status && (
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Status</div>
+                    <span className={`text-xs px-2 py-1 rounded-full border ${
+                      aychindodataUser.status === 'success' 
+                        ? 'text-success bg-success/10 border-success/20' 
+                        : 'text-gray-500 bg-gray-100 border-gray/20'
+                    }`}>
+                      {aychindodataUser.status}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <div className="text-sm text-gray-500">No data available</div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Networks Card */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-teal-50 to-teal-100/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-lg font-bold text-gray-900">Available Networks</CardTitle>
+              <CardDescription className="text-gray-600">Aychindodata network status</CardDescription>
+            </div>
+            <div className="p-2 bg-teal-100 rounded-lg">
+              <Network className="h-5 w-5 text-teal-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingAychindodataNetworks ? (
+              <div className="animate-pulse space-y-3">
+                <div className="h-12 bg-gray-200 rounded mb-2"></div>
+                <div className="h-12 bg-gray-200 rounded mb-2"></div>
+                <div className="h-12 bg-gray-200 rounded"></div>
+              </div>
+            ) : aychindodataNetworks.length > 0 ? (
+              <div className="space-y-3">
+                {aychindodataNetworks.map((network) => (
+                  <div 
+                    key={network.id} 
+                    className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-teal-300 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${
+                        network.isActive && network.status === 'On' 
+                          ? 'bg-green-500' 
+                          : 'bg-gray-400'
+                      }`}></div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{network.name}</div>
+                        <div className="text-xs text-gray-500">{network.id}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full border ${
+                        network.isActive && network.status === 'On'
+                          ? 'text-success bg-success/10 border-success/20'
+                          : 'text-gray-500 bg-gray-100 border-gray/20'
+                      }`}>
+                        {network.status || (network.isActive ? 'Active' : 'Inactive')}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <div className="text-sm text-gray-500">No networks available</div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Recent Activity */}
       <motion.div

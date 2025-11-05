@@ -6,10 +6,6 @@ import {
   User, 
   Transaction, 
   WalletLog, 
-  OtoBillProfile, 
-  OtoBillWalletBalance,
-  OtoBillTransaction,
-  OtoBillTransactionStats,
   TransactionStats
 } from '../types'
 import { clearAdminAuth } from '../utils/auth'
@@ -32,19 +28,14 @@ interface AdminAuthState {
   users: User[]
   transactions: Transaction[]
   walletLogs: WalletLog[]
-  otobillProfile: OtoBillProfile | null
-  otobillWalletBalance: OtoBillWalletBalance | null
-  otobillTransactions: OtoBillTransaction[]
-  otobillTransactionStats: OtoBillTransactionStats | null
-  otobillTransactionsPagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
+  transactionStats: TransactionStats | null
+  transactionsPagination: {
+    currentPage: number
     hasNext: boolean
     hasPrev: boolean
+    totalPages: number
+    total: number
   } | null
-  transactionStats: TransactionStats | null
 }
 
 interface AdminAuthStore extends AdminAuthState {
@@ -71,19 +62,14 @@ interface AdminAuthStore extends AdminAuthState {
   // Data fetching methods
   fetchStats: () => Promise<void>
   fetchUsers: () => Promise<void>
-  fetchTransactions: () => Promise<void>
-  fetchWalletLogs: () => Promise<void>
   updateTransactionStatus: (transactionId: string, status: 'pending' | 'successful' | 'failed') => Promise<void>
-  // OtoBill methods
-  fetchOtoBillProfile: () => Promise<void>
-  fetchOtoBillWalletBalance: () => Promise<void>
-  fetchOtoBillTransactions: (page?: number, limit?: number, filters?: any) => Promise<void>
-  fetchOtoBillTransaction: (transactionId: string) => Promise<OtoBillTransaction | null>
-  fetchOtoBillTransactionStats: (startDate?: string, endDate?: string, type?: 'all' | 'data' | 'airtime') => Promise<void>
   fetchTransactionStats: (startDate?: string, endDate?: string) => Promise<void>
+  fetchTransactions: (page?: number, limit?: number, filters?: any, append?: boolean) => Promise<void>
+  getTransactionById: (transactionId: string) => Promise<any>
+  clearTransactions: () => void
 }
 
-export const useAdminStore = create<AdminAuthStore>((set) => ({
+export const useAdminStore = create<AdminAuthStore>((set, get) => ({
   admin: null,
   isAuthenticated: false,
   isLoading: false,
@@ -91,12 +77,8 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
   users: [],
   transactions: [],
   walletLogs: [],
-  otobillProfile: null,
-  otobillWalletBalance: null,
-  otobillTransactions: [],
-  otobillTransactionStats: null,
-  otobillTransactionsPagination: null,
   transactionStats: null,
+  transactionsPagination: null,
 
   restoreAuthState: () => {
     const accessToken = localStorage.getItem('adminAccessToken')
@@ -444,18 +426,8 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
         endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
       })
 
-      // Use OtoBill transactions for revenue calculation instead of virtual account transactions
+      // Initialize empty transactions array - will be populated from transactionStats if needed
       let transactions: any[] = []
-      try {
-        const otobillTransactionsResponse = await adminApiService.getOtoBillTransactions(1, 50)
-        if (otobillTransactionsResponse.success && otobillTransactionsResponse.data) {
-          transactions = otobillTransactionsResponse.data.transactions
-        }
-      } catch (transactionError) {
-        console.warn('OtoBill transactions failed, using fallback data:', transactionError)
-        // Use fallback transaction data
-        transactions = []
-      }
       
       // Calculate stats from real data
       const userStats = userStatsResponse.success ? userStatsResponse.data : null
@@ -490,8 +462,8 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
         return sum
       }, 0)
 
-      const walletTransactions = 0 // OtoBill doesn't have wallet funding transactions
-      const walletRevenue = 0 // OtoBill doesn't have wallet funding transactions
+      const walletTransactions = 0
+      const walletRevenue = 0
 
       // Calculate network stats
       const networkStats: any = {}
@@ -591,90 +563,6 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
     }
   },
 
-  fetchTransactions: async () => {
-    try {
-      const response = await adminApiService.getOtoBillTransactions(1, 50)
-      if (response.success && response.data) {
-        // Transform OtoBillTransaction to Transaction format
-        const transformedTransactions = response.data.transactions.map((otobillTx: any) => ({
-          _id: otobillTx._id,
-          userId: otobillTx.userId._id,
-          type: otobillTx.transactionType,
-          amount: otobillTx.amount,
-          currency: 'NGN',
-          status: otobillTx.status,
-          reference: otobillTx.topupmateRef,
-          description: otobillTx.description,
-          phoneNumber: otobillTx.dataPhoneNumber || otobillTx.airtimePhoneNumber,
-          network: otobillTx.dataNetworkName || otobillTx.airtimeNetworkName,
-          dataPlan: otobillTx.dataPlanName,
-          transactionId: otobillTx._id,
-          otobillRef: otobillTx.topupmateRef,
-          profit: otobillTx.profitMargin,
-          planId: otobillTx.dataPlanId,
-          planName: otobillTx.dataPlanName,
-          createdAt: otobillTx.createdAt,
-          updatedAt: otobillTx.updatedAt,
-          metadata: {
-            payerAccountNumber: '',
-            bankName: '',
-            accountNumber: '',
-            accountName: ''
-          },
-          id: otobillTx._id,
-          userName: otobillTx.userId.fullName
-        }))
-        
-        set({ transactions: transformedTransactions })
-        
-        // Also update the recentTransactions in stats
-        set((state) => ({
-          stats: state.stats ? {
-            ...state.stats,
-            recentTransactions: transformedTransactions.slice(0, 4)
-          } : null
-        }))
-      } else {
-        throw new Error(response.message || 'Failed to fetch transactions')
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch transactions:', error)
-      // Don't show toast error - we'll use fallback values
-      // toast.error('Failed to fetch transactions')
-    }
-  },
-
-  fetchWalletLogs: async () => {
-    try {
-      // Use OtoBill transactions as wallet logs instead of virtual account transactions
-      const response = await adminApiService.getOtoBillTransactions(1, 100)
-      if (response.success && response.data) {
-        // Transform OtoBill transactions to WalletLog format
-        const walletLogs = response.data.transactions.map((transaction: any) => ({
-          id: transaction._id,
-          userId: transaction.userId._id,
-          userName: transaction.userId.fullName || 'Unknown User',
-          userEmail: transaction.userId.email || 'No email',
-          type: 'credit' as 'credit' | 'debit', // OtoBill transactions are typically credits
-          amount: transaction.amount,
-          balance: 0, // Balance not available in transaction data
-          description: transaction.description,
-          reference: transaction.topupmateRef,
-          paymentMethod: 'otobill',
-          status: transaction.status as 'successful' | 'pending' | 'failed',
-          createdAt: transaction.createdAt
-        }))
-        
-        set({ walletLogs })
-      } else {
-        throw new Error(response.message || 'Failed to fetch wallet logs')
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch wallet logs:', error)
-      // Don't show toast error - we'll use empty array as fallback
-      set({ walletLogs: [] })
-    }
-  },
 
   updateTransactionStatus: async (_transactionId: string, _status: 'pending' | 'successful' | 'failed') => {
     try {
@@ -696,91 +584,6 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
     }
   },
 
-  // OtoBill methods
-  fetchOtoBillProfile: async () => {
-    try {
-      const response = await adminApiService.getOtoBillProfile()
-      if (response.success && response.data) {
-        set({ otobillProfile: response.data })
-      } else {
-        throw new Error(response.message || 'Failed to fetch OtoBill profile')
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch OtoBill profile:', error)
-      // Silent fail - no error message
-      throw error
-    }
-  },
-
-  fetchOtoBillWalletBalance: async () => {
-    try {
-      const response = await adminApiService.getOtoBillWalletBalance()
-      if (response.success && response.data) {
-        set({ otobillWalletBalance: response.data })
-      } else {
-        throw new Error(response.message || 'Failed to fetch OtoBill wallet balance')
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch OtoBill wallet balance:', error)
-      // Silent fail - no error message
-      throw error
-    }
-  },
-
-  fetchOtoBillTransactions: async (page?: number, limit?: number, filters?: any) => {
-    try {
-      const response = await adminApiService.getOtoBillTransactions(page, limit, filters);
-      if (response.success && response.data) {
-        set({
-          otobillTransactions: response.data.transactions,
-          otobillTransactionsPagination: {
-            page: response.data.page,
-            limit: limit || 20,
-            total: response.data.total,
-            pages: response.data.pages,
-            hasNext: response.data.hasNext,
-            hasPrev: response.data.hasPrev
-          }
-        });
-      } else {
-        throw new Error(response.message || 'Failed to fetch OtoBill transactions');
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch OtoBill transactions:', error);
-      // Silent fail - no error message
-      throw error;
-    }
-  },
-
-  fetchOtoBillTransaction: async (transactionId: string) => {
-    try {
-      const response = await adminApiService.getOtoBillTransaction(transactionId);
-      if (response.success && response.data) {
-        return response.data;
-      } else {
-        return null;
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch OtoBill transaction:', error);
-      // Silent fail - no error message
-      throw error;
-    }
-  },
-
-  fetchOtoBillTransactionStats: async (startDate?: string, endDate?: string, type?: 'all' | 'data' | 'airtime') => {
-    try {
-      const response = await adminApiService.getOtoBillTransactionStats(startDate, endDate, type);
-      if (response.success && response.data) {
-        set({ otobillTransactionStats: response.data });
-      } else {
-        throw new Error(response.message || 'Failed to fetch OtoBill transaction stats');
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch OtoBill transaction stats:', error);
-      // Silent fail - no error message
-      throw error;
-    }
-  },
 
   fetchTransactionStats: async (startDate?: string, endDate?: string) => {
     try {
@@ -815,5 +618,89 @@ export const useAdminStore = create<AdminAuthStore>((set) => ({
       console.error('Failed to fetch user transactions:', error);
       throw error;
     }
+  },
+
+  fetchTransactions: async (page: number = 1, limit: number = 20, filters?: any, append: boolean = false) => {
+    try {
+      const response = await adminApiService.getAllTransactions(page, limit, filters);
+      if (response.success && response.data) {
+        // Transform the transaction data to match the Transaction interface
+        const transformedTransactions = (response.data.transactions || []).map((transaction: any) => {
+          // Safely handle user data
+          const user = transaction.user || {}
+          const userFirstName = user.firstName || ''
+          const userLastName = user.lastName || ''
+          const userName = user.name || (userFirstName || userLastName ? `${userFirstName} ${userLastName}`.trim() : 'Unknown User')
+          
+          // Safely handle transaction data
+          const transactionData = transaction.data || {}
+          
+          return {
+            _id: transaction.id || transaction._id || '',
+            id: transaction.id || transaction._id || '',
+            userId: user.id || user._id || '',
+            type: transaction.type || 'unknown',
+            amount: transaction.amount || 0,
+            currency: transaction.currency || 'NGN',
+            status: transaction.status || 'pending',
+            reference: transaction.reference || '',
+            description: transaction.description || '',
+            profit: transaction.profit || 0,
+            phoneNumber: transactionData.phoneNumber || transaction.phoneNumber || '',
+            network: transactionData.networkName || transaction.networkName || '',
+            dataPlan: transactionData.planName || '',
+            planId: transactionData.planId || '',
+            planName: transactionData.planName || '',
+            otobillRef: transaction.otobillRef || '',
+            userName: userName,
+            createdAt: transaction.createdAt || new Date().toISOString(),
+            updatedAt: transaction.updatedAt || new Date().toISOString(),
+            virtualAccount: transaction.virtualAccount || null,
+            metadata: transaction.metadata || null
+          }
+        }).filter((transaction: any) => transaction.id); // Filter out any invalid transactions
+        
+        // Get current transactions from state
+        const currentTransactions = get().transactions;
+        
+        // Only update pagination if it exists in the response
+        const pagination = response.data.pagination ? {
+          currentPage: response.data.pagination.page || 1,
+          hasNext: response.data.pagination.hasNext || false,
+          hasPrev: response.data.pagination.hasPrev || false,
+          totalPages: response.data.pagination.totalPages || 1,
+          total: response.data.pagination.total || transformedTransactions.length
+        } : null;
+        
+        set({ 
+          transactions: append ? [...currentTransactions, ...transformedTransactions] : transformedTransactions,
+          transactionsPagination: pagination
+        });
+      } else {
+        throw new Error(response.message || 'Failed to fetch transactions');
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch transactions:', error);
+      toast.error(error.message || 'Failed to fetch transactions');
+      throw error;
+    }
+  },
+
+  getTransactionById: async (transactionId: string) => {
+    try {
+      const response = await adminApiService.getTransactionById(transactionId);
+      return response;
+    } catch (error: any) {
+      console.error('Failed to fetch transaction by ID:', error);
+      toast.error(error.message || 'Failed to fetch transaction details');
+      throw error;
+    }
+  },
+
+  clearTransactions: () => {
+    set({ 
+      transactions: [],
+      transactionsPagination: null
+    });
   },
 })) 

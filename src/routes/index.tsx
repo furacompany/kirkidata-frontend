@@ -24,16 +24,9 @@ const AdminLogin = lazy(() => import('../pages/auth/AdminLogin'));
 const AdminHome = lazy(() => import('../pages/admin/AdminHome'));
 const UsersManagement = lazy(() => import('../pages/admin/UsersManagement'));
 const DataPlans = lazy(() => import('../pages/admin/DataPlans'));
-const SyncOtoBill = lazy(() => import('../pages/admin/SyncOtoBill'));
 const TransactionsPanel = lazy(() => import('../pages/admin/TransactionsPanel'));
 const WalletLogs = lazy(() => import('../pages/admin/WalletLogs'));
 const AdminProfile = lazy(() => import('../pages/admin/AdminProfile'));
-
-
-const OtoBillWallet = lazy(() => import('../pages/admin/OtoBillWallet'));
-const OtobillProfile = lazy(() => import('../pages/admin/OtobillProfile'));
-const OtoBillTransactions = lazy(() => import('../pages/admin/OtoBillTransactions'));
-const OtoBillStats = lazy(() => import('../pages/admin/OtoBillStats'));
 const NotFound = lazy(() => import('../pages/notfound'));
 
 // Protected route wrapper for admin routes
@@ -114,15 +107,8 @@ const AppRoutes = () => (
         <Route index element={<AdminHome />} />
         <Route path="users" element={<UsersManagement />} />
         <Route path="data-plans" element={<DataPlans />} />
-        <Route path="sync-otobill" element={<SyncOtoBill />} />
         <Route path="transactions" element={<TransactionsPanel />} />
         <Route path="wallet-logs" element={<WalletLogs />} />
-        <Route path="debug-test" element={<div>Debug route working! Path: /admin/debug-test</div>} />
-        <Route path="otobill-wallet" element={<OtoBillWallet />} />
-        <Route path="otobill-profile" element={<OtobillProfile />} />
-        <Route path="otobill-transactions" element={<OtoBillTransactions />} />
-        <Route path="otobill-stats" element={<OtoBillStats />} />
-        <Route path="test-route" element={<div>Test route working!</div>} />
         <Route path="profile" element={<AdminProfile />} />
       </Route>
       <Route path="*" element={<NotFound />} />

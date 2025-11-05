@@ -35,15 +35,10 @@ import UsersManagement from './pages/admin/UsersManagement'
 import EditUser from './pages/admin/EditUser'
 import UserTransactions from './pages/admin/UserTransactions'
 import DataPlans from './pages/admin/DataPlans'
-import SyncOtoBill from './pages/admin/SyncOtoBill'
 import TransactionsPanel from './pages/admin/TransactionsPanel'
 import WalletLogs from './pages/admin/WalletLogs'
 
 import AdminProfile from './pages/admin/AdminProfile'
-import OtobillProfile from './pages/admin/OtobillProfile'
-import OtoBillWallet from './pages/admin/OtoBillWallet'
-import OtoBillTransactions from './pages/admin/OtoBillTransactions'
-import OtoBillStats from './pages/admin/OtoBillStats'
 
 // Layouts
 import DashboardLayout from './components/layout/DashboardLayout'
@@ -246,16 +241,11 @@ const App: React.FC = () => {
              <Route path="users" element={<UsersManagement />} />
              <Route path="users/:userId/edit" element={<EditUser />} />
              <Route path="users/:userId/transactions" element={<UserTransactions />} />
-             <Route path="data-plans" element={<DataPlans />} />
-             <Route path="sync-otobill" element={<SyncOtoBill />} />
-             <Route path="transactions" element={<TransactionsPanel />} />
-             <Route path="wallet-logs" element={<WalletLogs />} />
+            <Route path="data-plans" element={<DataPlans />} />
+            <Route path="transactions" element={<TransactionsPanel />} />
+            <Route path="wallet-logs" element={<WalletLogs />} />
 
-             <Route path="profile" element={<AdminProfile />} />
-             <Route path="otobill-profile" element={<OtobillProfile />} />
-             <Route path="otobill-wallet" element={<OtoBillWallet />} />
-             <Route path="otobill-transactions" element={<OtoBillTransactions />} />
-             <Route path="otobill-stats" element={<OtoBillStats />} />
+            <Route path="profile" element={<AdminProfile />} />
            </Route>
 
           {/* 404 Route */}

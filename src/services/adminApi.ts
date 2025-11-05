@@ -1,14 +1,4 @@
 import { clearAdminAuth } from '../utils/auth'
-import { 
-  OtoBillNetworksResponse, 
-  OtoBillDataPlansResponse, 
-  OtoBillPricingSummaryResponse,
-  OtoBillDataPlansPricingResponse,
-  OtoBillPricingUpdateResponse,
-  OtoBillTransactionsResponse,
-  OtoBillTransactionResponse,
-  OtoBillStatsResponse
-} from '../types'
 
 const API_BASE_URL = 'https://api.kirkidata.ng/api/v1'
 
@@ -150,14 +140,20 @@ class AdminApiService {
     }
 
     const response = await fetch(url, config)
-    let data
+    let data: any = null
     try {
-      data = await response.json()
-    } catch (error) {
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status} ${response.statusText}`)
+      const text = await response.text()
+      if (text) {
+        try {
+          data = JSON.parse(text)
+        } catch (parseError) {
+          // If JSON parsing fails, data remains null
+          data = null
+        }
       }
-      throw new Error('Invalid JSON response from server')
+    } catch (error) {
+      // If reading response fails, data remains null
+      data = null
     }
 
     if (!response.ok) {
@@ -209,9 +205,11 @@ class AdminApiService {
       } else if (response.status === 404) {
         throw new Error(data?.message || 'Resource not found')
       } else if (response.status === 500) {
-        throw new Error(data?.message || 'Server error occurred. Please try again later.')
+        const errorMessage = data?.message || data?.error || 'Server error occurred. Please try again later.'
+        throw new Error(errorMessage)
       } else {
-        throw new Error(data?.message || `HTTP error! status: ${response.status}`)
+        const errorMessage = data?.message || data?.error || `HTTP error! status: ${response.status}`
+        throw new Error(errorMessage)
       }
     }
 
@@ -604,216 +602,19 @@ class AdminApiService {
     }
   }
 
-  // OtoBill API Methods
-  async getOtoBillProfile(): Promise<any> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const response = await this.request('/otobill/profile', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
-      }
-      throw error
-    }
-  }
-
-  async getOtoBillWalletBalance(): Promise<any> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const response = await this.request('/otobill/wallet/balance', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
-      }
-      throw error
-    }
-  }
-
-  async getOtoBillNetworks(): Promise<OtoBillNetworksResponse> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const response = await this.request<OtoBillNetworksResponse>('/otobill/networks', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
-      }
-      throw error
-    }
-  }
-
-  async getOtoBillDataPlansByNetwork(
-    networkName: string, 
-    planType: string, 
-    page: number = 1, 
-    limit: number = 20
-  ): Promise<OtoBillDataPlansResponse> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const queryParams = new URLSearchParams({
-        planType,
-        page: page.toString(),
-        limit: limit.toString()
-      })
-      
-      const response = await this.request<OtoBillDataPlansResponse>(`/otobill/data-plans/network/${networkName}?${queryParams}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
-      }
-      throw error
-    }
-  }
-
-  async getOtoBillPricingSummary(): Promise<OtoBillPricingSummaryResponse> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const response = await this.request<OtoBillPricingSummaryResponse>('/otobill/pricing/summary', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
-      }
-      throw error
-    }
-  }
-
-  async getOtoBillDataPlansPricing(
-    networkName?: string,
-    planType?: string,
-    page: number = 1,
-    limit: number = 20,
-    includeInactive: boolean = true
-  ): Promise<OtoBillDataPlansPricingResponse> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const queryParams = new URLSearchParams({
-        includeInactive: includeInactive.toString(),
-        page: page.toString(),
-        limit: limit.toString()
-      })
-      
-      if (networkName) queryParams.append('networkName', networkName)
-      if (planType) queryParams.append('planType', planType)
-      
-      const response = await this.request<OtoBillDataPlansPricingResponse>(`/otobill/data-plans/pricing?${queryParams}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
-      }
-      throw error
-    }
-  }
-
-  async updateOtoBillDataPlanPricing(
-    planId: string,
-    adminPrice: number,
-    isActive?: boolean
-  ): Promise<OtoBillPricingUpdateResponse> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const body: { adminPrice: number; isActive?: boolean } = { adminPrice }
-      if (isActive !== undefined) {
-        body.isActive = isActive
-      }
-      
-      const response = await this.request<OtoBillPricingUpdateResponse>(`/otobill/data-plans/${planId}/pricing`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
-      }
-      throw error
-    }
-  }
-
-  async getOtoBillTransactions(
+  async getAllTransactions(
     page: number = 1,
     limit: number = 20,
     filters?: {
-      transactionType?: 'data' | 'airtime'
-      status?: 'successful' | 'pending' | 'failed'
+      type?: 'airtime' | 'data' | 'funding' | 'debit'
+      status?: 'pending' | 'completed' | 'failed' | 'cancelled'
+      networkName?: string
       startDate?: string
       endDate?: string
-      userId?: string
+      minAmount?: number
+      maxAmount?: number
     }
-  ): Promise<OtoBillTransactionsResponse> {
+  ): Promise<any> {
     const accessToken = localStorage.getItem('adminAccessToken')
     
     if (!accessToken) {
@@ -826,13 +627,15 @@ class AdminApiService {
         limit: limit.toString()
       })
       
-      if (filters?.transactionType) queryParams.append('transactionType', filters.transactionType)
+      if (filters?.type) queryParams.append('type', filters.type)
       if (filters?.status) queryParams.append('status', filters.status)
+      if (filters?.networkName) queryParams.append('networkName', filters.networkName)
       if (filters?.startDate) queryParams.append('startDate', filters.startDate)
       if (filters?.endDate) queryParams.append('endDate', filters.endDate)
-      if (filters?.userId) queryParams.append('userId', filters.userId)
+      if (filters?.minAmount) queryParams.append('minAmount', filters.minAmount.toString())
+      if (filters?.maxAmount) queryParams.append('maxAmount', filters.maxAmount.toString())
       
-      const response = await this.request<OtoBillTransactionsResponse>(`/otobill/transactions?${queryParams}`, {
+      const response = await this.request<any>(`/transactions?${queryParams}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -847,7 +650,7 @@ class AdminApiService {
     }
   }
 
-  async getOtoBillTransaction(transactionId: string): Promise<OtoBillTransactionResponse> {
+  async getTransactionById(transactionId: string): Promise<any> {
     const accessToken = localStorage.getItem('adminAccessToken')
     
     if (!accessToken) {
@@ -855,7 +658,7 @@ class AdminApiService {
     }
     
     try {
-      const response = await this.request<OtoBillTransactionResponse>(`/otobill/transactions/${transactionId}`, {
+      const response = await this.request<any>(`/transactions/${transactionId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -867,85 +670,6 @@ class AdminApiService {
         throw new Error('401: Unauthorized access. Please log in.')
       } else if (error.message?.includes('404')) {
         throw new Error('404: Transaction not found')
-      }
-      throw error
-    }
-  }
-
-  async getOtoBillTransactionStats(
-    startDate?: string,
-    endDate?: string,
-    type?: 'all' | 'data' | 'airtime'
-  ): Promise<OtoBillStatsResponse> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const queryParams = new URLSearchParams()
-      
-      if (startDate) queryParams.append('startDate', startDate)
-      if (endDate) queryParams.append('endDate', endDate)
-      if (type) queryParams.append('type', type)
-      
-      const response = await this.request<OtoBillStatsResponse>(`/otobill/stats/transactions?${queryParams}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
-      }
-      throw error
-    }
-  }
-
-  async syncOtoBillDataPlans(): Promise<any> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const response = await this.request<any>('/otobill/sync/data-plans', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
-      }
-      throw error
-    }
-  }
-
-  async syncOtoBillAirtimePricing(): Promise<any> {
-    const accessToken = localStorage.getItem('adminAccessToken')
-    
-    if (!accessToken) {
-      throw new Error('401: Authentication required')
-    }
-    
-    try {
-      const response = await this.request<any>('/otobill/sync/airtime-pricing', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-      return response
-    } catch (error: any) {
-      if (error.message?.includes('401')) {
-        throw new Error('401: Unauthorized access. Please log in.')
       }
       throw error
     }
@@ -1039,6 +763,270 @@ class AdminApiService {
       if (filters?.maxAmount) queryParams.append('maxAmount', filters.maxAmount.toString())
       
       const response = await this.request<any>(`/transactions/user/${userId}?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  // Aychindodata API Methods
+  async getAychindodataUser(): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<any>('/aychindodata/user', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getAychindodataNetworks(): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<any>('/aychindodata/networks', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  // Data Plans API Methods
+  async createDataPlan(planData: {
+    planId: string
+    name: string
+    networkName: string
+    planType: string
+    dataSize: string
+    validityDays: number
+    originalPrice: number
+    adminPrice: number
+    isActive: boolean
+  }): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<any>('/data-plans', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(planData),
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      if (error.message?.includes('409')) {
+        throw new Error('409: Data plan with this Plan ID already exists')
+      }
+      throw error
+    }
+  }
+
+  async getDataPlans(filters?: {
+    networkName?: string
+    planType?: string
+    isActive?: boolean
+    page?: number
+    limit?: number
+  }): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const queryParams = new URLSearchParams()
+      if (filters?.networkName) queryParams.append('networkName', filters.networkName)
+      if (filters?.planType) queryParams.append('planType', filters.planType)
+      if (filters?.isActive !== undefined) queryParams.append('isActive', filters.isActive.toString())
+      if (filters?.page) queryParams.append('page', filters.page.toString())
+      if (filters?.limit) queryParams.append('limit', filters.limit.toString())
+      
+      const queryString = queryParams.toString()
+      const endpoint = `/data-plans${queryString ? `?${queryString}` : ''}`
+      
+      const response = await this.request<any>(endpoint, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getDataPlanById(id: string): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<any>(`/data-plans/${id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      if (error.message?.includes('404')) {
+        throw new Error('404: Data plan not found')
+      }
+      throw error
+    }
+  }
+
+  async updateDataPlan(planId: string, updateData: {
+    adminPrice?: number
+    isActive?: boolean
+  }): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<any>(`/data-plans/${planId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      if (error.message?.includes('404')) {
+        throw new Error('404: Data plan not found')
+      }
+      throw error
+    }
+  }
+
+  async deleteDataPlan(id: string): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<any>(`/data-plans/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      if (error.message?.includes('404')) {
+        throw new Error('404: Data plan not found')
+      }
+      throw error
+    }
+  }
+
+  async getPlanTypesByNetwork(networkName: string): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<any>(`/data-plans/network/${networkName}/types`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      }
+      throw error
+    }
+  }
+
+  async getPlansByNetworkAndType(
+    networkName: string,
+    planType: string,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString()
+      })
+      
+      const response = await this.request<any>(`/data-plans/network/${networkName}/type/${planType}?${queryParams}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

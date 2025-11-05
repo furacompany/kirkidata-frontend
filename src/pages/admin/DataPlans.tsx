@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { 
   Wifi, Edit, ChevronDown, Search,
   Clock, Download, Settings, Grid, List, RefreshCw,
-  DollarSign, Activity
+  Plus, Trash2
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -11,40 +11,62 @@ import { Input } from '../../components/ui/Input'
 import toast from 'react-hot-toast'
 import { adminApiService } from '../../services/adminApi'
 import { 
-  OtoBillNetwork, 
-  OtoBillDataPlan, 
-  OtoBillDataPlanWithPricing,
-  OtoBillPricingSummary
+  DataPlan
 } from '../../types'
 
 type ViewMode = 'card' | 'table'
 
+interface Network {
+  id: string
+  name: string
+  status: string
+  isActive: boolean
+}
+
 const DataPlans: React.FC = () => {
   // State for networks and data plans
-  const [networks, setNetworks] = useState<OtoBillNetwork[]>([])
-  const [dataPlansWithPricing, setDataPlansWithPricing] = useState<OtoBillDataPlanWithPricing[]>([])
+  const [networks, setNetworks] = useState<Network[]>([])
+  const [dataPlans, setDataPlans] = useState<DataPlan[]>([])
   const [isLoadingNetworks, setIsLoadingNetworks] = useState(false)
-  const [isLoadingPricing, setIsLoadingPricing] = useState(false)
-  
-  // Pricing summary state
-  const [pricingSummary, setPricingSummary] = useState<OtoBillPricingSummary | null>(null)
+  const [isLoadingPlans, setIsLoadingPlans] = useState(false)
   
   // Filter states
-  const [selectedNetwork, setSelectedNetwork] = useState<OtoBillNetwork | null>(null)
+  const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null)
   const [selectedPlanType, setSelectedPlanType] = useState<string>('')
+  const [availablePlanTypes, setAvailablePlanTypes] = useState<string[]>([])
+  const [isLoadingPlanTypes, setIsLoadingPlanTypes] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   
   // UI states
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false)
   const [showPlanTypeDropdown, setShowPlanTypeDropdown] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
-  // Inline edit state removed; we use modal-based editing everywhere
   
-  // Pricing edit modal state
-  const [showPricingModal, setShowPricingModal] = useState(false)
-  const [selectedPlanForPricing, setSelectedPlanForPricing] = useState<OtoBillDataPlanWithPricing | null>(null)
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null)
   const [newAdminPrice, setNewAdminPrice] = useState<string>('')
   const [newIsActive, setNewIsActive] = useState<boolean | null>(null)
+  
+  // Create modal state
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [createFormData, setCreateFormData] = useState({
+    planId: '',
+    name: '',
+    networkName: '',
+    planType: '',
+    dataSize: '',
+    validityDays: '',
+    originalPrice: '',
+    adminPrice: '',
+    isActive: true
+  })
+  
+  // Delete confirmation state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [planToDelete, setPlanToDelete] = useState<DataPlan | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -53,80 +75,112 @@ const DataPlans: React.FC = () => {
   const [hasNext, setHasNext] = useState(false)
   const [hasPrev, setHasPrev] = useState(false)
 
-  // Available plan types for MTN (based on your API examples)
-  const availablePlanTypes = ['Corporate', 'SME', 'Gifting']
-
   // Fetch networks on component mount
   useEffect(() => {
     fetchNetworks()
-    fetchPricingSummary()
   }, [])
+
+  // Fetch plan types when network changes
+  useEffect(() => {
+    if (selectedNetwork) {
+      fetchPlanTypes(selectedNetwork.name)
+    } else {
+      setAvailablePlanTypes([])
+      setSelectedPlanType('')
+    }
+  }, [selectedNetwork])
 
   // Fetch data plans when filters change
   useEffect(() => {
-    fetchDataPlansWithPricing()
+    fetchDataPlans()
   }, [selectedNetwork, selectedPlanType, currentPage])
 
   const fetchNetworks = async () => {
     setIsLoadingNetworks(true)
     try {
-      const response = await adminApiService.getOtoBillNetworks()
-      if (response.success) {
+      const response = await adminApiService.getAychindodataNetworks()
+      if (response.success && response.data) {
         setNetworks(response.data)
       } else {
         toast.error(response.message || 'Failed to fetch networks')
       }
     } catch (error: any) {
       console.error('Error fetching networks:', error)
-      // Silent fail - no error message
+      toast.error('Failed to fetch networks')
     } finally {
       setIsLoadingNetworks(false)
     }
   }
 
-  const fetchPricingSummary = async () => {
+  const fetchPlanTypes = async (networkName: string) => {
+    setIsLoadingPlanTypes(true)
     try {
-      const response = await adminApiService.getOtoBillPricingSummary()
-      if (response.success) {
-        setPricingSummary(response.data)
+      const response = await adminApiService.getPlanTypesByNetwork(networkName)
+      if (response.success && response.data) {
+        // Filter out "Standard" from plan types
+        const filteredTypes = response.data.filter((type: string) => type !== 'Standard')
+        setAvailablePlanTypes(filteredTypes)
       } else {
-        console.warn('Failed to fetch pricing summary:', response.message)
+        console.warn('Failed to fetch plan types:', response.message)
       }
     } catch (error: any) {
-      console.warn('Error fetching pricing summary:', error)
-      // Don't show error toast for pricing summary as it's not critical
-    }
-  }
-
-  const fetchDataPlansWithPricing = async () => {
-    setIsLoadingPricing(true)
-    try {
-      const response = await adminApiService.getOtoBillDataPlansPricing(
-        selectedNetwork?.name,
-        selectedPlanType || undefined,
-        currentPage,
-        20,
-        true // includeInactive = true
-      )
-      
-      if (response.success) {
-        setDataPlansWithPricing(response.data.plans)
-        setTotalPages(response.data.pagination.totalPages)
-        setTotalPlans(response.data.pagination.total)
-        setHasNext(response.data.pagination.hasNext)
-        setHasPrev(response.data.pagination.hasPrev)
-      } else {
-        // Silent fail - no error message
-      }
-    } catch (error: any) {
-      console.error('Error fetching data plans with pricing:', error)
-      // Silent fail - no error message
+      console.error('Error fetching plan types:', error)
     } finally {
-      setIsLoadingPricing(false)
+      setIsLoadingPlanTypes(false)
     }
   }
 
-  const handleNetworkSelect = (network: OtoBillNetwork) => {
+  const fetchDataPlans = async () => {
+    setIsLoadingPlans(true)
+    try {
+      let response
+      if (selectedNetwork && selectedPlanType) {
+        // Use specific endpoint for network and type
+        response = await adminApiService.getPlansByNetworkAndType(
+          selectedNetwork.name,
+          selectedPlanType,
+          currentPage,
+          20
+        )
+      } else {
+        // Use general endpoint with filters - ensure we only get plans from new API
+        response = await adminApiService.getDataPlans({
+          networkName: selectedNetwork?.name,
+          planType: selectedPlanType || undefined,
+          page: currentPage,
+          limit: 20
+        })
+      }
+      
+      if (response.success && response.data) {
+        // Filter out any plans with "Standard" plan type and ensure we only have new API plans
+        const plans = (response.data.plans || []).filter((plan: DataPlan) => {
+          // Exclude Standard plan type
+          if (plan.planType === 'Standard') return false
+          // Ensure plan has the required fields from new API structure
+          return plan.id && plan.planId
+        })
+        
+        setDataPlans(plans)
+        if (response.data.pagination) {
+          setTotalPages(response.data.pagination.pages || 1)
+          // Use filtered count for display, but keep pagination info from API
+          setTotalPlans(plans.length)
+          setHasNext(response.data.pagination.hasNext || false)
+          setHasPrev(response.data.pagination.hasPrev || false)
+        }
+      } else {
+        toast.error(response.message || 'Failed to fetch data plans')
+      }
+    } catch (error: any) {
+      console.error('Error fetching data plans:', error)
+      toast.error(error.message || 'Failed to fetch data plans')
+    } finally {
+      setIsLoadingPlans(false)
+    }
+  }
+
+  const handleNetworkSelect = (network: Network) => {
     setSelectedNetwork(network)
     setSelectedPlanType('')
     setCurrentPage(1)
@@ -138,92 +192,191 @@ const DataPlans: React.FC = () => {
     setCurrentPage(1)
     setShowPlanTypeDropdown(false)
   }
-
-
-  // Open pricing modal for plan (now all plans have pricing data)
-  const handleOpenPricingModalForPlan = async (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
-    // Since we now fetch all plans with pricing, we can open directly
-    if ('adminPrice' in plan) {
-      setSelectedPlanForPricing(plan as OtoBillDataPlanWithPricing)
-      setNewAdminPrice('')
-      setNewIsActive(plan.isActive)
-      setShowPricingModal(true)
-    } else {
-      // Fallback for any basic plans that might still exist
-      const fallback = {
-        planId: plan.planId,
-        name: plan.name,
-        networkName: plan.networkName,
-        planType: plan.planType,
-        validityDays: plan.validityDays,
-        originalPrice: 'price' in plan ? plan.price : 0,
-        adminPrice: 'price' in plan ? plan.price : 0,
-        profit: 0,
-        isActive: true,
-        lastSynced: new Date().toISOString(),
-      } as unknown as OtoBillDataPlanWithPricing
-      setSelectedPlanForPricing(fallback)
-      setNewAdminPrice('')
-      setNewIsActive(true)
-      setShowPricingModal(true)
-    }
-  }
-
-  const handlePricingEditStart = (plan: OtoBillDataPlanWithPricing) => {
-    setSelectedPlanForPricing(plan)
-    setNewAdminPrice('') // Start with empty input for better UX
+  // Edit handlers
+  const handleEditPlan = (plan: DataPlan) => {
+    setSelectedPlan(plan)
+    setNewAdminPrice('')
     setNewIsActive(plan.isActive)
-    setShowPricingModal(true)
+    setShowEditModal(true)
   }
 
-  const handlePricingEditCancel = () => {
-    setShowPricingModal(false)
-    setSelectedPlanForPricing(null)
+  const handleEditCancel = () => {
+    setShowEditModal(false)
+    setSelectedPlan(null)
     setNewAdminPrice('')
     setNewIsActive(null)
   }
 
-  const handlePricingEditSave = async () => {
-    if (!selectedPlanForPricing) return
+  const handleEditSave = async () => {
+    if (!selectedPlan) return
     
-    // Determine final price: use input if provided; else keep current
-    const priceValue = newAdminPrice ? Number(newAdminPrice) : selectedPlanForPricing.adminPrice
+    const priceValue = newAdminPrice ? Number(newAdminPrice) : selectedPlan.adminPrice
     if (isNaN(priceValue) || priceValue <= 0) {
       toast.error('Please enter a valid admin price or leave it unchanged.')
       return
     }
 
-    setIsLoadingPricing(true)
+    setIsLoadingPlans(true)
     try {
-      const response = await adminApiService.updateOtoBillDataPlanPricing(
-        selectedPlanForPricing.planId,
-        priceValue,
-        typeof newIsActive === 'boolean' ? newIsActive : undefined
-      )
+      const updateData: any = {}
+      if (newAdminPrice) updateData.adminPrice = priceValue
+      if (typeof newIsActive === 'boolean') updateData.isActive = newIsActive
 
-      if (response.success) {
-        setDataPlansWithPricing(prev => prev.map(plan => 
-          plan.planId === selectedPlanForPricing.planId ? {
-            ...plan,
-            adminPrice: response.data.adminPrice,
-            profit: response.data.profit,
-            isActive: response.data.isActive
-          } : plan
+      const response = await adminApiService.updateDataPlan(selectedPlan.planId, updateData)
+
+      if (response.success && response.data) {
+        setDataPlans(prev => prev.map(plan => 
+          plan.id === selectedPlan.id ? response.data : plan
         ))
-        setShowPricingModal(false)
-        setSelectedPlanForPricing(null)
+        setShowEditModal(false)
+        setSelectedPlan(null)
         setNewAdminPrice('')
         setNewIsActive(null)
         toast.success('Data plan updated successfully!')
-        fetchPricingSummary()
+        fetchDataPlans()
       } else {
         toast.error(response.message || 'Failed to update plan')
       }
     } catch (error: any) {
-      console.error('Error updating pricing:', error)
-      toast.error(error.message || 'Failed to update plan. Please try again.')
+      console.error('Error updating plan:', error)
+      if (error.message?.includes('404')) {
+        toast.error('Data plan not found')
+      } else {
+        toast.error(error.message || 'Failed to update plan. Please try again.')
+      }
     } finally {
-      setIsLoadingPricing(false)
+      setIsLoadingPlans(false)
+    }
+  }
+
+  // Create handlers
+  const handleCreatePlan = () => {
+    setCreateFormData({
+      planId: '',
+      name: '',
+      networkName: '',
+      planType: '',
+      dataSize: '',
+      validityDays: '',
+      originalPrice: '',
+      adminPrice: '',
+      isActive: true
+    })
+    setShowCreateModal(true)
+  }
+
+  const handleCreateCancel = () => {
+    setShowCreateModal(false)
+    setCreateFormData({
+      planId: '',
+      name: '',
+      networkName: '',
+      planType: '',
+      dataSize: '',
+      validityDays: '',
+      originalPrice: '',
+      adminPrice: '',
+      isActive: true
+    })
+  }
+
+  const handleCreateSave = async () => {
+    // Validation
+    if (!createFormData.planId || !createFormData.name || !createFormData.networkName || 
+        !createFormData.planType || !createFormData.dataSize || !createFormData.validityDays ||
+        !createFormData.originalPrice || !createFormData.adminPrice) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    const validityDays = Number(createFormData.validityDays)
+    const originalPrice = Number(createFormData.originalPrice)
+    const adminPrice = Number(createFormData.adminPrice)
+
+    if (isNaN(validityDays) || validityDays <= 0) {
+      toast.error('Please enter a valid validity days (must be greater than 0)')
+      return
+    }
+
+    if (isNaN(originalPrice) || originalPrice <= 0) {
+      toast.error('Please enter a valid original price (must be greater than 0)')
+      return
+    }
+
+    if (isNaN(adminPrice) || adminPrice <= 0) {
+      toast.error('Please enter a valid admin price (must be greater than 0)')
+      return
+    }
+
+    setIsCreating(true)
+    try {
+      const response = await adminApiService.createDataPlan({
+        planId: createFormData.planId,
+        name: createFormData.name,
+        networkName: createFormData.networkName,
+        planType: createFormData.planType,
+        dataSize: createFormData.dataSize,
+        validityDays,
+        originalPrice,
+        adminPrice,
+        isActive: createFormData.isActive
+      })
+
+      if (response.success && response.data) {
+        toast.success('Data plan created successfully!')
+        setShowCreateModal(false)
+        handleCreateCancel()
+        fetchDataPlans()
+      } else {
+        toast.error(response.message || 'Failed to create plan')
+      }
+    } catch (error: any) {
+      console.error('Error creating plan:', error)
+      if (error.message?.includes('409')) {
+        toast.error('Data plan with this Plan ID already exists')
+      } else {
+        toast.error(error.message || 'Failed to create plan. Please try again.')
+      }
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  // Delete handlers
+  const handleDeletePlan = (plan: DataPlan) => {
+    setPlanToDelete(plan)
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false)
+    setPlanToDelete(null)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!planToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const response = await adminApiService.deleteDataPlan(planToDelete.id)
+
+      if (response.success) {
+        toast.success('Data plan deleted successfully!')
+        setShowDeleteModal(false)
+        setPlanToDelete(null)
+        fetchDataPlans()
+      } else {
+        toast.error(response.message || 'Failed to delete plan')
+      }
+    } catch (error: any) {
+      console.error('Error deleting plan:', error)
+      if (error.message?.includes('404')) {
+        toast.error('Data plan not found')
+      } else {
+        toast.error(error.message || 'Failed to delete plan. Please try again.')
+      }
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -244,63 +397,21 @@ const DataPlans: React.FC = () => {
     setSelectedPlanType('')
     setSearchTerm('')
     setCurrentPage(1)
-    // The useEffect will automatically fetch all data plans when filters are cleared
   }
 
-  const filteredPlansWithPricing = dataPlansWithPricing.filter(plan => {
+  const filteredPlans = dataPlans.filter(plan => {
     if (!searchTerm) return true
-    return plan.name.toLowerCase().includes(searchTerm.toLowerCase())
+    return plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           plan.planId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           plan.networkName.toLowerCase().includes(searchTerm.toLowerCase())
   })
-
-  // Use dataPlansWithPricing for all cases since we now fetch all plans with pricing
-  const getDisplayPlans = () => {
-    return filteredPlansWithPricing
-  }
-
-  // Helper function to get plan ID
-  const getPlanId = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
-    return plan.planId
-  }
-
-  // Helper function to get plan price
-  const getPlanPrice = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
-    if ('adminPrice' in plan) {
-      return plan.adminPrice
-    }
-    return plan.price
-  }
-
-  // Helper function to get formatted price
-  const getFormattedPrice = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
-    if ('formattedPrice' in plan) {
-      return plan.formattedPrice
-    }
-    return `₦${getPlanPrice(plan).toLocaleString()}`
-  }
-
-  // Helper function to get profit
-  const getPlanProfit = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
-    if ('profit' in plan) {
-      return plan.profit
-    }
-    return 0
-  }
-
-  // Helper function to get formatted profit
-  const getFormattedProfit = (plan: OtoBillDataPlan | OtoBillDataPlanWithPricing) => {
-    if ('formattedProfit' in plan) {
-      return plan.formattedProfit
-    }
-    const profit = getPlanProfit(plan)
-    return profit > 0 ? `+₦${profit.toLocaleString()}` : `₦${profit.toLocaleString()}`
-  }
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
   }
 
   const refreshData = () => {
-    fetchDataPlansWithPricing()
+    fetchDataPlans()
   }
 
   const getNetworkLogo = (networkName: string) => {
@@ -326,72 +437,23 @@ const DataPlans: React.FC = () => {
             Total Plans: <span className="font-semibold text-gray-900">{totalPlans}</span>
           </div>
           <Button
+            onClick={handleCreatePlan}
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+          >
+            <Plus className="w-4 h-4" />
+            Create Data Plan
+          </Button>
+          <Button
             onClick={refreshData}
-            disabled={isLoadingPricing}
+            disabled={isLoadingPlans}
             variant="outline"
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoadingPricing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoadingPlans ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
       </div>
-
-      {/* Pricing Summary */}
-      {pricingSummary && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Activity className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Networks</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {pricingSummary.networks.active}/{pricingSummary.networks.total}
-                  </p>
-                  <p className="text-xs text-gray-500">Active/Total</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Wifi className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Data Plans</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {pricingSummary.dataPlans.visible}/{pricingSummary.dataPlans.total}
-                  </p>
-                  <p className="text-xs text-gray-500">Visible/Total</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Airtime Pricing</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {pricingSummary.airtimePricing.active}/{pricingSummary.airtimePricing.total}
-                  </p>
-                  <p className="text-xs text-gray-500">Active/Total</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* Filters */}
       <Card>
@@ -471,10 +533,12 @@ const DataPlans: React.FC = () => {
               <button
                 onClick={() => setShowPlanTypeDropdown(!showPlanTypeDropdown)}
                 className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors"
-                disabled={!selectedNetwork}
+                disabled={!selectedNetwork || isLoadingPlanTypes}
               >
                 <div className="flex items-center gap-2">
-                  {selectedPlanType ? (
+                  {isLoadingPlanTypes ? (
+                    <span className="text-gray-500">Loading types...</span>
+                  ) : selectedPlanType ? (
                     <span className="font-medium">{selectedPlanType}</span>
                   ) : (
                     <span className="text-gray-500">
@@ -485,21 +549,27 @@ const DataPlans: React.FC = () => {
                 <ChevronDown className={`w-4 h-4 transition-transform ${showPlanTypeDropdown ? 'rotate-180' : ''}`} />
               </button>
               
-              {showPlanTypeDropdown && selectedNetwork && (
+              {showPlanTypeDropdown && selectedNetwork && !isLoadingPlanTypes && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
+                  className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                 >
-                  {availablePlanTypes.map((planType) => (
-                    <button
-                      key={planType}
-                      onClick={() => handlePlanTypeSelect(planType)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
-                    >
-                      <span className="font-medium">{planType}</span>
-                    </button>
-                  ))}
+                  {availablePlanTypes.length > 0 ? (
+                    availablePlanTypes.map((planType) => (
+                      <button
+                        key={planType}
+                        onClick={() => handlePlanTypeSelect(planType)}
+                        className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
+                      >
+                        <span className="font-medium">{planType}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-gray-500">
+                      No plan types available
+                    </div>
+                  )}
                 </motion.div>
               )}
             </div>
@@ -517,7 +587,7 @@ const DataPlans: React.FC = () => {
       </Card>
 
       {/* View Mode Toggle */}
-      {dataPlansWithPricing.length > 0 ? (
+      {filteredPlans.length > 0 ? (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">View Mode:</span>
@@ -559,7 +629,7 @@ const DataPlans: React.FC = () => {
       ) : null}
 
       {/* Data Plans Display */}
-      {dataPlansWithPricing.length > 0 ? (
+      {filteredPlans.length > 0 ? (
         <div className="space-y-6">
           {/* Network Header */}
           <Card>
@@ -592,24 +662,24 @@ const DataPlans: React.FC = () => {
           </Card>
 
           {/* Loading State */}
-          {isLoadingPricing && (
+          {isLoadingPlans && (
             <Card>
               <CardContent className="text-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading data plans with pricing...</p>
+                <p className="text-gray-500">Loading data plans...</p>
               </CardContent>
             </Card>
           )}
 
           {/* Data Plans Content */}
-          {!isLoadingPricing && (
+          {!isLoadingPlans && (
             <>
               {/* Card View */}
               {viewMode === 'card' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {dataPlansWithPricing.map((plan) => (
+                  {filteredPlans.map((plan) => (
                     <motion.div
-                      key={plan.planId}
+                      key={plan.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors bg-white"
@@ -625,7 +695,7 @@ const DataPlans: React.FC = () => {
                           <div className="flex items-center gap-3 text-sm text-gray-500 mt-2">
                             <span className="flex items-center gap-1">
                               <Download className="w-3 h-3" />
-                              {plan.name.includes('GB') ? plan.name.split(' ')[0] : plan.name.split(' ')[0]}
+                              {plan.dataSize}
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
@@ -654,11 +724,18 @@ const DataPlans: React.FC = () => {
                         
                         <div className="flex items-center gap-2 ml-3">
                           <button
-                            onClick={() => handlePricingEditStart(plan)}
+                            onClick={() => handleEditPlan(plan)}
                             className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
-                            title="Edit Pricing"
+                            title="Edit Plan"
                           >
                             <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePlan(plan)}
+                            className="p-1 text-red-600 hover:text-red-700 transition-colors"
+                            title="Delete Plan"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -672,7 +749,7 @@ const DataPlans: React.FC = () => {
                           </span>
                         </div>
                         <div className="text-xs text-gray-400">
-                          Last synced: {new Date(plan.lastSynced).toLocaleDateString()}
+                          Plan ID: {plan.planId}
                         </div>
                       </div>
                     </motion.div>
@@ -715,11 +792,11 @@ const DataPlans: React.FC = () => {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {dataPlansWithPricing.map((plan) => (
-                            <tr key={plan.planId} className="hover:bg-gray-50">
+                          {filteredPlans.map((plan) => (
+                            <tr key={plan.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">{plan.name}</div>
-                                <div className="text-sm text-gray-500">ID: {plan.planId}</div>
+                                <div className="text-sm text-gray-500">Plan ID: {plan.planId}</div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -751,13 +828,22 @@ const DataPlans: React.FC = () => {
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button
-                                  onClick={() => handlePricingEditStart(plan)}
-                                  className="text-blue-600 hover:text-blue-700"
-                                  title="Edit Pricing"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleEditPlan(plan)}
+                                    className="text-blue-600 hover:text-blue-700"
+                                    title="Edit Plan"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeletePlan(plan)}
+                                    className="text-red-600 hover:text-red-700"
+                                    title="Delete Plan"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -781,7 +867,7 @@ const DataPlans: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={!hasPrev || isLoadingPricing}
+                          disabled={!hasPrev || isLoadingPlans}
                         >
                           Previous
                         </Button>
@@ -789,7 +875,7 @@ const DataPlans: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={!hasNext || isLoadingPricing}
+                          disabled={!hasNext || isLoadingPlans}
                         >
                           Next
                         </Button>
@@ -802,255 +888,21 @@ const DataPlans: React.FC = () => {
           )}
         </div>
       ) : (
-        /* Comprehensive Overview - All Networks and Plan Types */
-        <div className="space-y-6">
-          {/* Overview Header */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Wifi className="w-6 h-6" />
-                <span>All Networks Data Plans Overview</span>
-                <span className="text-base font-normal text-gray-500">
-                  ({totalPlans} total plans)
-                </span>
-              </CardTitle>
-              <CardDescription>
-                Comprehensive view of all data plans across all networks and plan types
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          {/* Loading State */}
-          {isLoadingPricing && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading all data plans...</p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* All Data Plans Content */}
-          {!isLoadingPricing && getDisplayPlans().length > 0 && (
-            <>
-              {/* Card View */}
-              {viewMode === 'card' && (
-                <div className="space-y-8">
-                  {/* Group by Network */}
-                  {Array.from(new Set(getDisplayPlans().map(plan => plan.networkName))).map((networkName) => (
-                    <div key={networkName} className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{getNetworkLogo(networkName)}</span>
-                        <h3 className="text-xl font-semibold text-gray-900">{networkName}</h3>
-                      </div>
-                      
-                      {/* Group by Plan Type within Network */}
-                      {Array.from(new Set(getDisplayPlans().filter(plan => plan.networkName === networkName).map(plan => plan.planType))).map((planType) => {
-                        const networkTypePlans = getDisplayPlans().filter(plan => 
-                          plan.networkName === networkName && plan.planType === planType
-                        )
-                        
-                        return (
-                          <div key={`${networkName}-${planType}`} className="ml-6 space-y-3">
-                            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-                              <Wifi className="w-4 h-4 text-primary" />
-                              <span className="font-semibold text-gray-700">{planType} Plans</span>
-                              <span className="text-sm text-gray-500">({networkTypePlans.length})</span>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {networkTypePlans.map((plan) => (
-                                <motion.div
-                                  key={getPlanId(plan)}
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors bg-white"
-                                >
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <div className="font-medium text-gray-900 text-base">
-                                        {plan.name}
-                                      </div>
-                                      <div className="text-sm text-gray-600 mt-1">
-                                        {plan.planType} • {plan.validityDays} days
-                                      </div>
-                                      <div className="flex items-center gap-3 text-sm text-gray-500 mt-2">
-                                        <span className="flex items-center gap-1">
-                                          <Download className="w-3 h-3" />
-                                          {plan.name.includes('GB') ? plan.name.split(' ')[0] : plan.name.split(' ')[0]}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                          <Clock className="w-3 h-3" />
-                                          {plan.validityDays} days
-                                        </span>
-                                      </div>
-                                      
-                                      {/* Pricing Information - Show if available */}
-                                      {'adminPrice' in plan && (
-                                        <div className="mt-3 space-y-2">
-                                          <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-600">Original Price:</span>
-                                            <span className="font-medium text-gray-900">₦{plan.originalPrice.toLocaleString()}</span>
-                                          </div>
-                                          <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-600">Admin Price:</span>
-                                            <span className="font-medium text-primary">₦{plan.adminPrice.toLocaleString()}</span>
-                                          </div>
-                                          <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-600">Profit:</span>
-                                            <span className={`font-medium ${getProfitColor(plan.profit)}`}>
-                                              {getProfitIcon(plan.profit)} ₦{plan.profit.toLocaleString()}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-2 ml-3">
-                                      <div className="text-right">
-                                        <div className="font-bold text-primary text-base">
-                                          {getFormattedPrice(plan)}
-                                        </div>
-                                        {'profit' in plan && getPlanProfit(plan) > 0 && (
-                                          <div className="text-xs text-green-600">
-                                            +{getFormattedProfit(plan)}
-                                          </div>
-                                        )}
-                                      </div>
-                                      <button
-                                        onClick={() => handleOpenPricingModalForPlan(plan)}
-                                        className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
-                                        title="Edit Pricing"
-                                      >
-                                        <Edit className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Table View */}
-              {viewMode === 'table' && (
-                <Card>
-                  <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Network
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Plan Name
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Type
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Validity
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Price
-                            </th>
-                            {getDisplayPlans().some(plan => 'adminPrice' in plan) && (
-                              <>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Admin Price
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Profit
-                                </th>
-                              </>
-                            )}
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {getDisplayPlans().map((plan) => (
-                            <tr key={getPlanId(plan)} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-lg">{getNetworkLogo(plan.networkName)}</span>
-                                  <span className="text-sm font-medium text-gray-900">{plan.networkName}</span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">{plan.name}</div>
-                                <div className="text-sm text-gray-500">ID: {getPlanId(plan)}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                  {plan.planType}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {plan.validityDays} days
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {getFormattedPrice(plan)}
-                              </td>
-                              {getDisplayPlans().some(p => 'adminPrice' in p) && (
-                                <>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {'adminPrice' in plan ? `₦${plan.adminPrice.toLocaleString()}` : '-'}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                    {'profit' in plan ? (
-                                      <span className={`font-medium ${getProfitColor(plan.profit)}`}>
-                                        {getProfitIcon(plan.profit)} ₦{plan.profit.toLocaleString()}
-                                      </span>
-                                    ) : '-'}
-                                  </td>
-                                </>
-                              )}
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button
-                                  onClick={() => handleOpenPricingModalForPlan(plan)}
-                                  className="text-blue-600 hover:text-blue-700"
-                                  title="Edit Price"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          )}
-
-          {/* No Data State */}
-          {!isLoadingPricing && getDisplayPlans().length === 0 && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Wifi className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Plans Available</h3>
-                <p className="text-gray-500 mb-4">
-                  No data plans are currently available. Please check your API connection or try refreshing.
-                </p>
-                <Button onClick={refreshData}>Refresh Data</Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        /* No Data State */
+        <Card>
+          <CardContent className="text-center py-12">
+            <Wifi className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Plans Available</h3>
+            <p className="text-gray-500 mb-4">
+              {isLoadingPlans ? 'Loading data plans...' : 'No data plans are currently available. Please check your API connection or try refreshing.'}
+            </p>
+            <Button onClick={refreshData}>Refresh Data</Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* No Results State */}
-      {!isLoadingPricing && filteredPlansWithPricing.length === 0 && searchTerm && (
+      {!isLoadingPlans && filteredPlans.length === 0 && searchTerm && (
         <Card>
           <CardContent className="text-center py-12">
             <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -1063,145 +915,282 @@ const DataPlans: React.FC = () => {
         </Card>
       )}
 
-      {/* Pricing Edit Modal */}
-      {showPricingModal && selectedPlanForPricing && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="p-6 max-w-md mx-4 w-full">
+      {/* Edit Modal */}
+      {showEditModal && selectedPlan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleEditCancel}>
+          <Card className="p-6 max-w-md mx-4 w-full" onClick={(e) => e.stopPropagation()}>
             <div className="space-y-6">
-              {/* Header */}
               <div className="border-b border-gray-200 pb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Edit Data Plan Pricing</h3>
-                <p className="text-sm text-gray-600">Update pricing for {selectedPlanForPricing.name}</p>
+                <h3 className="text-lg font-semibold text-gray-900">Edit Data Plan</h3>
+                <p className="text-sm text-gray-600">Update pricing for {selectedPlan.name}</p>
               </div>
-
-              {/* Plan Details */}
               <div className="space-y-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Network:</span>
-                      <p className="font-medium text-gray-900">{selectedPlanForPricing.networkName}</p>
+                      <p className="font-medium text-gray-900">{selectedPlan.networkName}</p>
                     </div>
                     <div>
                       <span className="text-gray-600">Plan Type:</span>
-                      <p className="font-medium text-gray-900">{selectedPlanForPricing.planType}</p>
+                      <p className="font-medium text-gray-900">{selectedPlan.planType}</p>
                     </div>
                     <div>
                       <span className="text-gray-600">Plan Name:</span>
-                      <p className="font-medium text-gray-900">{selectedPlanForPricing.name}</p>
+                      <p className="font-medium text-gray-900">{selectedPlan.name}</p>
                     </div>
                     <div>
-                      <span className="text-gray-600">Validity:</span>
-                      <p className="font-medium text-gray-900">{selectedPlanForPricing.validityDays} days</p>
+                      <span className="text-gray-600">Plan ID:</span>
+                      <p className="font-medium text-gray-900">{selectedPlan.planId}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-gray-600">MongoDB ID:</span>
+                      <p className="font-medium text-gray-900 text-xs break-all">{selectedPlan.id}</p>
                     </div>
                   </div>
                 </div>
-
-                {/* Current Pricing Display */}
                 <div className="space-y-3">
                   <h4 className="font-medium text-gray-900">Current Pricing</h4>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Original Price:</span>
-                      <span className="text-lg font-bold text-gray-900">₦{selectedPlanForPricing.originalPrice.toLocaleString()}</span>
+                      <span className="text-lg font-bold text-gray-900">₦{selectedPlan.originalPrice.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Current Admin Price:</span>
-                      <span className="text-lg font-bold text-primary">₦{selectedPlanForPricing.adminPrice.toLocaleString()}</span>
+                      <span className="text-lg font-bold text-primary">₦{selectedPlan.adminPrice.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Current Profit:</span>
-                      <span className={`text-lg font-bold ${getProfitColor(selectedPlanForPricing.profit)}`}>
-                        {getProfitIcon(selectedPlanForPricing.profit)} ₦{selectedPlanForPricing.profit.toLocaleString()}
+                      <span className={`text-lg font-bold ${getProfitColor(selectedPlan.profit)}`}>
+                        {getProfitIcon(selectedPlan.profit)} ₦{selectedPlan.profit.toLocaleString()}
                       </span>
                     </div>
                   </div>
                 </div>
-
-                {/* New Admin Price Input */}
-                                 <div className="space-y-2">
-                   <label className="block text-sm font-medium text-gray-700">
-                     New Admin Price (₦)
-                   </label>
-                   <Input
-                     type="number"
-                     value={newAdminPrice}
-                     onChange={(e) => setNewAdminPrice(e.target.value)}
-                     placeholder="Enter new admin price"
-                     min="1"
-                     className="text-lg font-medium"
-                   />
-                 </div>
-
-                 {/* Active Toggle */}
-                 <div className="space-y-2">
-                   <label className="block text-sm font-medium text-gray-700">Active Status</label>
-                   <div className="flex items-center gap-3">
-                     <button
-                       type="button"
-                       onClick={() => setNewIsActive(true)}
-                       className={`px-3 py-1 rounded-md text-sm border ${newIsActive === true ? 'bg-green-600 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-                     >
-                       Active
-                     </button>
-                     <button
-                       type="button"
-                       onClick={() => setNewIsActive(false)}
-                       className={`px-3 py-1 rounded-md text-sm border ${newIsActive === false ? 'bg-red-600 text-white border-red-700' : 'bg-white text-gray-700 border-gray-300'}`}
-                     >
-                       Inactive
-                     </button>
-                   </div>
-                   <p className="text-xs text-gray-500">You can toggle status without changing the price.</p>
-                 </div>
-
-                                 {/* Preview of New Profit */}
-                 {newAdminPrice && Number(newAdminPrice) > 0 && (
-                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                     <div className="flex items-center justify-between">
-                       <span className="text-sm font-medium text-gray-700">New Profit:</span>
-                       <span className={`text-lg font-bold ${getProfitColor(Number(newAdminPrice) - selectedPlanForPricing.originalPrice)}`}>
-                         {getProfitIcon(Number(newAdminPrice) - selectedPlanForPricing.originalPrice)} ₦{(Number(newAdminPrice) - selectedPlanForPricing.originalPrice).toLocaleString()}
-                       </span>
-                     </div>
-                     <div className="text-xs text-gray-600 mt-1">
-                       {Number(newAdminPrice) > selectedPlanForPricing.originalPrice 
-                         ? `Profit margin: ${(((Number(newAdminPrice) - selectedPlanForPricing.originalPrice) / selectedPlanForPricing.originalPrice) * 100).toFixed(1)}%`
-                         : 'This will result in a loss'
-                       }
-                     </div>
-                   </div>
-                 )}
-
-                 {/* Warning for loss */}
-                 {newAdminPrice && Number(newAdminPrice) > 0 && Number(newAdminPrice) < selectedPlanForPricing.originalPrice && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <span className="text-red-600">⚠️</span>
-                      <span className="text-sm text-red-700">
-                        <strong>Warning:</strong> The new admin price is lower than the original price. This will result in a loss.
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">New Admin Price (₦)</label>
+                  <Input
+                    type="number"
+                    value={newAdminPrice}
+                    onChange={(e) => setNewAdminPrice(e.target.value)}
+                    placeholder="Enter new admin price"
+                    min="1"
+                    className="text-lg font-medium"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Active Status</label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setNewIsActive(true)}
+                      className={`px-3 py-1 rounded-md text-sm border ${newIsActive === true ? 'bg-green-600 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                    >
+                      Active
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewIsActive(false)}
+                      className={`px-3 py-1 rounded-md text-sm border ${newIsActive === false ? 'bg-red-600 text-white border-red-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                    >
+                      Inactive
+                    </button>
+                  </div>
+                </div>
+                {newAdminPrice && Number(newAdminPrice) > 0 && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">New Profit:</span>
+                      <span className={`text-lg font-bold ${getProfitColor(Number(newAdminPrice) - selectedPlan.originalPrice)}`}>
+                        {getProfitIcon(Number(newAdminPrice) - selectedPlan.originalPrice)} ₦{(Number(newAdminPrice) - selectedPlan.originalPrice).toLocaleString()}
                       </span>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* Action Buttons */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <Button
-                  onClick={handlePricingEditCancel}
-                  variant="outline"
-                  disabled={isLoadingPricing}
-                >
+                <Button onClick={handleEditCancel} variant="outline" disabled={isLoadingPlans}>
                   Cancel
                 </Button>
-                                 <Button
-                   onClick={handlePricingEditSave}
-                   disabled={isLoadingPricing}
-                   className="bg-primary hover:bg-primary/90"
-                 >
-                   {isLoadingPricing ? 'Updating...' : 'Update Pricing'}
-                 </Button>
+                <Button onClick={handleEditSave} disabled={isLoadingPlans} className="bg-primary hover:bg-primary/90">
+                  {isLoadingPlans ? 'Updating...' : 'Update Plan'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCreateCancel}>
+          <Card className="p-6 max-w-2xl mx-4 w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="space-y-6">
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Create New Data Plan</h3>
+                <p className="text-sm text-gray-600">Add a new data plan to the system</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Plan ID *</label>
+                  <Input
+                    type="text"
+                    value={createFormData.planId}
+                    onChange={(e) => setCreateFormData({...createFormData, planId: e.target.value})}
+                    placeholder="e.g., 9"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Plan Name *</label>
+                  <Input
+                    type="text"
+                    value={createFormData.name}
+                    onChange={(e) => setCreateFormData({...createFormData, name: e.target.value})}
+                    placeholder="e.g., 230MB"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Network Name *</label>
+                  <select
+                    value={createFormData.networkName}
+                    onChange={async (e) => {
+                      const networkName = e.target.value
+                      setCreateFormData({...createFormData, networkName, planType: ''})
+                      if (networkName) {
+                        try {
+                          const response = await adminApiService.getPlanTypesByNetwork(networkName)
+                          if (response.success && response.data) {
+                            // Filter out "Standard" from plan types
+                            const filteredTypes = response.data.filter((type: string) => type !== 'Standard')
+                            setAvailablePlanTypes(filteredTypes)
+                          }
+                        } catch (error) {
+                          console.error('Error fetching plan types:', error)
+                        }
+                      }
+                    }}
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    required
+                  >
+                    <option value="">Select Network</option>
+                    {networks.map((network) => (
+                      <option key={network.id} value={network.name}>{network.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Plan Type *</label>
+                  <Input
+                    type="text"
+                    value={createFormData.planType}
+                    onChange={(e) => setCreateFormData({...createFormData, planType: e.target.value})}
+                    placeholder="e.g., SME, Gifting, Corporate"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Data Size *</label>
+                  <Input
+                    type="text"
+                    value={createFormData.dataSize}
+                    onChange={(e) => setCreateFormData({...createFormData, dataSize: e.target.value})}
+                    placeholder="e.g., 230MB"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Validity Days *</label>
+                  <Input
+                    type="number"
+                    value={createFormData.validityDays}
+                    onChange={(e) => setCreateFormData({...createFormData, validityDays: e.target.value})}
+                    placeholder="e.g., 1"
+                    min="1"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Original Price (₦) *</label>
+                  <Input
+                    type="number"
+                    value={createFormData.originalPrice}
+                    onChange={(e) => setCreateFormData({...createFormData, originalPrice: e.target.value})}
+                    placeholder="e.g., 196"
+                    min="1"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Admin Price (₦) *</label>
+                  <Input
+                    type="number"
+                    value={createFormData.adminPrice}
+                    onChange={(e) => setCreateFormData({...createFormData, adminPrice: e.target.value})}
+                    placeholder="e.g., 250"
+                    min="1"
+                    required
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">Active Status</label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCreateFormData({...createFormData, isActive: true})}
+                      className={`px-3 py-1 rounded-md text-sm border ${createFormData.isActive === true ? 'bg-green-600 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                    >
+                      Active
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCreateFormData({...createFormData, isActive: false})}
+                      className={`px-3 py-1 rounded-md text-sm border ${createFormData.isActive === false ? 'bg-red-600 text-white border-red-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                    >
+                      Inactive
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <Button onClick={handleCreateCancel} variant="outline" disabled={isCreating}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateSave} disabled={isCreating} className="bg-primary hover:bg-primary/90">
+                  {isCreating ? 'Creating...' : 'Create Plan'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && planToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleDeleteCancel}>
+          <Card className="p-6 max-w-md mx-4 w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="space-y-6">
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Delete Data Plan</h3>
+                <p className="text-sm text-gray-600">Are you sure you want to delete this data plan?</p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <div className="space-y-2">
+                  <p className="font-medium text-gray-900">{planToDelete.name}</p>
+                  <p className="text-sm text-gray-600">Network: {planToDelete.networkName}</p>
+                  <p className="text-sm text-gray-600">Plan ID: {planToDelete.planId}</p>
+                  <p className="text-sm text-red-600 font-medium mt-2">This action cannot be undone.</p>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <Button onClick={handleDeleteCancel} variant="outline" disabled={isDeleting}>
+                  Cancel
+                </Button>
+                <Button onClick={handleDeleteConfirm} disabled={isDeleting} className="bg-red-600 hover:bg-red-700">
+                  {isDeleting ? 'Deleting...' : 'Delete Plan'}
+                </Button>
               </div>
             </div>
           </Card>

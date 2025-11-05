@@ -435,4 +435,89 @@ export interface OtoBillStatsResponse {
   message: string
   data: OtoBillTransactionStats
   timestamp?: string
-} 
+}
+
+// New Data Plan Interfaces
+export interface DataPlan {
+  id: string
+  planId: string
+  name: string
+  networkName: string
+  planType: string
+  dataSize: string
+  validityDays: number
+  originalPrice: number
+  adminPrice: number
+  profit: number
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DataPlansResponse {
+  success: boolean
+  message: string
+  data?: {
+    plans: DataPlan[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      pages: number
+      hasNext: boolean
+      hasPrev: boolean
+    }
+  }
+  timestamp?: string
+}
+
+export interface DataPlanResponse {
+  success: boolean
+  message: string
+  data?: DataPlan
+  timestamp?: string
+}
+
+export interface CreateDataPlanRequest {
+  planId: string
+  name: string
+  networkName: string
+  planType: string
+  dataSize: string
+  validityDays: number
+  originalPrice: number
+  adminPrice: number
+  isActive: boolean
+}
+
+export interface CreateDataPlanResponse {
+  success: boolean
+  message: string
+  data?: DataPlan
+  timestamp?: string
+}
+
+export interface UpdateDataPlanRequest {
+  adminPrice?: number
+  isActive?: boolean
+}
+
+export interface UpdateDataPlanResponse {
+  success: boolean
+  message: string
+  data?: DataPlan
+  timestamp?: string
+}
+
+export interface DeleteDataPlanResponse {
+  success: boolean
+  message: string
+  timestamp?: string
+}
+
+export interface PlanTypesResponse {
+  success: boolean
+  message: string
+  data?: string[]
+  timestamp?: string
+}
