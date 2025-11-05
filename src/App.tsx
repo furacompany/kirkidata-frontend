@@ -36,7 +36,6 @@ import EditUser from './pages/admin/EditUser'
 import UserTransactions from './pages/admin/UserTransactions'
 import DataPlans from './pages/admin/DataPlans'
 import TransactionsPanel from './pages/admin/TransactionsPanel'
-import WalletLogs from './pages/admin/WalletLogs'
 
 import AdminProfile from './pages/admin/AdminProfile'
 
@@ -243,7 +242,6 @@ const App: React.FC = () => {
              <Route path="users/:userId/transactions" element={<UserTransactions />} />
             <Route path="data-plans" element={<DataPlans />} />
             <Route path="transactions" element={<TransactionsPanel />} />
-            <Route path="wallet-logs" element={<WalletLogs />} />
 
             <Route path="profile" element={<AdminProfile />} />
            </Route>

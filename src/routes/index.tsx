@@ -25,7 +25,6 @@ const AdminHome = lazy(() => import('../pages/admin/AdminHome'));
 const UsersManagement = lazy(() => import('../pages/admin/UsersManagement'));
 const DataPlans = lazy(() => import('../pages/admin/DataPlans'));
 const TransactionsPanel = lazy(() => import('../pages/admin/TransactionsPanel'));
-const WalletLogs = lazy(() => import('../pages/admin/WalletLogs'));
 const AdminProfile = lazy(() => import('../pages/admin/AdminProfile'));
 const NotFound = lazy(() => import('../pages/notfound'));
 
@@ -108,7 +107,6 @@ const AppRoutes = () => (
         <Route path="users" element={<UsersManagement />} />
         <Route path="data-plans" element={<DataPlans />} />
         <Route path="transactions" element={<TransactionsPanel />} />
-        <Route path="wallet-logs" element={<WalletLogs />} />
         <Route path="profile" element={<AdminProfile />} />
       </Route>
       <Route path="*" element={<NotFound />} />

@@ -49,7 +49,6 @@ const AdminLayout: React.FC = () => {
     { name: 'Users Management', href: '/admin/users', icon: Users },
     { name: 'Data Plans', href: '/admin/data-plans', icon: Wifi },
     { name: 'All Transactions', href: '/admin/transactions', icon: FileText },
-    { name: 'Wallet Logs', href: '/admin/wallet-logs', icon: CreditCard },
     { name: 'Profile', href: '/admin/profile', icon: User },
   ]
 
