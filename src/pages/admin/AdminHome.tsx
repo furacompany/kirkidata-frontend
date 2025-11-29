@@ -492,7 +492,7 @@ const AdminHome: React.FC = () => {
                 <div>
                   <div className="text-sm text-gray-600 mb-1">Balance</div>
                   <div className="text-2xl font-bold text-indigo-600">
-                    ₦{parseFloat(aychindodataUser.balance || '0').toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ₦{parseFloat((aychindodataUser.balance || '0').toString().replace(/,/g, '')).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
                 {aychindodataUser.status && (
