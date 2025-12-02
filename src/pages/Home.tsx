@@ -868,8 +868,8 @@ const Home: React.FC = () => {
       {/* Footer */}
       <footer id="contact" className="bg-gray-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
+            <div className="lg:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center overflow-hidden">
                   <img 
@@ -926,6 +926,13 @@ const Home: React.FC = () => {
                 <li><a href="#contact" className="hover:text-white transition-colors">Contact Us</a></li>
                 <li><a href="#features" className="hover:text-white transition-colors">How It Works</a></li>
                 <li><a href="#pricing" className="hover:text-white transition-colors">Pricing Guide</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold mb-4">Legal</h4>
+              <ul className="space-y-3 text-gray-400">
+                <li><Link to="/terms-and-conditions" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
+                <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
           </div>

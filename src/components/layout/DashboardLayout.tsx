@@ -16,7 +16,8 @@ import {
   Zap,
   Tv,
   BookOpen,
-  ChevronDown
+  ChevronDown,
+  FileText
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { Button } from '../ui/Button'
@@ -45,6 +46,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Transaction History', href: '/transactions', icon: History },
     { name: 'KYC Verification', href: '/kyc', icon: Shield },
     { name: 'Profile', href: '/profile', icon: User },
+  ]
+
+  const legalLinks = [
+    { name: 'Terms & Conditions', href: '/terms-and-conditions', icon: FileText },
+    { name: 'Privacy Policy', href: '/privacy-policy', icon: Shield },
   ]
 
   const handleLogout = async () => {
@@ -122,6 +128,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </Link>
               )
             })}
+            <div className="border-t border-white/10 mt-4 pt-4">
+              {legalLinks.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                      isActive(item.href)
+                        ? 'bg-white/10 text-white shadow-lg'
+                        : 'text-white/80 hover:bg-white/5 hover:text-white'
+                    }`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Icon className="mr-3 h-5 w-5" />
+                    {item.name}
+                  </Link>
+                )
+              })}
+            </div>
           </nav>
           
           {/* Mobile user section */}
@@ -183,6 +209,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </Link>
               )
             })}
+            <div className="border-t border-white/10 mt-4 pt-4">
+              {legalLinks.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                      isActive(item.href)
+                        ? 'bg-white/10 text-white shadow-lg'
+                        : 'text-white/80 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="mr-3 h-5 w-5" />
+                    {item.name}
+                  </Link>
+                )
+              })}
+            </div>
           </nav>
           
           {/* Desktop user section */}

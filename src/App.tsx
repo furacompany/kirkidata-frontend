@@ -46,6 +46,8 @@ import AdminLayout from './components/layout/AdminLayout'
 // Components
 import NotFound from './pages/notfound'
 import FAQ from './pages/FAQ'
+import TermsAndConditionsPage from './pages/TermsAndConditionsPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ 
@@ -113,6 +115,8 @@ const App: React.FC = () => {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
