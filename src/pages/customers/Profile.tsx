@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   User, Mail, Phone, MapPin, Shield, Eye, EyeOff,
-  Camera, RefreshCw, Edit, Save, X
+  Camera, RefreshCw, Edit, Save, X, Trash2
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useAuthStore } from '../../store/authStore'
 import { useUserStore } from '../../store/userStore'
+import DeleteAccountModal from '../../components/ui/DeleteAccountModal'
 import toast from 'react-hot-toast'
 
 interface PasswordForm {
@@ -24,7 +25,7 @@ interface PinForm {
 }
 
 const Profile: React.FC = () => {
-  const { user, fetchUserProfile, changePassword, changePin, updateUserProfile } = useAuthStore()
+  const { user, fetchUserProfile, changePassword, changePin, updateUserProfile, deleteAccount } = useAuthStore()
   const { walletBalance, fetchWalletBalance } = useUserStore()
 
   const [passwordForm, setPasswordForm] = useState<PasswordForm>({
@@ -60,6 +61,8 @@ const Profile: React.FC = () => {
   const [showCurrentPin, setShowCurrentPin] = useState(false)
   const [showNewPin, setShowNewPin] = useState(false)
   const [showConfirmPin, setShowConfirmPin] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
   // Fetch user profile data when component mounts
   useEffect(() => {
@@ -264,6 +267,20 @@ const Profile: React.FC = () => {
       }
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true)
+    try {
+      await deleteAccount()
+      // Show success and close modal
+      setShowDeleteModal(false)
+      setIsDeletingAccount(false)
+    } catch (error: any) {
+      // Error is already handled in the store
+      setIsDeletingAccount(false)
+      setShowDeleteModal(false)
     }
   }
 
@@ -640,7 +657,55 @@ const Profile: React.FC = () => {
         </Card>
       </motion.div>
 
+      {/* Delete Account Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <Card className="border-red-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Delete Account
+            </CardTitle>
+            <CardDescription>
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-800">
+                <strong>Warning:</strong> Once you delete your account, it cannot be recovered. Your account will be deactivated immediately 
+                and permanently deleted after 90 days. Please make sure you've downloaded any important data before proceeding.
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">
+                  Need more information? <a href="/account-deletion" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Read our account deletion guide</a>
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50"
+                onClick={() => setShowDeleteModal(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Account
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+        isDeleting={isDeletingAccount}
+      />
     </div>
   )
 }

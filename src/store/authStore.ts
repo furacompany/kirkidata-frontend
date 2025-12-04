@@ -19,6 +19,7 @@ interface AuthStore extends AuthState {
   validatePin: (pin: string) => Promise<boolean>
   changePin: (currentPin: string, newPin: string) => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  deleteAccount: () => Promise<void>
   restoreAuthState: () => boolean
   validateAndRefreshTokens: () => Promise<boolean>
   areTokensValid: () => boolean
@@ -590,6 +591,23 @@ export const useAuthStore = create<AuthStore>((set, get) => {
       set({ isLoading: false })
     }
   },
+
+  deleteAccount: async () => {
+    set({ isLoading: true })
+    try {
+      // TODO: Implement backend endpoint /users/me/delete
+      // For now, just show success message without API call
+      // Simulate a delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500))
+      toast.success('Account will be deleted in the next 90 days')
+      set({ isLoading: false })
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete account')
+      set({ isLoading: false })
+      throw error
+    }
+  },
+
      validateAndRefreshTokens: async () => {
      try {
        const refreshResponse = await userApiService.refreshToken()

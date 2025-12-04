@@ -48,6 +48,7 @@ import NotFound from './pages/notfound'
 import FAQ from './pages/FAQ'
 import TermsAndConditionsPage from './pages/TermsAndConditionsPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import AccountDeletionPage from './pages/AccountDeletionPage'
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ 
@@ -117,6 +118,7 @@ const App: React.FC = () => {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/account-deletion" element={<AccountDeletionPage />} />
 
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

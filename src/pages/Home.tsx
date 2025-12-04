@@ -933,6 +933,7 @@ const Home: React.FC = () => {
               <ul className="space-y-3 text-gray-400">
                 <li><Link to="/terms-and-conditions" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
                 <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/account-deletion" className="hover:text-white transition-colors">Account Deletion</Link></li>
               </ul>
             </div>
           </div>

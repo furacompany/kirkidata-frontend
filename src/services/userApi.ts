@@ -211,6 +211,16 @@ export interface UpdateUserProfileResponse {
   timestamp?: string
 }
 
+export interface DeleteAccountResponse {
+  success: boolean
+  message: string
+  data?: {
+    deletionDate: string
+    accountId: string
+  }
+  timestamp?: string
+}
+
 export interface RefreshTokenRequest {
   refreshToken: string
   role: string
@@ -636,6 +646,18 @@ class UserApiService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userData),
+    })
+  }
+
+  async deleteAccount(): Promise<DeleteAccountResponse> {
+    const accessToken = localStorage.getItem('accessToken')
+    
+    return this.request<DeleteAccountResponse>('/users/me/delete', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
     })
   }
 
