@@ -728,6 +728,34 @@ class AdminApiService {
     }
   }
 
+  async generateVirtualAccount(userId: string): Promise<any> {
+    const accessToken = localStorage.getItem('adminAccessToken')
+    
+    if (!accessToken) {
+      throw new Error('401: Authentication required')
+    }
+    
+    try {
+      const response = await this.request<any>(`/users/${userId}/virtual-account`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      return response
+    } catch (error: any) {
+      if (error.message?.includes('401')) {
+        throw new Error('401: Unauthorized access. Please log in.')
+      } else if (error.message?.includes('404')) {
+        throw new Error('404: User not found')
+      } else if (error.message?.includes('400')) {
+        throw new Error('400: Invalid request. Virtual account may already exist.')
+      }
+      throw error
+    }
+  }
+
   async getUserTransactions(
     userId: string,
     page: number = 1,

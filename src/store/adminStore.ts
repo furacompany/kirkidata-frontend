@@ -50,6 +50,7 @@ interface AdminAuthStore extends AdminAuthState {
   getUserByPhone: (phone: string) => Promise<any>
   getUserByEmail: (email: string) => Promise<any>
   getUserById: (userId: string) => Promise<any>
+  generateVirtualAccount: (userId: string) => Promise<any>
   getUserTransactions: (userId: string, page?: number, limit?: number, filters?: any) => Promise<any>
   updateUserProfile: (userId: string, firstName: string, lastName: string, state: string) => Promise<any>
   updateUserWallet: (userId: string, amount: number, description: string) => Promise<any>
@@ -606,6 +607,17 @@ export const useAdminStore = create<AdminAuthStore>((set, get) => ({
       return response;
     } catch (error: any) {
       console.error('Failed to fetch user by ID:', error);
+      throw error;
+    }
+  },
+
+  generateVirtualAccount: async (userId: string) => {
+    try {
+      const response = await adminApiService.generateVirtualAccount(userId);
+      toast.success('Virtual account generated successfully!');
+      return response;
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to generate virtual account');
       throw error;
     }
   },

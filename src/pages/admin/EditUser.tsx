@@ -8,8 +8,20 @@ import toast from 'react-hot-toast'
 import { 
   UserCheck, UserX, Trash2, Users, 
   AlertTriangle, XCircle,
-  Edit, ArrowLeft, Save, X
+  Edit, ArrowLeft, Save, X, CreditCard
 } from 'lucide-react'
+
+interface VirtualAccount {
+  virtualAccountNo: string
+  virtualAccountName: string
+  status: string
+  provider: string
+  customerName: string
+  email: string
+  accountReference: string
+  createdAt: string
+  updatedAt: string
+}
 
 interface UserData {
   _id: string
@@ -25,6 +37,7 @@ interface UserData {
   createdAt: string
   updatedAt: string
   state?: string
+  virtualAccount?: VirtualAccount
 }
 
 const EditUser: React.FC = () => {
@@ -36,7 +49,8 @@ const EditUser: React.FC = () => {
     updateUserWallet,
     deactivateUser,
     reactivateUser,
-    deleteUser
+    deleteUser,
+    generateVirtualAccount
   } = useAdminStore()
 
   const [userData, setUserData] = useState<UserData | null>(null)
@@ -58,6 +72,7 @@ const EditUser: React.FC = () => {
   // User action states
   const [isPerformingAction, setIsPerformingAction] = useState(false)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [isGeneratingVirtualAccount, setIsGeneratingVirtualAccount] = useState(false)
 
   // Load user data on component mount
   useEffect(() => {
@@ -234,6 +249,24 @@ const EditUser: React.FC = () => {
     }
   }
 
+  const handleGenerateVirtualAccount = async () => {
+    if (!userData) return
+
+    setIsGeneratingVirtualAccount(true)
+    try {
+      const response = await generateVirtualAccount(userData._id)
+      if (response.success) {
+        // Reload user data to get the newly generated virtual account
+        await loadUserData()
+      }
+    } catch (error: any) {
+      console.error('Generate virtual account error:', error)
+      // Error toast is already shown by the store
+    } finally {
+      setIsGeneratingVirtualAccount(false)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
       year: 'numeric',
@@ -394,8 +427,80 @@ const EditUser: React.FC = () => {
             </div>
           </div>
 
+          {/* Virtual Account Information */}
+          <div className="space-y-4 pt-4 border-t border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+              <CreditCard className="w-5 h-5" />
+              Virtual Account
+            </h3>
+            {userData.virtualAccount ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Account Number</label>
+                    <p className="text-gray-900 font-mono">{userData.virtualAccount.virtualAccountNo}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Account Name</label>
+                    <p className="text-gray-900">{userData.virtualAccount.virtualAccountName}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Status</label>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${userData.virtualAccount.status === 'Enabled' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                      <span className={`text-sm font-medium ${userData.virtualAccount.status === 'Enabled' ? 'text-green-700' : 'text-red-700'}`}>
+                        {userData.virtualAccount.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Provider</label>
+                    <p className="text-gray-900 capitalize">{userData.virtualAccount.provider}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Customer Name</label>
+                    <p className="text-gray-900">{userData.virtualAccount.customerName}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Email</label>
+                    <p className="text-gray-900">{userData.virtualAccount.email}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium text-gray-500">Account Reference</label>
+                    <p className="text-gray-900 font-mono text-sm">{userData.virtualAccount.accountReference}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Created At</label>
+                    <p className="text-gray-900">{formatDate(userData.virtualAccount.createdAt)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Updated At</label>
+                    <p className="text-gray-900">{formatDate(userData.virtualAccount.updatedAt)}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <div className="flex items-center space-x-2 text-gray-500">
+                    <XCircle className="w-5 h-5" />
+                    <p className="text-sm font-medium">No virtual account</p>
+                  </div>
+                  <Button
+                    onClick={handleGenerateVirtualAccount}
+                    disabled={isGeneratingVirtualAccount}
+                    className="px-4 py-2 flex items-center gap-2"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    {isGeneratingVirtualAccount ? 'Generating...' : 'Generate Virtual Account'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Activity Information */}
-          <div className="space-y-4">
+          <div className="space-y-4 pt-4 border-t border-gray-200">
             <h3 className="text-lg font-medium text-gray-900">Activity Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
